@@ -82,8 +82,8 @@ class GeminiVisionService {
 
     // 3. Local Neural Vision Fallback (offline / mesh)
     if (onProgress) onProgress("Executing On-Device Neural Vision Classification...");
-    const localClassification = await documentClassifier.classifyAndValidate(dataUrl, rawText, file.name);
-    const localMeds = prescriptionParser.parsePrescriptionText(rawText || file.name);
+    const isLabOrScan = localClassification.type === "pathology_report" || localClassification.type === "xray_report" || localClassification.type === "ecg_report" || (localClassification.categoryLabel || "").toLowerCase().includes("pathology") || (localClassification.categoryLabel || "").toLowerCase().includes("biochemistry") || (localClassification.categoryLabel || "").toLowerCase().includes("lab");
+    const localMeds = (!isLabOrScan && (localClassification.type === "prescription" || localClassification.type === "discharge_summary")) ? prescriptionParser.parsePrescriptionText(rawText || file.name) : [];
     const localLab = labParser.parseLabReportText(rawText);
     const localDiseases = diseaseExtractor.extractDiseases(
       rawText || file.name,
@@ -153,6 +153,10 @@ CRITICAL MEDICAL AUTHENTICITY VALIDATION:
 ]
 \`\`\`
    - Only mark "medicine": null, "dosage": null, "usage": null, "validated": false, "reason": "Unclear handwriting" if a line contains 100% completely unintelligible scribbles where no medicine letters can be discerned. If letters/stems are readable, transcribe the candidate medicine name with clinical context.
+5. If it is a Pathology Laboratory Report, Biochemistry Panel, CBC, X-Ray, or ECG:
+   - A pathology report provides objective numerical laboratory measurements (e.g., Hemoglobin, Platelets, Fasting Glucose, Serum Creatinine).
+   - It DOES NOT contain prescribed medications.
+   - You MUST NOT generate a structured JSON medication array for pathology reports. The JSON medication array MUST BE COMPLETELY EMPTY [].
 
 Structure the response as:
 ## Report Type
@@ -290,7 +294,8 @@ Always finish with: **NOT FOR CLINICAL USE WITHOUT PHYSICIAN REVIEW**`;
     }
 
     // Extract medications, lab results, and diseases
-    const extractedMedications = !isNonMedical ? prescriptionParser.parsePrescriptionText(text) : [];
+    const isPathologyOrImaging = type === "pathology_report" || type === "xray_report" || type === "ecg_report" || (categoryLabel || "").toLowerCase().includes("pathology") || (categoryLabel || "").toLowerCase().includes("biochemistry") || (categoryLabel || "").toLowerCase().includes("lab");
+    const extractedMedications = (!isNonMedical && !isPathologyOrImaging && (type === "prescription" || type === "discharge_summary")) ? prescriptionParser.parsePrescriptionText(text) : [];
     const labResults = !isNonMedical ? labParser.parseLabReportText(text) : { flags: [], normalValues: [], artifacts: [] };
     const extractedDiseases = !isNonMedical ? diseaseExtractor.extractDiseases(
       text,

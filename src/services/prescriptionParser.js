@@ -802,7 +802,7 @@ export const SNOMED_DRUG_DICTIONARY = [
   // --- Vitamins, Minerals & Supplements ---
   {
     generic: "Calcium Carbonate + Vitamin D3",
-    brandNames: ["shelcal", "shelcal 500", "shelcal-500", "shelcal hd", "gemcal", "cipcal", "cipcal 500", "calcimax", "corcium", "supracal", "calcium"],
+    brandNames: ["shelcal", "shelcal 500", "shelcal-500", "shelcal hd", "gemcal", "cipcal", "cipcal 500", "calcimax", "corcium", "supracal"],
     snomed: "429712002",
     drugClass: "Bone Mineral & Calcium Supplement",
     standardDose: "500 mg",
@@ -838,7 +838,7 @@ export const SNOMED_DRUG_DICTIONARY = [
   },
   {
     generic: "Ferrous Ascorbate + Folic Acid",
-    brandNames: ["ferrous ascorbate", "orofer-xt", "orofer xt", "autrin", "feronia-xt", "livogen", "fefol", "folvite", "fol 5", "iron"],
+    brandNames: ["ferrous ascorbate", "orofer-xt", "orofer xt", "autrin", "feronia-xt", "livogen", "fefol", "folvite", "fol 5"],
     snomed: "429715000",
     drugClass: "Hematinic & Iron Supplement",
     standardDose: "100 mg Elemental Iron",
@@ -1004,8 +1004,8 @@ class PrescriptionParser {
     const cleanToken = token.toLowerCase().replace(/[^a-z0-9]/g, "");
     if (cleanToken.length < 2) return null;
 
-    // Reject non-medical English vocabulary, anatomy, UI terms, tutorial text, business/retail terms, chemistry terms
-    if (/^(the|and|for|with|after|before|daily|during|fever|body|ache|pain|tablet|capsule|syrup|injection|tab|cap|syp|inj|dr|clinic|hospital|patient|date|time|review|print|screen|active|window|paste|save|folder|using|tool|sketch|area|choose|type|full|open|search|start|menu|press|hold|items|total|milk|bread|apple|rice|paid|thank|shopping|walmart|function|return|export|default|honda|city|quote|service|flight|seat|gate|delhi|mumbai|bangalore|india|airline|ticket|receipt|invoice|screenshot|snip|snapping|camera|photo|video|call|people|person|image|picture|view|finding|findings|impression|joint|space|knee|shoulder|chest|bone|spine|pelvis|tibia|femur|humerus|clavicle|lateral|radiograph|radiology|normal|abnormal|report|investigation|parameter|value|range|unit|result|status|target|fedex|order|summary|meeting|revenue|growth|focus|market|campaign|amazon|contract|weather|forecast|delay|notice|repair|bill|account|bank|email|letter|package|delivery|product|item|amount|balance|payment|card|credit|debit|salary|project|client|company|office|team|manager|director|employee|customer|student|school|college|university|exam|score|grade|class|subject|course|lesson|chapter|page|section|paragraph|sentence|word|text|data|code|system|server|network|internet|website|online|software|hardware|device|phone|mobile|laptop|computer|display|screen|monitor|keyboard|mouse|power|button|switch|cable|battery|charger|storage|memory|drive|folder|file|document|pdf|png|jpg|jpeg|gif|svg|audio|video|music|movie|game|play|pause|stop|record|sound|voice|volume|track|channel|media|sodium|potassium|calcium|acid|chloride|hydroxide|hydrochloric|titration|chemistry|experiment|reaction|solution|solvent)$/i.test(cleanToken)) {
+    // Reject non-medical English vocabulary, anatomy, UI terms, tutorial text, business/retail terms, chemistry terms, pathology analytes
+    if (/^(the|and|for|with|after|before|daily|during|fever|body|ache|pain|tablet|capsule|syrup|injection|tab|cap|syp|inj|dr|clinic|hospital|patient|date|time|review|print|screen|active|window|paste|save|folder|using|tool|sketch|area|choose|type|full|open|search|start|menu|press|hold|items|total|milk|bread|apple|rice|paid|thank|shopping|walmart|function|return|export|default|honda|city|quote|service|flight|seat|gate|delhi|mumbai|bangalore|india|airline|ticket|receipt|invoice|screenshot|snip|snapping|camera|photo|video|call|people|person|image|picture|view|finding|findings|impression|joint|space|knee|shoulder|chest|bone|spine|pelvis|tibia|femur|humerus|clavicle|lateral|radiograph|radiology|normal|abnormal|report|investigation|parameter|value|range|unit|result|status|target|fedex|order|summary|meeting|revenue|growth|focus|market|campaign|amazon|contract|weather|forecast|delay|notice|repair|bill|account|bank|email|letter|package|delivery|product|item|amount|balance|payment|card|credit|debit|salary|project|client|company|office|team|manager|director|employee|customer|student|school|college|university|exam|score|grade|class|subject|course|lesson|chapter|page|section|paragraph|sentence|word|text|data|code|system|server|network|internet|website|online|software|hardware|device|phone|mobile|laptop|computer|display|screen|monitor|keyboard|mouse|power|button|switch|cable|battery|charger|storage|memory|drive|folder|file|document|pdf|png|jpg|jpeg|gif|svg|audio|video|music|movie|game|play|pause|stop|record|sound|voice|volume|track|channel|media|sodium|potassium|calcium|acid|chloride|hydroxide|hydrochloric|titration|chemistry|experiment|reaction|solution|solvent|iron|albumin|glucose|creatinine|urea|bilirubin|sgpt|sgot|cholesterol|triglycerides|platelet|platelets|hemoglobin|haemoglobin|leukocyte|hematocrit|haematocrit|lymphocyte|neutrophil|eosinophil|monocyte|basophil|analyte|serum|plasma|specimen|biochemistry|hematology|pathology)$/i.test(cleanToken)) {
       return null;
     }
 

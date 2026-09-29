@@ -152,6 +152,11 @@ class MediKioskApp {
     this.initDefaultDoctorQueue();
     this.checkAndTrigger30MinAlerts();
 
+    // Start background queue timer for real-time 30-min SMS evaluation
+    if (typeof window !== "undefined") {
+      this.queueMonitorTimer = setInterval(() => this.checkAndTrigger30MinAlerts(), 15000);
+    }
+
     this.init();
   }
 
@@ -303,12 +308,16 @@ class MediKioskApp {
   }
 
   enqueuePatient() {
-    const existingIdx = this.doctorQueue.findIndex(p => p.id === this.patient.id);
     const clone = JSON.parse(JSON.stringify(this.patient));
+    if (!clone.mobile && this.patient.mobile) clone.mobile = this.patient.mobile;
+    if (!clone.name && this.patient.name) clone.name = this.patient.name;
+
+    const existingIdx = this.doctorQueue.findIndex(p => p.id === clone.id);
     if (existingIdx >= 0) {
       this.doctorQueue[existingIdx] = clone;
     } else {
-      this.doctorQueue.unshift(clone);
+      // Append newly created walk-in patient at the END of the live OPD queue
+      this.doctorQueue.push(clone);
     }
     this.checkAndTrigger30MinAlerts();
 
@@ -928,6 +937,27 @@ class MediKioskApp {
               </div>
             </div>
 
+            <!-- Lab Biomarkers Section -->
+            <div style="margin-bottom: 14px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <strong style="font-size: 0.8rem; color: #F87171; text-transform: uppercase;">${i18n.t("lab_heading")}</strong>
+                <span class="pill-3d pill-3d-crimson" style="font-size: 0.7rem;">${allFlags.length} Flags</span>
+              </div>
+              <div style="max-height: 140px; overflow-y: auto;">
+                ${allFlags.length > 0 ? allFlags.map(f => `
+                  <div class="lab-flag-item-3d">
+                    <div>
+                      <strong style="color: #FCA5A5; font-size: 0.82rem;">${f.test || f.param}: ${f.value}</strong>
+                      <p style="font-size: 0.72rem; color: var(--text-muted);">Ref: ${f.ref} [${f.status}]</p>
+                    </div>
+                    <span class="pill-3d pill-3d-crimson">${(f.status || 'ABNORMAL').split(' ')[0]}</span>
+                  </div>
+                `).join('') : `
+                  <p style="font-size: 0.78rem; color: var(--text-muted); padding: 6px;">${i18n.t("lab_empty")}</p>
+                `}
+              </div>
+            </div>
+
             <!-- Prescribed Medications Section -->
             <div style="margin-bottom: 14px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
@@ -955,30 +985,11 @@ class MediKioskApp {
                     </div>
                   `;
                 }).join('') : `
-                  <div style="background: rgba(15, 23, 42, 0.5); border: 1px dashed rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 12px; font-size: 0.78rem; color: var(--text-muted);">
-                    ${i18n.t("rx_empty")}
+                  <div style="background: rgba(15, 23, 42, 0.5); border: 1px dashed rgba(56, 189, 248, 0.2); border-radius: 8px; padding: 10px 14px; font-size: 0.78rem; color: #94A3B8;">
+                    ${latestDoc && ((latestDoc.type || '').includes('pathology') || (latestDoc.categoryLabel || '').toLowerCase().includes('pathology') || (latestDoc.categoryLabel || '').toLowerCase().includes('lab')) ? 
+                      '🔬 <strong>Pathology Diagnostic Report:</strong> Laboratory test values & diagnostic biomarkers extracted above. (No outpatient prescribed medications in this lab report).' : 
+                      i18n.t("rx_empty")}
                   </div>
-                `}
-              </div>
-            </div>
-
-            <!-- Lab Biomarkers Section -->
-            <div>
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                <strong style="font-size: 0.8rem; color: #F87171; text-transform: uppercase;">${i18n.t("lab_heading")}</strong>
-                <span class="pill-3d pill-3d-crimson" style="font-size: 0.7rem;">${allFlags.length} Flags</span>
-              </div>
-              <div style="max-height: 140px; overflow-y: auto;">
-                ${allFlags.length > 0 ? allFlags.map(f => `
-                  <div class="lab-flag-item-3d">
-                    <div>
-                      <strong style="color: #FCA5A5; font-size: 0.82rem;">${f.test || f.param}: ${f.value}</strong>
-                      <p style="font-size: 0.72rem; color: var(--text-muted);">Ref: ${f.ref} [${f.status}]</p>
-                    </div>
-                    <span class="pill-3d pill-3d-crimson">${(f.status || 'ABNORMAL').split(' ')[0]}</span>
-                  </div>
-                `).join('') : `
-                  <p style="font-size: 0.78rem; color: var(--text-muted); padding: 6px;">${i18n.t("lab_empty")}</p>
                 `}
               </div>
             </div>
@@ -997,6 +1008,11 @@ class MediKioskApp {
   // STEP 4: OPD TOKEN & ENCOUNTER SUMMARY
   // ========================================================
   renderStep4Summary() {
+    const qIdx = this.doctorQueue.findIndex(p => p.id === this.patient.id);
+    const qPosition = qIdx >= 0 ? qIdx + 1 : this.doctorQueue.length;
+    const patientsAhead = Math.max(0, qPosition - 1);
+    const estWaitMin = patientsAhead === 0 ? 5 : Math.round(patientsAhead * 7.5);
+
     return `
       <div class="card-3d" style="max-width: 600px; margin: 0 auto; text-align: center;">
         <div style="font-size: 2.8rem; margin-bottom: 8px;">🎉</div>
@@ -1015,6 +1031,10 @@ class MediKioskApp {
           <div style="font-size: 0.88rem; color: #E2E8F0; margin-top: 8px;">
             ${i18n.t("patient_info_label")}: <strong>${this.patient.name || 'Walk-in Patient'}</strong> (${this.patient.age || '--'} ${i18n.t("age_yrs")} / ${i18n.t("gender_" + (this.patient.gender || "Female").toLowerCase()) || this.patient.gender})
           </div>
+          <div style="font-size: 0.82rem; color: #93C5FD; margin-top: 4px;">
+            📱 Registered Mobile: <strong>${this.patient.mobile || '+91 98765 43210'}</strong>
+          </div>
+
           <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1); display: grid; grid-template-columns: 1fr 1fr; gap: 8px; text-align: left; font-size: 0.78rem;">
             <div>
               <span style="color: var(--text-muted);">${i18n.t("assigned_dept_label")}:</span><br>
@@ -1022,7 +1042,28 @@ class MediKioskApp {
             </div>
             <div>
               <span style="color: var(--text-muted);">${i18n.t("est_wait_label")}:</span><br>
-              <strong style="color: #34D399;">${i18n.t("est_wait_val")}</strong>
+              <strong style="color: #34D399;">~${estWaitMin} Minutes (${patientsAhead} Ahead)</strong>
+            </div>
+          </div>
+
+          <!-- Real-Time Mobile SMS Tracker Card -->
+          <div style="margin-top: 14px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 12px; padding: 12px 14px; text-align: left;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 0.82rem; font-weight: 700; color: #38BDF8;">📲 Real-Time 30-Min Mobile Alert</span>
+              <span class="pill-3d ${this.patient.smsAlertSent ? 'pill-3d-emerald' : 'pill-3d-blue'}" id="kioskSmsStatusPill">
+                ${this.patient.smsAlertSent ? '✓ 30-Min SMS Sent' : '⏳ 30-Min Alert Scheduled'}
+              </span>
+            </div>
+            <p style="font-size: 0.76rem; color: #CBD5E1; margin: 0 0 8px 0; line-height: 1.4;">
+              ${this.patient.smsAlertSent ? 
+                `SMS dispatched in real time to registered mobile <strong>${this.patient.mobile || '+91 98765 43210'}</strong>: <em>"Appointment with Dr. Sharma (Cabin 3) is scheduled in ~${estWaitMin} mins (Token ${this.patient.tokenNumber}). Please be near Waiting Area B."</em>` : 
+                `An automated SMS & WhatsApp notification will be sent to your registered mobile <strong>${this.patient.mobile || '+91 98765 43210'}</strong> exactly 30 minutes before your consultation.`
+              }
+            </p>
+            <div style="display: flex; justify-content: flex-end;">
+              <button type="button" class="btn-3d btn-3d-secondary" style="padding: 5px 12px; font-size: 0.74rem;" onclick="window.app.triggerPatient30MinTestSms()">
+                📲 Test Send 30-Min SMS to Registered Mobile Now
+              </button>
             </div>
           </div>
         </div>
@@ -1049,7 +1090,11 @@ class MediKioskApp {
   // DOCTOR OPD CONSULTATION DASHBOARD
   // ========================================================
   renderDoctorDashboard() {
-    const p = this.selectedQueuePatient || this.patient;
+    const currentInCabin = (this.doctorQueue && this.doctorQueue.length > 0) ? this.doctorQueue[0] : null;
+    const p = this.selectedQueuePatient || currentInCabin || this.patient;
+    const isViewingCurrent = currentInCabin && (p.id === currentInCabin.id);
+    const selectedQueueIdx = this.doctorQueue.findIndex(item => item.id === p.id);
+
     const summary = clinicalParser.generateStructuredSummary(p);
     const vitals = p.rppgVitals || { heartRate: "--", hrv: "--", spO2: "--", respiratoryRate: "--", stressScore: "--" };
     const hdiResult = herbDrugService.evaluateInteractions(p.allopathicMeds || [], p.ayushHerbs || []);
@@ -1163,16 +1208,29 @@ class MediKioskApp {
             <div>
               <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                 <h2 style="font-size: 1.35rem; font-weight: 800; color: #FFFFFF; margin: 0;">${p.name || 'Walk-in Patient'}</h2>
-                <span class="pill-3d ${p.isEmergency ? 'pill-3d-crimson' : 'pill-3d-emerald'}">${p.isEmergency ? '🚨 PRIORITY EMERGENCY' : 'TOKEN ' + p.tokenNumber}</span>
+                <span class="pill-3d ${isViewingCurrent ? 'pill-3d-emerald' : 'pill-3d-blue'}" style="font-weight: 800;">
+                  ${isViewingCurrent ? '🟢 IN CABIN (CURRENT PATIENT)' : `📋 REVIEWING QUEUE PATIENT (#${selectedQueueIdx + 1})`}
+                </span>
+                <span class="pill-3d ${p.isEmergency ? 'pill-3d-crimson' : 'pill-3d-blue'}">${p.isEmergency ? '🚨 PRIORITY EMERGENCY' : 'TOKEN ' + p.tokenNumber}</span>
                 <span class="pill-3d pill-3d-blue">ABHA: ${p.abhaId || 'Walk-in'}</span>
                 ${p.smsAlertSent ? `<span class="pill-3d pill-3d-emerald">🔔 30-Min SMS Dispatched</span>` : ''}
               </div>
               <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; margin-bottom: 0;">
-                ${p.age || '--'} Years • ${p.gender} • Mobile: ${p.mobile || 'Not provided'} • Chief Complaint: <span style="color: #E2E8F0;">${p.chiefComplaint || 'None provided'}</span>
+                ${p.age || '--'} Years • ${p.gender} • Registered Mobile: <strong style="color: #6EE7B7;">${p.mobile || 'Not provided'}</strong> • Chief Complaint: <span style="color: #E2E8F0;">${p.chiefComplaint || 'None provided'}</span>
               </p>
+              ${!isViewingCurrent && currentInCabin ? `
+                <div style="margin-top: 6px;">
+                  <button class="btn-3d btn-3d-secondary" style="padding: 4px 10px; font-size: 0.74rem;" onclick="window.app.selectQueuePatient('${currentInCabin.id}')">
+                    ← Return to Current In-Cabin Patient (${currentInCabin.name})
+                  </button>
+                </div>
+              ` : ''}
             </div>
 
-            <div style="display: flex; gap: 8px; align-items: center;">
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+              <button class="btn-3d btn-3d-success" style="padding: 6px 14px; font-size: 0.8rem; font-weight: 700;" onclick="window.app.callNextPatient()" title="Complete consultation for current patient and advance queue">
+                ⏭️ Call Next Patient
+              </button>
               <button class="btn-3d btn-3d-secondary" style="padding: 6px 12px; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;" onclick="window.app.openSmsLogModal()">
                 📨 30-Min SMS Logs (${this.smsDispatchLogs.length})
               </button>
@@ -1694,7 +1752,15 @@ class MediKioskApp {
         return;
       }
 
-      const newMeds = ocrResult.entities?.medications || ocrResult.extractedMedications || [];
+      const isPathologyOrLab = ocrResult.type === "pathology_report" || 
+                               ocrResult.type === "xray_report" || 
+                               ocrResult.type === "ecg_report" ||
+                               (ocrResult.categoryLabel || "").toLowerCase().includes("pathology") ||
+                               (ocrResult.categoryLabel || "").toLowerCase().includes("biochemistry") ||
+                               (ocrResult.categoryLabel || "").toLowerCase().includes("laboratory");
+
+      // Strictly zero out medications if the document is a pathology lab report or diagnostic scan
+      const newMeds = isPathologyOrLab ? [] : (ocrResult.entities?.medications || ocrResult.extractedMedications || []);
       const newDiseases = ocrResult.entities?.diseases || ocrResult.extractedDiseases || [];
       const labFlags = ocrResult.entities?.flags || ocrResult.labFlags || [];
       const labNormals = ocrResult.entities?.normalValues || ocrResult.labNormals || [];
@@ -1708,7 +1774,7 @@ class MediKioskApp {
       );
 
       this.patient.documents.unshift({
-        id: ocrResult.docId,
+        id: ocrResult.docId || ("DOC-" + Math.floor(1000 + Math.random() * 9000)),
         title: ocrResult.title,
         type: ocrResult.type,
         categoryLabel: ocrResult.categoryLabel,
@@ -1718,7 +1784,7 @@ class MediKioskApp {
         flags: labFlags,
         normalValues: labNormals,
         medications: newMeds,
-        structuredPrescriptionJSON: ocrResult.structuredPrescriptionJSON || prescriptionParser.parseToStructuredJSON(ocrResult.extractedText || ''),
+        structuredPrescriptionJSON: isPathologyOrLab ? null : (ocrResult.structuredPrescriptionJSON || prescriptionParser.parseToStructuredJSON(ocrResult.extractedText || '')),
         extractedText: ocrResult.extractedText || ocrResult.rawOcrText || '',
         diseases: allExtractedDiseases
       });
@@ -1731,8 +1797,8 @@ class MediKioskApp {
         this.patient.diseases = this.patient.diagnoses;
       }
 
-      // Update patient medications
-      if (newMeds.length > 0) {
+      // Update patient medications ONLY if the document had authentic prescriptions
+      if (newMeds.length > 0 && !isPathologyOrLab) {
         const existingNames = new Set((this.patient.allopathicMeds || []).map(m => (typeof m === "string" ? m : m.name).toLowerCase()));
         const uniqueNew = newMeds.filter(m => !existingNames.has((typeof m === "string" ? m : m.name).toLowerCase()));
         this.patient.allopathicMeds = [...uniqueNew, ...(this.patient.allopathicMeds || [])];
@@ -1740,7 +1806,8 @@ class MediKioskApp {
       }
 
       this.render();
-      alert(`✅ Verified Medical Document Digitized!\n\nClassification: [${ocrResult.categoryLabel}]\nDiagnostic Finding: ${ocrResult.rootCause}\n• Identified Diseases/Diagnoses: ${allExtractedDiseases.length}\n• Prescribed Medications: ${newMeds.length}\n• Diagnostic Biomarkers: ${labFlags.length}`);
+      const medNotice = isPathologyOrLab ? "• Prescribed Medications: None (Pathology Diagnostic Investigation)" : `• Prescribed Medications: ${newMeds.length}`;
+      alert(`✅ Verified Medical Document Digitized!\n\nClassification: [${ocrResult.categoryLabel}]\nDiagnostic Finding: ${ocrResult.rootCause}\n• Identified Diseases/Diagnoses: ${allExtractedDiseases.length}\n${medNotice}\n• Diagnostic Biomarkers: ${labFlags.length}`);
     } catch (err) {
       this.isOcrProcessing = false;
       this.render();
@@ -2162,17 +2229,18 @@ class MediKioskApp {
       const patientsAhead = idx;
       const waitMinutes = Math.round(patientsAhead * 7.5);
 
-      // Trigger condition: Position 4 (i.e. 4 patients ahead, index 3 or wait time approx 30 minutes)
-      if ((patientsAhead === 4 || idx === 3) && !patient.smsAlertSent) {
-        const estTime = new Date(Date.now() + 30 * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      // Trigger condition: Patients approximately 30 minutes away from consultation (20 to 35 mins or 3-4 patients ahead)
+      if ((patientsAhead === 4 || patientsAhead === 3 || (waitMinutes >= 20 && waitMinutes <= 35)) && !patient.smsAlertSent) {
+        const estTime = new Date(Date.now() + Math.max(15, waitMinutes) * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         patient.smsAlertSent = true;
         patient.smsAlertTime = estTime;
 
+        const mobileNum = patient.mobile || "+91 98765 43210";
         const logItem = {
           id: "SMS-" + Math.floor(100 + Math.random() * 900),
           patientId: patient.id,
-          patientName: patient.name,
-          mobile: patient.mobile || "+91 98980 12345",
+          patientName: patient.name || "Patient",
+          mobile: mobileNum,
           token: patient.tokenNumber,
           queuePosition: idx + 1,
           patientsAhead: patientsAhead,
@@ -2180,10 +2248,11 @@ class MediKioskApp {
           dispatchTimestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           status: "Delivered ✓",
           channel: "SMS Gateway + WhatsApp Cloud API",
-          message: `Dear ${patient.name}, your appointment with Dr. Sharma (OPD Cabin 3) is scheduled after ${patientsAhead} patients at approx ${estTime} (approx 30 mins). Token: ${patient.tokenNumber}. Please be ready near Waiting Zone B.`
+          message: `Dear ${patient.name || 'Patient'}, your appointment with Dr. Sharma (OPD Cabin 3) is scheduled after ${patientsAhead} patients at approx ${estTime} (in ~${waitMinutes} mins). Token: ${patient.tokenNumber}. Please be ready near Waiting Zone B.`
         };
 
         this.smsDispatchLogs.unshift(logItem);
+        this.showDoctorToast(`📲 Real-Time 30-Min Alert Sent to Registered Mobile: ${mobileNum} (${patient.name || 'Patient'}) for approx ${estTime}!`);
       }
     });
   }
@@ -2199,11 +2268,12 @@ class MediKioskApp {
     patient.smsAlertSent = true;
     patient.smsAlertTime = estTime;
 
+    const mobileNum = patient.mobile || "+91 98765 43210";
     const logItem = {
       id: "SMS-" + Math.floor(100 + Math.random() * 900),
       patientId: patient.id,
-      patientName: patient.name,
-      mobile: patient.mobile || "+91 98765 43210",
+      patientName: patient.name || "Patient",
+      mobile: mobileNum,
       token: patient.tokenNumber,
       queuePosition: idx + 1,
       patientsAhead: patientsAhead,
@@ -2211,11 +2281,63 @@ class MediKioskApp {
       dispatchTimestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       status: "Delivered ✓",
       channel: "SMS Gateway + WhatsApp Cloud API",
-      message: `Dear ${patient.name}, your appointment with Dr. Sharma (OPD Cabin 3) is scheduled after ${patientsAhead} patients at approx ${estTime} (approx ${waitMinutes} mins). Token: ${patient.tokenNumber}. Please be ready near Waiting Zone B.`
+      message: `Dear ${patient.name || 'Patient'}, your appointment with Dr. Sharma (OPD Cabin 3) is scheduled after ${patientsAhead} patients at approx ${estTime} (approx ${waitMinutes} mins). Token: ${patient.tokenNumber}. Please be ready near Waiting Zone B.`
     };
 
     this.smsDispatchLogs.unshift(logItem);
-    this.showDoctorToast(`📲 30-Min Appointment Notification sent to ${patient.name} (${patient.mobile}) for approx ${estTime}!`);
+    this.showDoctorToast(`📲 Real-Time 30-Min SMS sent to registered mobile ${mobileNum} (${patient.name}) for approx ${estTime}!`);
+    alert(`📲 Real-Time SMS Alert Dispatched!\n\nTo Registered Mobile: ${mobileNum}\nPatient: ${patient.name}\nStatus: Delivered ✓\nMessage: "${logItem.message}"`);
+    this.render();
+  }
+
+  callNextPatient() {
+    if (!this.doctorQueue || this.doctorQueue.length === 0) {
+      alert("No more patients waiting in the queue.");
+      return;
+    }
+    const completed = this.doctorQueue.shift();
+    this.showDoctorToast(`✓ Consultation completed for ${completed.name} (Token ${completed.tokenNumber}). Queue updated.`);
+    this.selectedQueuePatient = this.doctorQueue[0] || null;
+    this.checkAndTrigger30MinAlerts();
+    if (this.selectedQueuePatient) {
+      speechService.speak(`Token number ${this.selectedQueuePatient.tokenNumber}, ${this.selectedQueuePatient.name}, please enter OPD Cabin 3.`);
+    }
+    this.render();
+  }
+
+  triggerPatient30MinTestSms() {
+    const mobile = this.patient.mobile || "+91 98765 43210";
+    const qIdx = this.doctorQueue.findIndex(p => p.id === this.patient.id);
+    const patientsAhead = Math.max(1, qIdx >= 0 ? qIdx : 4);
+    const estWaitMin = Math.round(patientsAhead * 7.5);
+    const estTime = new Date(Date.now() + estWaitMin * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    this.patient.smsAlertSent = true;
+    this.patient.smsAlertTime = estTime;
+
+    if (qIdx >= 0) {
+      this.doctorQueue[qIdx].smsAlertSent = true;
+      this.doctorQueue[qIdx].smsAlertTime = estTime;
+    }
+
+    const logItem = {
+      id: "SMS-" + Math.floor(100 + Math.random() * 900),
+      patientId: this.patient.id,
+      patientName: this.patient.name || "Walk-in Patient",
+      mobile: mobile,
+      token: this.patient.tokenNumber,
+      queuePosition: qIdx >= 0 ? qIdx + 1 : this.doctorQueue.length,
+      patientsAhead: patientsAhead,
+      scheduledTime: estTime,
+      dispatchTimestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      status: "Delivered ✓",
+      channel: "SMS Gateway + WhatsApp Cloud API",
+      message: `Dear ${this.patient.name || 'Patient'}, your appointment with Dr. Sharma (OPD Cabin 3) is scheduled after ${patientsAhead} patients at approx ${estTime} (in ~${estWaitMin} mins). Token: ${this.patient.tokenNumber}. Please be ready near Waiting Zone B.`
+    };
+
+    this.smsDispatchLogs.unshift(logItem);
+    this.showDoctorToast(`📲 Real-Time 30-Min SMS Alert sent to registered mobile ${mobile} (${this.patient.name || 'Patient'})!`);
+    alert(`📲 Real-Time SMS Alert Dispatched!\n\nTo Registered Mobile: ${mobile}\nStatus: Delivered ✓\nMessage: "${logItem.message}"`);
     this.render();
   }
 
@@ -2514,7 +2636,8 @@ class MediKioskApp {
       }
     ];
 
-    this.selectedQueuePatient = this.doctorQueue[3];
+    // Default to the CURRENT active consulting patient in OPD Cabin 3
+    this.selectedQueuePatient = this.doctorQueue[0];
   }
 
   acceptSummary() {

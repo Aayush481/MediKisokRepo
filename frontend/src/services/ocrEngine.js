@@ -168,8 +168,20 @@ class OCREngine {
     let syndromicText = "";
     let xrayDetails = null;
 
-    // 1. Medications: check all clinical documents (prescriptions, discharge, medical records)
-    extractedMedications = prescriptionParser.parsePrescriptionText(ocrText || fileName);
+    // 1. Medications: Strictly ONLY extract if the document is an authentic doctor prescription or discharge medication chart.
+    // Pathology lab reports, biochemistry tests, X-rays, and ECGs NEVER contain prescribed medications.
+    const isLabOrImaging = classification.type === "pathology_report" || 
+                           classification.type === "xray_report" || 
+                           classification.type === "ecg_report" ||
+                           (classification.categoryLabel || "").toLowerCase().includes("pathology") ||
+                           (classification.categoryLabel || "").toLowerCase().includes("biochemistry") ||
+                           (classification.categoryLabel || "").toLowerCase().includes("laboratory");
+
+    if (!isLabOrImaging && (classification.type === "prescription" || classification.type === "discharge_summary" || classification.type === "medical_record")) {
+      extractedMedications = prescriptionParser.parsePrescriptionText(ocrText || fileName);
+    } else {
+      extractedMedications = [];
+    }
 
     // 2. Lab tests: check if pathology or contains lab parameters
     if (classification.type === "pathology_report" || /\b(cbc|wbc|rbc|hb|haemoglobin|platelet|pcv|mcv|mch|glucose|sugar|creatinine|urea|sgpt|sgot|tsh|lipid|cholesterol)\b/i.test(ocrText)) {
