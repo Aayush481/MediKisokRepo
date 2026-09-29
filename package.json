@@ -1,0 +1,32 @@
+{
+  "name": "medikiosk-sih-2026",
+  "version": "1.0.0",
+  "description": "AI-Powered Multimodal Clinical History Elicitation, AYUSH Dashavidha Pariksha & Medical Document Digitization Platform for Smart India Hackathon",
+  "type": "module",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "node backend/server.js",
+    "server": "node backend/server.js",
+    "test": "node test_advanced_prescription_and_lab_summary.js && node test_doc_detection_suite.js && node test_prescription_engine.js"
+  },
+  "keywords": [
+    "sih2026",
+    "medikiosk",
+    "clinical-intake",
+    "abdm",
+    "fhir",
+    "ayush",
+    "prakriti",
+    "medical-ocr",
+    "healthcare-ai"
+  ],
+  "author": "SIH Team",
+  "license": "MIT",
+  "dependencies": {
+    "@mediapipe/tasks-vision": "^1.0.1",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.4",
+    "express": "^5.2.1",
+    "tesseract.js": "^7.0.0"
+  }
+}

@@ -1,0 +1,1203 @@
+/**
+ * MediKiosk 3D Real-World Clinical Hardware & Terminal Design System
+ * Human-Crafted Tactile Industrial Design for Hospital Kiosks & Doctor OPD Suites
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+:root {
+  /* Surface & Background Depths */
+  --bg-darkest: #070B14;
+  --bg-primary: #0B1120;
+  --bg-secondary: #0F172A;
+  --bg-card: rgba(18, 26, 44, 0.85);
+  --bg-card-elevated: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%);
+  --bg-card-glass: rgba(255, 255, 255, 0.03);
+  --bg-surface-inset: #050811;
+
+  /* Clinical Accents */
+  --emerald: #10B981;
+  --emerald-glow: rgba(16, 185, 129, 0.4);
+  --emerald-dark: #064E3B;
+  --cyan: #06B6D4;
+  --cyan-glow: rgba(6, 182, 212, 0.35);
+  --blue: #3B82F6;
+  --blue-glow: rgba(59, 130, 246, 0.35);
+  --teal: #0D9488;
+  --amber: #F59E0B;
+  --amber-glow: rgba(245, 158, 11, 0.35);
+  --crimson: #EF4444;
+  --crimson-glow: rgba(239, 68, 68, 0.4);
+  --purple: #8B5CF6;
+
+  /* Typography Colors */
+  --text-primary: #F8FAFC;
+  --text-secondary: #CBD5E1;
+  --text-muted: #94A3B8;
+  --text-dim: #64748B;
+
+  /* 3D Borders & Real-World Shadows */
+  --border-light: rgba(255, 255, 255, 0.08);
+  --border-specular: 1px solid rgba(255, 255, 255, 0.14);
+  --border-active: 1.5px solid rgba(6, 182, 212, 0.7);
+  --shadow-3d-card: 0 20px 40px -15px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  --shadow-3d-elevated: 0 25px 50px -12px rgba(0, 0, 0, 0.85), 0 0 20px rgba(6, 182, 212, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  --shadow-3d-button: 0 4px 14px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  --shadow-3d-inset: inset 0 2px 6px rgba(0, 0, 0, 0.6), 0 1px 0 rgba(255, 255, 255, 0.05);
+
+  /* Fonts */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Outfit', var(--font-sans);
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-darkest);
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(14, 165, 233, 0.08) 0%, transparent 60%),
+    radial-gradient(circle at 100% 100%, rgba(16, 185, 129, 0.05) 0%, transparent 50%),
+    linear-gradient(180deg, #070B14 0%, #0B1120 100%);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ========================================================
+   TOP CLINICAL HARDWARE TERMINAL HEADER
+   ======================================================== */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.9rem 2rem;
+  background: rgba(11, 17, 32, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-badge {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #0284C7 0%, #0D9488 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  box-shadow: 0 6px 16px rgba(2, 132, 199, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.brand-text h1 {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(90deg, #FFFFFF 0%, #E2E8F0 60%, #38BDF8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1.1;
+}
+
+.brand-text p {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* 3D Hardware Mode Switcher */
+.mode-toggle-group {
+  display: flex;
+  background: var(--bg-surface-inset);
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: var(--shadow-3d-inset);
+}
+
+.mode-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 7px 16px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mode-btn.active {
+  background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
+  color: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.mode-btn:hover:not(.active) {
+  color: var(--text-primary);
+}
+
+.lang-select {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--shadow-3d-button);
+  outline: none;
+}
+
+/* Terminal Quick Ingestion Bar */
+.kiosk-quick-bar {
+  background: rgba(15, 23, 42, 0.65);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 0.6rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  backdrop-filter: blur(10px);
+}
+
+.quick-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.quick-bar-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.quick-chip {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  padding: 4px 12px;
+  border-radius: 8px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.quick-chip:hover {
+  background: rgba(51, 65, 85, 0.8);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
+}
+
+/* ========================================================
+   MAIN CONTAINER & 3D STEP WIZARD
+   ======================================================== */
+.main-wrapper {
+  max-width: 1380px;
+  margin: 1.5rem auto;
+  padding: 0 1.5rem;
+}
+
+/* Step Progress Indicator (Hospital Touch Kiosk Ribbon) */
+.kiosk-stepper {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 1.75rem;
+}
+
+.step-node {
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  padding: 12px 16px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: var(--shadow-3d-card);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.step-node::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.step-node.active {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.5);
+  box-shadow: var(--shadow-3d-elevated);
+}
+
+.step-node.active::before {
+  background: linear-gradient(90deg, #38BDF8, #10B981);
+}
+
+.step-node.completed {
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.step-node.completed::before {
+  background: #10B981;
+}
+
+.step-number {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.step-node.active .step-number {
+  background: linear-gradient(135deg, #0284C7, #0D9488);
+  color: #FFFFFF;
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 10px rgba(2, 132, 199, 0.4);
+}
+
+.step-node.completed .step-number {
+  background: #065F46;
+  color: #34D399;
+  border-color: #10B981;
+}
+
+.step-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.step-node.active .step-label {
+  color: #FFFFFF;
+}
+
+.step-node.completed .step-label {
+  color: #CBD5E1;
+}
+
+.step-subtext {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+
+/* ========================================================
+   3D REAL-WORLD TACTILE CARDS & CONTAINERS
+   ======================================================== */
+.card-3d {
+  background: var(--bg-card);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: var(--shadow-3d-card);
+  padding: 1.75rem;
+  position: relative;
+}
+
+.card-header-3d {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.card-title-3d {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  letter-spacing: -0.01em;
+}
+
+.card-subtitle-3d {
+  font-size: 0.84rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* ========================================================
+   3D BIOMETRIC CAMERA BAY & TELEMETRY VITALS
+   ======================================================== */
+.vitals-hardware-bay {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(8, 12, 22, 0.9) 100%);
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-3d-card);
+  margin-bottom: 1.5rem;
+}
+
+.bay-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+/* Camera Lens Frame & Reticle HUD */
+.camera-hardware-lens {
+  position: relative;
+  height: 200px;
+  border-radius: 14px;
+  background: #020617;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.9);
+}
+
+.reticle-hud {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 140px;
+  height: 170px;
+  border: 2px dashed rgba(245, 158, 11, 0.6);
+  border-radius: 50% 50% 45% 45%;
+  pointer-events: none;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reticle-hud.locked {
+  border: 2.5px solid #10B981;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.4), inset 0 0 15px rgba(16, 185, 129, 0.2);
+}
+
+.reticle-status-badge {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Real-Time Pulse Waveform Oscilloscope */
+.pulse-waveform-canvas {
+  width: 100%;
+  height: 38px;
+  background: rgba(2, 6, 23, 0.7);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  margin-top: 8px;
+}
+
+.oscilloscope-container-3d {
+  background: rgba(2, 6, 23, 0.85);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 10px;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.8);
+}
+
+.oscilloscope-canvas-3d {
+  width: 100%;
+  height: 52px;
+  display: block;
+  border-radius: 6px;
+  background: radial-gradient(circle at center, rgba(6, 78, 59, 0.15) 0%, rgba(2, 6, 23, 0.95) 100%);
+}
+
+.oscilloscope-legend {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: #38BDF8;
+  margin-bottom: 4px;
+}
+
+/* 5-Point Alignment Status Checklist */
+.checklist-pill-bar {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.pill-check {
+  background: rgba(2, 6, 23, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.pill-check.pass {
+  background: rgba(6, 78, 59, 0.5);
+  border-color: #10B981;
+  color: #6EE7B7;
+  font-weight: 700;
+}
+
+/* 3D Telemetry Vitals Grid */
+.telemetry-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-top: 1rem;
+}
+
+.telemetry-card {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.85) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 12px;
+  text-align: center;
+  box-shadow: var(--shadow-3d-card);
+  position: relative;
+  overflow: hidden;
+}
+
+.telemetry-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.telemetry-card.highlight {
+  border-color: var(--crimson);
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.25);
+}
+
+.telemetry-card.highlight::before {
+  background: var(--crimson);
+}
+
+.telemetry-value {
+  font-family: var(--font-display);
+  font-size: 1.65rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  line-height: 1.1;
+}
+
+.telemetry-unit {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-left: 2px;
+}
+
+.telemetry-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-top: 4px;
+}
+
+.telemetry-status {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--emerald);
+  margin-top: 2px;
+}
+
+/* ========================================================
+   3D INTERACTIVE ANATOMICAL BODY MAP
+   ======================================================== */
+.bodymap-hardware-box {
+  background: var(--bg-card);
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-3d-card);
+  text-align: center;
+}
+
+.bodymap-svg-container {
+  display: flex;
+  justify-content: center;
+  margin: 1rem 0;
+}
+
+.human-silhouette {
+  width: 190px;
+  height: 260px;
+}
+
+.body-zone-target {
+  fill: rgba(30, 41, 59, 0.8);
+  stroke: rgba(56, 189, 248, 0.4);
+  stroke-width: 1.5;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.body-zone-target:hover {
+  fill: rgba(56, 189, 248, 0.3);
+  stroke: #38BDF8;
+  filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.6));
+}
+
+.body-zone-target.selected {
+  fill: rgba(239, 68, 68, 0.45);
+  stroke: #EF4444;
+  filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.8));
+}
+
+/* ========================================================
+   VOICE INTAKE & SOCRATES CLINICAL PROBING
+   ======================================================== */
+.voice-station-3d {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.8) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: var(--shadow-3d-card);
+  margin-bottom: 1.25rem;
+}
+
+.mic-tactile-button {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%);
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  color: #FFFFFF;
+  font-size: 1.8rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(2, 132, 199, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mic-tactile-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(2, 132, 199, 0.6);
+}
+
+.mic-tactile-button.listening {
+  background: linear-gradient(135deg, #EF4444 0%, #B91C1C 100%);
+  box-shadow: 0 0 30px rgba(239, 68, 68, 0.8);
+  animation: pulse-microphone 1.2s infinite;
+}
+
+@keyframes pulse-microphone {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+/* Form Controls & Real-World Inputs */
+.input-label-3d {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  text-align: left;
+}
+
+.input-text-3d {
+  width: 100%;
+  background: var(--bg-surface-inset);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 11px 14px;
+  color: #FFFFFF;
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  outline: none;
+  box-shadow: var(--shadow-3d-inset);
+  transition: border-color 0.2s;
+}
+
+.input-text-3d:focus {
+  border-color: #38BDF8;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.25), var(--shadow-3d-inset);
+}
+
+/* 3D Chip Selector */
+.chip-rack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.tactile-chip {
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.tactile-chip:hover {
+  background: rgba(51, 65, 85, 0.8);
+  color: #FFFFFF;
+}
+
+.tactile-chip.selected {
+  background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
+}
+
+/* ========================================================
+   3D PHYSICAL TACTILE BUTTONS
+   ======================================================== */
+.btn-3d {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  font-weight: 700;
+  border-radius: 12px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+  box-shadow: var(--shadow-3d-button);
+}
+
+.btn-3d:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.btn-3d-primary {
+  background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%);
+  color: #FFFFFF;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.btn-3d-primary:hover {
+  background: linear-gradient(135deg, #0369A1 0%, #075985 100%);
+}
+
+.btn-3d-success {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  color: #FFFFFF;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.btn-3d-success:hover {
+  background: linear-gradient(135deg, #047857 0%, #065F46 100%);
+}
+
+.btn-3d-secondary {
+  background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
+  color: var(--text-secondary);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.btn-3d-secondary:hover {
+  background: rgba(51, 65, 85, 0.9);
+  color: #FFFFFF;
+}
+
+.btn-3d-danger {
+  background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
+  color: #FFFFFF;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* ========================================================
+   PRESCRIPTION & LAB DOCUMENT DIGITIZER BAY
+   ======================================================== */
+.scanner-dropzone-3d {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.6) 0%, rgba(2, 6, 23, 0.8) 100%);
+  border: 2px dashed rgba(56, 189, 248, 0.4);
+  border-radius: 16px;
+  padding: 2.25rem 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-3d-inset);
+  transition: all 0.3s;
+}
+
+.scanner-dropzone-3d:hover,
+.scanner-dropzone-3d.dragover {
+  border-color: #38BDF8;
+  background: rgba(14, 165, 233, 0.08);
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.2), var(--shadow-3d-inset);
+}
+
+.medication-card-3d {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 4px solid var(--emerald);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.lab-flag-item-3d {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* ========================================================
+   DOCTOR OPD CONSULTATION SUITE
+   ======================================================== */
+.doctor-layout-3d {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.queue-panel-3d {
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 1.25rem;
+  box-shadow: var(--shadow-3d-card);
+}
+
+.queue-patient-card-3d {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.queue-patient-card-3d:hover {
+  background: rgba(51, 65, 85, 0.7);
+}
+
+.queue-patient-card-3d.active {
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.2) 0%, rgba(13, 148, 136, 0.2) 100%);
+  border: 1.5px solid #38BDF8;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.25);
+}
+
+.queue-patient-card-3d.emergency {
+  border-color: var(--crimson);
+  background: rgba(239, 68, 68, 0.15);
+}
+
+/* Herb-Drug Interaction Alert Box */
+.hdi-alert-box-3d {
+  background: linear-gradient(135deg, rgba(69, 10, 10, 0.8) 0%, rgba(30, 41, 59, 0.9) 100%);
+  border: 1.5px solid var(--crimson);
+  border-radius: 14px;
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 10px 30px rgba(239, 68, 68, 0.25);
+}
+
+/* Modal Windows */
+.modal-backdrop-3d {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.85);
+  backdrop-filter: blur(16px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1.5rem;
+}
+
+.modal-content-3d {
+  background: var(--bg-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  padding: 1.75rem;
+  box-shadow: var(--shadow-3d-elevated);
+  width: 100%;
+  max-width: 850px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Utility Pills */
+.pill-3d {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.pill-3d-emerald {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.5);
+  color: #6EE7B7;
+}
+
+.pill-3d-crimson {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  color: #FCA5A5;
+}
+
+.pill-3d-blue {
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.5);
+  color: #93C5FD;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .kiosk-stepper { grid-template-columns: 1fr 1fr; }
+  .telemetry-grid { grid-template-columns: repeat(3, 1fr); }
+  .doctor-layout-3d { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  .telemetry-grid { grid-template-columns: 1fr 1fr; }
+  .kiosk-stepper { grid-template-columns: 1fr; }
+}
+
+/* ========================================================
+   ORGANIZED DOCTOR OPD CONSULTATION WORKSPACE
+   ======================================================== */
+.doctor-tabs-3d {
+  display: flex;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 6px;
+  margin-bottom: 1.25rem;
+  overflow-x: auto;
+}
+
+.doctor-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+}
+
+.doctor-tab-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #FFFFFF;
+}
+
+.doctor-tab-btn.active {
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.25) 0%, rgba(13, 148, 136, 0.25) 100%);
+  border: 1px solid #38BDF8;
+  color: #38BDF8;
+  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.2);
+}
+
+/* Document KPI Ribbon */
+.doc-kpi-ribbon {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+  margin-bottom: 1.25rem;
+}
+
+.doc-kpi-card {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 10px 14px;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.doc-kpi-card:hover {
+  border-color: rgba(56, 189, 248, 0.4);
+  background: rgba(30, 41, 59, 0.8);
+}
+
+.doc-kpi-val {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #FFFFFF;
+}
+
+.doc-kpi-lbl {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* Prescriptions Table & Cards */
+.rx-table-container {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.5);
+  margin-top: 10px;
+}
+
+.rx-table-3d {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.rx-table-3d th {
+  background: rgba(30, 41, 59, 0.8);
+  color: #93C5FD;
+  text-align: left;
+  padding: 10px 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.74rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.rx-table-3d td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: #E2E8F0;
+  vertical-align: middle;
+}
+
+.rx-table-3d tr:hover {
+  background: rgba(56, 189, 248, 0.04);
+}
+
+/* Document Previews Gallery */
+.doc-preview-gallery-3d {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.doc-card-preview-3d {
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+.doc-card-preview-3d:hover {
+  transform: translateY(-3px);
+  border-color: #38BDF8;
+  box-shadow: 0 10px 24px rgba(56, 189, 248, 0.25);
+}
+
+.doc-card-thumb-container {
+  height: 170px;
+  background: #0B0F19;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.doc-card-thumb-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: transform 0.3s;
+}
+
+.doc-card-thumb-container:hover img {
+  transform: scale(1.05);
+}
+
+.doc-card-thumb-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.doc-card-thumb-container:hover .doc-card-thumb-overlay {
+  opacity: 1;
+}
+
+.doc-card-body {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+/* 30-Min Queue Notification Alert Badges & Controls */
+.queue-30min-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.2) 0%, rgba(245, 158, 11, 0.25) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.6);
+  color: #FDE047;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
+  margin-top: 6px;
+  animation: pulse-soft 2s infinite;
+}
+
+.queue-30min-badge.sent {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.25) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.6);
+  color: #6EE7B7;
+  animation: none;
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.btn-sms-alert-3d {
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.5);
+  color: #38BDF8;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-sms-alert-3d:hover {
+  background: #38BDF8;
+  color: #020617;
+  box-shadow: 0 2px 8px rgba(56, 189, 248, 0.4);
+}
+
+/* Toast Notifications */
+.doctor-toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.doctor-toast-3d {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%);
+  border: 1.5px solid #38BDF8;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(56, 189, 248, 0.3);
+  backdrop-filter: blur(16px);
+  border-radius: 12px;
+  padding: 12px 16px;
+  color: #FFFFFF;
+  max-width: 420px;
+  pointer-events: auto;
+  animation: toast-slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes toast-slide-in {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}

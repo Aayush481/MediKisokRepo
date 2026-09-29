@@ -1,0 +1,82 @@
+# ==============================================================================
+# MediKiosk .gitignore
+# Prevents sensitive credentials, dependency bloat, caches, and test artifacts
+# ==============================================================================
+
+# 1. Sensitive Environment Variables & API Keys
+.env
+.env.local
+.env.*.local
+.env.development
+.env.test
+.env.production
+!.env.example
+
+# 2. Node Dependencies & Build Artifacts
+node_modules/
+dist/
+build/
+coverage/
+.npm/
+
+# 3. Logs & Process Dumps
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# 4. Large OCR Models, Trained Data & Scratch Test Artifacts
+eng.traineddata
+*.traineddata
+care_extracted_*.jpg
+*.tmp
+*.temp
+
+# 5. Python Bytecode, Caches & Virtual Envs
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.pytest_cache/
+
+# 6. Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# 7. IDE & Agent Directories
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+.gemini/

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MediKiosk - Smart Clinical Intake & Diagnostic Digitization Platform</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩺</text></svg>">
+  <!-- PDF.js for Universal Medical PDF Parsing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <!-- Tesseract.js for Real-Time OCR -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <!-- MediaPipe FaceMesh for Contactless rPPG Facial Tracking -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+</head>
+<body>
+
+  <!-- 3D Hardware Navigation Bar -->
+  <header class="navbar">
+    <div class="brand">
+      <div class="brand-badge">🩺</div>
+      <div class="brand-text">
+        <h1>MediKiosk Terminal</h1>
+        <p>Smart Clinical Intake & ABDM-FHIR First-Mile Digitization</p>
+      </div>
+    </div>
+
+    <div class="nav-actions">
+      <!-- Hardware Mode Switcher -->
+      <div class="mode-toggle-group">
+        <button class="mode-btn active" data-mode="kiosk">
+          🖥️ Patient Kiosk Terminal
+        </button>
+        <button class="mode-btn" data-mode="doctor">
+          👨‍⚕️ Doctor OPD Desk
+        </button>
+      </div>
+
+      <!-- Language Selector -->
+      <select id="langSelect" class="lang-select">
+        <option value="hi">🇮🇳 Hindi (हिन्दी)</option>
+        <option value="en">🇬🇧 English</option>
+        <option value="bn">🇮🇳 Bengali (বাংলা)</option>
+        <option value="ta">🇮🇳 Tamil (தமிழ்)</option>
+        <option value="te">🇮🇳 Telugu (తెలుగు)</option>
+        <option value="mr">🇮🇳 Marathi (मराठी)</option>
+      </select>
+    </div>
+  </header>
+
+  <!-- Kiosk Quick Toolbar -->
+  <aside class="kiosk-quick-bar">
+    <div class="quick-bar-left">
+      <span>🏥 <strong>Clinical Intake Mode</strong> (Live OPD Station)</span>
+    </div>
+    <div class="quick-bar-actions">
+      <button class="quick-chip" onclick="window.app.resetSession()">
+        ➕ New Walk-In Patient
+      </button>
+      <button class="quick-chip" onclick="window.app.goToStep(2)">
+        👁️ Optical Vitals Scan
+      </button>
+      <button class="quick-chip" onclick="window.app.goToStep(3); window.app.triggerFileInput();">
+        📄 Scan Prescription / Lab Report
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Application Container -->
+  <main class="main-wrapper" id="appContainer">
+    <!-- Rendered dynamically by src/app.js -->
+  </main>
+
+  <!-- HL7 FHIR JSON Inspection Modal -->
+  <div id="fhirModal" class="modal-backdrop-3d" style="display: none;">
+    <div class="modal-content-3d">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 1.4rem;">🌐</span>
+          <h3 style="font-size: 1.15rem; font-weight: 800; color: #FFFFFF;">ABDM HL7 FHIR R4 Bundle Record</h3>
+        </div>
+        <button class="btn-3d btn-3d-secondary" style="padding: 4px 10px; font-size: 0.8rem;" onclick="window.app.closeFhirModal()">✕</button>
+      </div>
+
+      <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+        Standardized Ayushman Bharat Digital Mission (ABDM) compliant Health Information Exchange (HIE) bundle.
+      </p>
+
+      <div style="background: #020617; border-radius: 12px; padding: 1rem; overflow: auto; flex: 1; border: 1px solid rgba(255,255,255,0.08);">
+        <pre id="fhirCodeBlock" style="font-family: var(--font-mono); font-size: 0.76rem; color: #38BDF8;"></pre>
+      </div>
+
+      <div style="margin-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 0.75rem; color: #34D399; font-weight: 600;">✓ Composition, Condition, Observation & MedicationStatement Included</span>
+        <button class="btn-3d btn-3d-primary" onclick="window.app.closeFhirModal()">Close Viewer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Medical Document Full-Size Viewer Modal -->
+  <div id="docViewerModal" class="modal-backdrop-3d" style="display: none;">
+    <div class="modal-content-3d" style="max-width: 900px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span id="docViewerIcon" style="font-size: 1.4rem;">📄</span>
+          <div>
+            <h3 id="docViewerTitle" style="font-size: 1.1rem; color: #FFFFFF; font-weight: 800;">Original Medical Document</h3>
+            <span id="docViewerCategory" class="pill-3d pill-3d-blue">Prescription</span>
+          </div>
+        </div>
+        <button class="btn-3d btn-3d-secondary" style="padding: 4px 10px; font-size: 0.8rem;" onclick="window.app.closeDocViewer()">✕</button>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 1rem; flex: 1; overflow: hidden;">
+        <!-- Left: Image Preview -->
+        <div style="background: #020617; border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.08);">
+          <img id="docViewerImage" src="" alt="Document Scan" style="max-width: 100%; max-height: 50vh; object-fit: contain;">
+        </div>
+
+        <!-- Right: Extracted Clinical Findings -->
+        <div style="background: rgba(15, 23, 42, 0.6); border-radius: 12px; padding: 1rem; overflow-y: auto; border: 1px solid rgba(255,255,255,0.08);">
+          <h4 style="color: #93C5FD; font-size: 0.85rem; font-weight: 700; margin-bottom: 8px;">Extracted Clinical Content</h4>
+          <pre id="docViewerText" style="font-family: var(--font-mono); font-size: 0.75rem; color: #E2E8F0; white-space: pre-wrap; line-height: 1.4;"></pre>
+        </div>
+      </div>
+
+      <div style="margin-top: 1rem; display: flex; justify-content: flex-end;">
+        <button class="btn-3d btn-3d-secondary" onclick="window.app.closeDocViewer()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Core App Scripts (ES Module) -->
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>
