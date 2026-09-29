@@ -119,6 +119,18 @@ class SpeechService {
     utterance.rate = 0.95; // Slightly slower for clear elderly understanding
     utterance.pitch = 1.0;
 
+    // Pick best matching native voice if available
+    try {
+      const voices = window.speechSynthesis.getVoices();
+      if (voices && voices.length > 0) {
+        const prefix = (langMap[lang] || "en-IN").split("-")[0].toLowerCase();
+        const matched = voices.find(v => v.lang.toLowerCase().startsWith(prefix));
+        if (matched) {
+          utterance.voice = matched;
+        }
+      }
+    } catch (e) {}
+
     if (onEnd) {
       utterance.onend = onEnd;
       utterance.onerror = onEnd;

@@ -17,6 +17,7 @@ import { herbDrugService } from "./services/herbDrugService.js";
 import { clinicalGraphService } from "./services/clinicalKnowledgeGraph.js";
 import { meshService } from "./services/meshService.js";
 import { diseaseExtractor } from "./services/diseaseExtractor.js";
+import { i18n } from "./services/i18nService.js";
 
 function generateMedicalDocSvg(type, title, facility, items = [], rootCause = "", patientName = "Priya Patel", token = "A-24") {
   const isRx = type === "prescription";
@@ -115,7 +116,7 @@ class MediKioskApp {
   constructor() {
     this.currentMode = "kiosk"; // "kiosk" | "doctor"
     this.currentStep = 1; // 1: Check-In, 2: Vitals & Intake, 3: Records, 4: Summary
-    this.currentLanguage = "hi";
+    this.currentLanguage = i18n.getLanguage() || "hi";
     this.isAyushMode = false;
     this.isOcrProcessing = false;
     this.ocrProgressText = "";
@@ -186,6 +187,11 @@ class MediKioskApp {
   }
 
   init() {
+    this.currentLanguage = i18n.getLanguage() || "hi";
+    speechService.setLanguage(this.currentLanguage);
+    const langSelect = document.getElementById("langSelect");
+    if (langSelect) langSelect.value = this.currentLanguage;
+    this.updateStaticHeaderTranslations();
     this.bindGlobalEvents();
     this.render();
   }
@@ -206,6 +212,40 @@ class MediKioskApp {
     }
   }
 
+  updateStaticHeaderTranslations() {
+    const kBtn = document.querySelector('.mode-btn[data-mode="kiosk"]');
+    if (kBtn) kBtn.textContent = i18n.t("mode_kiosk");
+    const dBtn = document.querySelector('.mode-btn[data-mode="doctor"]');
+    if (dBtn) dBtn.textContent = i18n.t("mode_doctor");
+
+    const quickIntake = document.querySelector(".quick-bar-left span");
+    if (quickIntake) quickIntake.innerHTML = `🏥 <strong>${i18n.t("quick_intake_mode")}</strong>`;
+
+    const quickChips = document.querySelectorAll(".quick-bar-actions .quick-chip");
+    if (quickChips.length >= 3) {
+      quickChips[0].textContent = i18n.t("quick_new_patient");
+      quickChips[1].textContent = i18n.t("quick_optical_scan");
+      quickChips[2].textContent = i18n.t("quick_scan_report");
+    }
+
+    const langSelect = document.getElementById("langSelect");
+    if (langSelect && langSelect.value !== this.currentLanguage) {
+      langSelect.value = this.currentLanguage;
+    }
+  }
+
+  appendSymptom(sym) {
+    const textarea = document.getElementById("chiefComplaintText");
+    if (!textarea) return;
+    const current = textarea.value.trim();
+    if (!current) {
+      textarea.value = sym;
+    } else if (!current.toLowerCase().includes(sym.toLowerCase())) {
+      textarea.value = current + ", " + sym;
+    }
+    this.patient.chiefComplaint = textarea.value;
+  }
+
   setMode(mode) {
     this.currentMode = mode;
     document.querySelectorAll(".mode-btn").forEach(btn => {
@@ -223,6 +263,10 @@ class MediKioskApp {
 
   setLanguage(lang) {
     this.currentLanguage = lang;
+    i18n.setLanguage(lang);
+    speechService.setLanguage(lang);
+    this.updateStaticHeaderTranslations();
+    this.render();
   }
 
   goToStep(step) {
@@ -290,29 +334,29 @@ class MediKioskApp {
           <div class="step-node ${this.currentStep === 1 ? 'active' : ''} ${this.currentStep > 1 ? 'completed' : ''}" onclick="window.app.goToStep(1)">
             <div class="step-number">${this.currentStep > 1 ? '✓' : '1'}</div>
             <div>
-              <div class="step-label">Patient Registration</div>
-              <div class="step-subtext">ABHA ID & Demographics</div>
+              <div class="step-label">${i18n.t("step1_title")}</div>
+              <div class="step-subtext">${i18n.t("step1_sub")}</div>
             </div>
           </div>
           <div class="step-node ${this.currentStep === 2 ? 'active' : ''} ${this.currentStep > 2 ? 'completed' : ''}" onclick="window.app.goToStep(2)">
             <div class="step-number">${this.currentStep > 2 ? '✓' : '2'}</div>
             <div>
-              <div class="step-label">Vitals & Intake</div>
-              <div class="step-subtext">Contactless rPPG & Symptoms</div>
+              <div class="step-label">${i18n.t("step2_title")}</div>
+              <div class="step-subtext">${i18n.t("step2_sub")}</div>
             </div>
           </div>
           <div class="step-node ${this.currentStep === 3 ? 'active' : ''} ${this.currentStep > 3 ? 'completed' : ''}" onclick="window.app.goToStep(3)">
             <div class="step-number">${this.currentStep > 3 ? '✓' : '3'}</div>
             <div>
-              <div class="step-label">Records & Prescriptions</div>
-              <div class="step-subtext">Prescription & Lab OCR</div>
+              <div class="step-label">${i18n.t("step3_title")}</div>
+              <div class="step-subtext">${i18n.t("step3_sub")}</div>
             </div>
           </div>
           <div class="step-node ${this.currentStep === 4 ? 'active' : ''}" onclick="window.app.goToStep(4)">
             <div class="step-number">4</div>
             <div>
-              <div class="step-label">Encounter Summary</div>
-              <div class="step-subtext">OPD Token & FHIR Bundle</div>
+              <div class="step-label">${i18n.t("step4_title")}</div>
+              <div class="step-subtext">${i18n.t("step4_sub")}</div>
             </div>
           </div>
         </div>
@@ -342,56 +386,56 @@ class MediKioskApp {
       <div class="card-3d" style="max-width: 680px; margin: 0 auto;">
         <div class="card-header-3d">
           <div>
-            <h2 class="card-title-3d">Patient Registration & ABHA Check-In</h2>
-            <p class="card-subtitle-3d">Enter demographics or scan Ayushman Bharat Health Account (ABHA) Card</p>
+            <h2 class="card-title-3d">${i18n.t("reg_title")}</h2>
+            <p class="card-subtitle-3d">${i18n.t("reg_subtitle")}</p>
           </div>
-          <button class="btn-3d btn-3d-secondary" style="padding: 8px 14px; font-size: 0.8rem;" onclick="window.app.speakStep1Prompt()">🔊 Audio Guide</button>
+          <button class="btn-3d btn-3d-secondary" style="padding: 8px 14px; font-size: 0.8rem;" onclick="window.app.speakStep1Prompt()">${i18n.t("audio_guide_btn")}</button>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 14px;">
           <div>
-            <label class="input-label-3d">Full Name / पूरा नाम</label>
-            <input type="text" id="patientNameInput" class="input-text-3d" placeholder="e.g. Smt. Sunita Devi" value="${this.patient.name}">
+            <label class="input-label-3d">${i18n.t("full_name_label")}</label>
+            <input type="text" id="patientNameInput" class="input-text-3d" placeholder="${i18n.t("full_name_ph")}" value="${this.patient.name}">
           </div>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
             <div>
-              <label class="input-label-3d">Age / उम्र</label>
-              <input type="number" id="patientAgeInput" class="input-text-3d" placeholder="e.g. 48" value="${this.patient.age}">
+              <label class="input-label-3d">${i18n.t("age_label")}</label>
+              <input type="number" id="patientAgeInput" class="input-text-3d" placeholder="${i18n.t("age_ph")}" value="${this.patient.age}">
             </div>
             <div>
-              <label class="input-label-3d">Gender / लिंग</label>
+              <label class="input-label-3d">${i18n.t("gender_label")}</label>
               <select id="patientGenderInput" class="input-text-3d">
-                <option value="Female" ${this.patient.gender === 'Female' ? 'selected' : ''}>Female / महिला</option>
-                <option value="Male" ${this.patient.gender === 'Male' ? 'selected' : ''}>Male / पुरुष</option>
-                <option value="Other" ${this.patient.gender === 'Other' ? 'selected' : ''}>Other / अन्य</option>
+                <option value="Female" ${this.patient.gender === 'Female' ? 'selected' : ''}>${i18n.t("gender_female")}</option>
+                <option value="Male" ${this.patient.gender === 'Male' ? 'selected' : ''}>${i18n.t("gender_male")}</option>
+                <option value="Other" ${this.patient.gender === 'Other' ? 'selected' : ''}>${i18n.t("gender_other")}</option>
               </select>
             </div>
           </div>
 
           <div>
-            <label class="input-label-3d">ABHA Health ID (Ayushman Bharat)</label>
-            <input type="text" id="patientAbhaInput" class="input-text-3d" placeholder="91-XXXX-XXXX-XXXX" value="${this.patient.abhaId}">
+            <label class="input-label-3d">${i18n.t("abha_label")}</label>
+            <input type="text" id="patientAbhaInput" class="input-text-3d" placeholder="${i18n.t("abha_ph")}" value="${this.patient.abhaId}">
           </div>
 
           <div>
-            <label class="input-label-3d">Mobile Contact Number</label>
-            <input type="tel" id="patientMobileInput" class="input-text-3d" placeholder="+91 98765 43210" value="${this.patient.mobile}">
+            <label class="input-label-3d">${i18n.t("mobile_label")}</label>
+            <input type="tel" id="patientMobileInput" class="input-text-3d" placeholder="${i18n.t("mobile_ph")}" value="${this.patient.mobile}">
           </div>
 
           <div style="background: rgba(13, 148, 136, 0.12); border: 1px solid rgba(13, 148, 136, 0.4); border-radius: 12px; padding: 12px 14px; display: flex; align-items: flex-start; gap: 10px; margin-top: 6px;">
             <span style="font-size: 1.2rem;">🔒</span>
             <div>
-              <strong style="font-size: 0.82rem; color: #5EEAD4;">Digital Personal Data Protection (DPDP) Act 2023 Compliance</strong>
+              <strong style="font-size: 0.82rem; color: #5EEAD4;">${i18n.t("dpdp_title")}</strong>
               <p style="font-size: 0.76rem; color: var(--text-muted); margin-top: 2px;">
-                Health data is processed ephemerally during this clinical encounter and linked to your ABHA profile under ABDM security standards.
+                ${i18n.t("dpdp_desc")}
               </p>
             </div>
           </div>
 
           <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
             <button class="btn-3d btn-3d-primary" style="padding: 14px 32px;" onclick="window.app.saveStep1AndNext()">
-              Proceed to Vitals & Intake →
+              ${i18n.t("btn_proceed_vitals")}
             </button>
           </div>
         </div>
@@ -421,36 +465,26 @@ class MediKioskApp {
         <div class="bay-header">
           <div>
             <h3 style="font-family: var(--font-display); font-size: 1.15rem; font-weight: 800; color: #FFFFFF;">
-              Contactless Optical rPPG Hemodynamic Scanner
+              ${i18n.t("vitals_title")}
             </h3>
             <p style="font-size: 0.78rem; color: var(--text-muted);">
-              Dual-Wavelength SpO₂ (Ratio-of-Ratios), RIAM Respiration Demodulation & Baevsky NN-Histogram HRV
+              ${i18n.t("vitals_subtitle")}
             </p>
           </div>
 
           <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <!-- Scan Duration Switcher (Clinical Intake vs Diagnostic HRV) -->
+            <!-- Scan Duration Switcher -->
             <div style="background: var(--bg-surface-inset); padding: 3px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); display: flex; gap: 2px;">
-              <button class="mode-btn ${this.scanDuration === 30000 ? 'active' : ''}" style="padding: 4px 10px; font-size: 0.74rem;" onclick="window.app.setScanDuration(30000)" title="Ultra-short 30s intake for walk-in kiosk triage">
-                ⏱️ 30s Rapid Scan
+              <button class="mode-btn ${this.scanDuration === 30000 ? 'active' : ''}" style="padding: 4px 10px; font-size: 0.74rem;" onclick="window.app.setScanDuration(30000)">
+                ${i18n.t("rapid_scan_btn")}
               </button>
-              <button class="mode-btn ${this.scanDuration === 60000 ? 'active' : ''}" style="padding: 4px 10px; font-size: 0.74rem;" onclick="window.app.setScanDuration(60000)" title="ESC/NASPE Gold Standard 60s for full diagnostic Baevsky HRV & Multi-cycle Respiration">
-                ⏱️ 60s Diagnostic HRV
-              </button>
-            </div>
-
-            <!-- Hardware Engine Switcher -->
-            <div style="background: var(--bg-surface-inset); padding: 3px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); display: flex; gap: 2px;">
-              <button class="mode-btn ${this.faceDetectorEngine === 'mediapipe' ? 'active' : ''}" style="padding: 4px 8px; font-size: 0.74rem;" onclick="window.app.setFaceDetectorEngine('mediapipe')">
-                MediaPipe Vision
-              </button>
-              <button class="mode-btn ${this.faceDetectorEngine === 'python' ? 'active' : ''}" style="padding: 4px 8px; font-size: 0.74rem;" onclick="window.app.setFaceDetectorEngine('python')">
-                Python Module
+              <button class="mode-btn ${this.scanDuration === 60000 ? 'active' : ''}" style="padding: 4px 10px; font-size: 0.74rem;" onclick="window.app.setScanDuration(60000)">
+                ${i18n.t("diagnostic_scan_btn")}
               </button>
             </div>
 
             <button class="btn-3d ${this.isAyushMode ? 'btn-3d-success' : 'btn-3d-secondary'}" style="padding: 6px 12px; font-size: 0.76rem;" onclick="window.app.toggleAyushMode()">
-              🌿 ${this.isAyushMode ? 'AYUSH Active' : 'AYUSH Mode'}
+              🌿 ${this.isAyushMode ? 'AYUSH Active' : i18n.t("ayush_mode_btn")}
             </button>
           </div>
         </div>
@@ -461,24 +495,24 @@ class MediKioskApp {
             ${this.patient.rppgVitals ? `
               <div style="height: 200px; border-radius: 14px; background: linear-gradient(135deg, rgba(6, 78, 59, 0.4) 0%, rgba(15, 23, 42, 0.85) 100%); border: 2px solid #10B981; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 1rem; box-shadow: 0 0 20px rgba(16, 185, 129, 0.25);">
                 <div style="font-size: 2.5rem; line-height: 1; margin-bottom: 6px;">✓</div>
-                <strong style="color: #6EE7B7; font-size: 0.95rem;">Vitals Calibrated & Locked</strong>
-                <p style="font-size: 0.74rem; color: #A7F3D0; margin-top: 2px;">${this.patient.rppgVitals.durationSeconds}s optical hemodynamics verified.</p>
+                <strong style="color: #6EE7B7; font-size: 0.95rem;">${i18n.t("vitals_calibrated")}</strong>
+                <p style="font-size: 0.74rem; color: #A7F3D0; margin-top: 2px;">${i18n.t("vitals_calibrated_sub")}</p>
                 <span class="pill-3d pill-3d-emerald" style="margin-top: 8px;">
-                  SNR: ${this.patient.rppgVitals.spectralSnr || '12.5'} • Gated Pass
+                  ${this.patient.rppgVitals.durationSeconds || 30}s • ${i18n.t("verified_badge")}
                 </span>
               </div>
             ` : `
               <div class="camera-hardware-lens" id="rppgCameraFeedContainer" style="cursor: pointer;" onclick="if(!window.app.patient.rppgVitals && window.app.cameraError) window.app.requestCameraDirectly();">
                 <div class="reticle-hud ${isLocked ? 'locked' : ''}">
                   <span class="reticle-status-badge">
-                    ${this.cameraError ? '🔴 Camera Access Required (Click Here)' : (this.faceLockState.message || (this.isRppgScanning ? 'MEASURING PULSE...' : 'ALIGNING FACE...'))}
+                    ${this.cameraError ? '🔴 ' + i18n.t("camera_req_btn") : (this.faceLockState.message || (this.isRppgScanning ? i18n.t("btn_scanning_vitals") : 'ALIGNING FACE...'))}
                   </span>
                 </div>
               </div>
               ${this.cameraError ? `
                 <div style="margin-top: 6px; text-align: center;">
                   <button class="btn-3d btn-3d-warning" style="padding: 6px 12px; font-size: 0.78rem; width: 100%;" onclick="window.app.requestCameraDirectly()">
-                    📷 Click to Enable Camera
+                    ${i18n.t("camera_req_btn")}
                   </button>
                 </div>
               ` : ''}
@@ -509,15 +543,15 @@ class MediKioskApp {
             <div>
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                 <span style="font-size: 0.78rem; color: #38BDF8; font-weight: 700;">
-                  Arterial Pulse Wave Extraction (${this.scanDuration >= 60000 ? '60s Diagnostic Mode' : '30s Rapid Mode'}):
+                  ${this.scanDuration >= 60000 ? i18n.t("diagnostic_scan_btn") : i18n.t("rapid_scan_btn")}:
                 </span>
                 ${this.patient.rppgVitals ? `
                   <button class="btn-3d btn-3d-success" style="padding: 6px 14px; font-size: 0.78rem;" onclick="window.app.nextStep()">
-                    Next: Scan Records ➔
+                    ${i18n.t("btn_next_records")}
                   </button>
                 ` : `
                   <button id="btnStartVitalsScan" class="btn-3d ${isLocked ? 'btn-3d-success' : 'btn-3d-primary'}" style="padding: 6px 14px; font-size: 0.78rem;" onclick="window.app.triggerRppgScan()">
-                    ${this.isRppgScanning ? 'Scanning Pulse Wave...' : (isLocked ? `Auto-Scanning in ${this.autoScanCountdown || 2}s (Click Now)` : '⚡ Scan Vitals')}
+                    ${this.isRppgScanning ? i18n.t("btn_scanning_vitals") : (isLocked ? i18n.t("auto_scan_msg") : i18n.t("btn_scan_vitals"))}
                   </button>
                 `}
               </div>
@@ -525,7 +559,7 @@ class MediKioskApp {
               ${this.isRppgScanning ? `
                 <div style="background: rgba(2, 6, 23, 0.9); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 10px; padding: 8px 12px; margin-bottom: 10px;">
                   <div style="display: flex; justify-content: space-between; font-size: 0.76rem; color: #38BDF8; font-weight: 600;">
-                    <span id="rppgCountdownText">Acquiring: ${this.rppgElapsedSec || '0.0'}s / ${(this.scanDuration/1000).toFixed(1)}s (${this.scanDuration >= 60000 ? 'Diagnostic HRV' : 'Rapid Intake'} • Hold Still)</span>
+                    <span id="rppgCountdownText">${this.rppgElapsedSec || '0.0'}s / ${(this.scanDuration/1000).toFixed(1)}s (Hold Still)</span>
                     <strong id="rppgProgressText">${this.rppgProgress}%</strong>
                   </div>
                   <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; margin-top: 5px;">
@@ -537,7 +571,7 @@ class MediKioskApp {
               <!-- Real-Time Capillary Pulse Wave Oscilloscope Visualizer -->
               <div class="oscilloscope-container-3d">
                 <div class="oscilloscope-legend">
-                  <span>📈 Live Photoplethysmogram Oscilloscope (POS/CHROM Waveform)</span>
+                  <span>📈 Live Photoplethysmogram Oscilloscope (Pulse Waveform)</span>
                   <span style="color: ${this.isRppgScanning ? '#34D399' : (this.patient.rppgVitals ? '#6EE7B7' : 'var(--text-muted)')}; font-weight: 700;">
                     ${this.isRppgScanning ? '● SAMPLING 30 FPS' : (this.patient.rppgVitals ? '✓ CAPTURE LOCKED' : '○ STANDBY')}
                   </span>
@@ -548,61 +582,53 @@ class MediKioskApp {
               <!-- Real-Time Telemetry Grid -->
               <div class="telemetry-grid">
                 <div class="telemetry-card ${vitals.heartRate > 100 ? 'highlight' : ''}">
-                  <div class="telemetry-value">${vitals.heartRate}<span class="telemetry-unit">BPM</span></div>
-                  <div class="telemetry-label">Heart Rate</div>
-                  <div class="telemetry-status">${vitals.heartRate > 100 ? '⚠️ Tachycardia' : (vitals.heartRate !== '--' ? 'Resting Normal' : 'Resting')}</div>
+                  <div class="telemetry-value">${vitals.heartRate}<span class="telemetry-unit">${i18n.t("telemetry_hr_unit")}</span></div>
+                  <div class="telemetry-label">${i18n.t("telemetry_hr")}</div>
+                  <div class="telemetry-status">${vitals.heartRate > 100 ? '⚠️ High Rate' : (vitals.heartRate !== '--' ? i18n.t("status_resting") : '--')}</div>
                 </div>
 
                 <div class="telemetry-card ${vitals.spO2 < 95 && vitals.spO2 !== '--' ? 'highlight' : ''}">
-                  <div class="telemetry-value">${vitals.spO2}<span class="telemetry-unit">%</span></div>
-                  <div class="telemetry-label">Dual-λ SpO₂</div>
+                  <div class="telemetry-value">${vitals.spO2}<span class="telemetry-unit">${i18n.t("telemetry_spo2_unit")}</span></div>
+                  <div class="telemetry-label">${i18n.t("telemetry_spo2")}</div>
                   <div class="telemetry-status" style="color: ${vitals.spO2 < 95 ? '#F87171' : '#34D399'};">
-                    ${vitals.spo2Diagnostics ? `R: ${vitals.spo2Diagnostics.rRatio} (Ratio-of-Ratios)` : (vitals.spO2 !== '--' ? 'Optimal Room Air' : 'Dual-Wavelength')}
+                    ${vitals.spO2 !== '--' ? i18n.t("status_optimal") : '--'}
                   </div>
                 </div>
 
                 <div class="telemetry-card ${vitals.stressScore > 70 ? 'highlight' : ''}">
-                  <div class="telemetry-value">${vitals.stressScore !== undefined ? vitals.stressScore : '--'}<span class="telemetry-unit">/100</span></div>
-                  <div class="telemetry-label">Baevsky Stress</div>
+                  <div class="telemetry-value">${vitals.stressScore !== undefined ? vitals.stressScore : '--'}<span class="telemetry-unit">${i18n.t("telemetry_stress_unit")}</span></div>
+                  <div class="telemetry-label">${i18n.t("telemetry_stress")}</div>
                   <div class="telemetry-status" style="color: #C084FC;">
-                    ${vitals.baevskyIndex ? `SI: ${vitals.baevskyIndex} (${vitals.stressCategory ? vitals.stressCategory.split(' ')[0] : 'Normal'})` : 'Histogram SI'}
+                    ${vitals.stressScore !== '--' && vitals.stressScore !== undefined ? i18n.t("status_relaxed") : '--'}
                   </div>
                 </div>
 
                 <div class="telemetry-card">
-                  <div class="telemetry-value">${vitals.hrv}<span class="telemetry-unit">ms</span></div>
-                  <div class="telemetry-label">HRV (RMSSD)</div>
+                  <div class="telemetry-value">${vitals.hrv}<span class="telemetry-unit">${i18n.t("telemetry_hrv_unit")}</span></div>
+                  <div class="telemetry-label">${i18n.t("telemetry_hrv")}</div>
                   <div class="telemetry-status">
-                    ${vitals.sdnn ? `SDNN: ${vitals.sdnn}ms` : 'Vagal Tone'}
+                    ${vitals.hrv !== '--' ? 'Steady' : '--'}
                   </div>
                 </div>
 
                 <div class="telemetry-card">
-                  <div class="telemetry-value">${vitals.respiratoryRate}<span class="telemetry-unit">RPM</span></div>
-                  <div class="telemetry-label">Respiration</div>
+                  <div class="telemetry-value">${vitals.respiratoryRate}<span class="telemetry-unit">${i18n.t("telemetry_resp_unit")}</span></div>
+                  <div class="telemetry-label">${i18n.t("telemetry_resp")}</div>
                   <div class="telemetry-status">
-                    ${vitals.respiratoryDiagnostics ? `RIAM Demod (${vitals.respiratoryFrequencyHz || 0.267}Hz)` : 'AM Envelope'}
+                    ${vitals.respiratoryRate !== '--' ? i18n.t("status_normal") : '--'}
                   </div>
                 </div>
               </div>
 
-              <!-- Comprehensive Clinical Hemodynamic Breakdown Card -->
+              <!-- Reassuring Clinical Vitals Verification -->
               ${this.patient.rppgVitals ? `
-                <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 10px; padding: 10px 14px; margin-top: 10px; font-size: 0.74rem; color: var(--text-secondary); display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 10px; padding: 10px 14px; margin-top: 10px; font-size: 0.8rem; color: #6EE7B7; display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 1.2rem;">✓</span>
                   <div>
-                    <strong style="color: #38BDF8;">🩸 Dual-Wavelength SpO₂:</strong><br>
-                    R = ${this.patient.rppgVitals.spo2Diagnostics?.rRatio ?? 0.38} (AC_R/DC_R ÷ AC_G/DC_G)<br>
-                    Formula: 104.0 - 17.5 × R = ${this.patient.rppgVitals.spO2}%
-                  </div>
-                  <div>
-                    <strong style="color: #34D399;">🫁 Respiration Extraction:</strong><br>
-                    Method: ${this.patient.rppgVitals.respiratoryDiagnostics?.method ? this.patient.rppgVitals.respiratoryDiagnostics.method.split('(')[0].trim() : 'RIAM/RIIV Demodulation'}<br>
-                    Spectral: ${this.patient.rppgVitals.respiratoryDiagnostics?.spectralRpm ?? this.patient.rppgVitals.respiratoryRate} RPM | Time: ${this.patient.rppgVitals.respiratoryDiagnostics?.timeRpm ?? this.patient.rppgVitals.respiratoryRate} RPM
-                  </div>
-                  <div>
-                    <strong style="color: #C084FC;">🧠 Baevsky Tension Index (SI):</strong><br>
-                    SI: ${this.patient.rppgVitals.baevskyIndex ?? 120} (Mo: ${this.patient.rppgVitals.baevskyDiagnostics?.modeSec ?? 0.8}s, AMo: ${this.patient.rppgVitals.baevskyDiagnostics?.amplitudeModePercent ?? 35}%, ΔX: ${this.patient.rppgVitals.baevskyDiagnostics?.variationRangeSec ?? 0.2}s)<br>
-                    Window: ${this.patient.rppgVitals.baevskyDiagnostics?.hrvWindowType ?? (this.scanDuration >= 60000 ? 'Standard Short-Term (≥60s)' : 'Ultra-Short (<60s)')}
+                    <strong>${i18n.t("vitals_summary_badge")}</strong>
+                    <p style="font-size: 0.74rem; color: #A7F3D0; margin: 2px 0 0 0;">
+                      Heart rate, oxygen saturation, and respiratory rate are securely calibrated for doctor evaluation.
+                    </p>
                   </div>
                 </div>
               ` : ''}
@@ -619,20 +645,39 @@ class MediKioskApp {
             <button id="micBtn" class="mic-tactile-button" onclick="window.app.toggleSpeech()">
               🎙️
             </button>
-            <h4 id="micStatusText" style="font-size: 1.05rem; margin-top: 10px; font-weight: 700;">Tap Microphone to Speak Symptoms</h4>
-            <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">Multi-lingual voice intake supports Hindi, English, Tamil, Bengali & Marathi</p>
+            <h4 id="micStatusText" style="font-size: 1.05rem; margin-top: 10px; font-weight: 700;">${i18n.t("voice_mic_title")}</h4>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">${i18n.t("voice_mic_sub")}</p>
 
             <div style="margin-top: 1rem; text-align: left;">
-              <label class="input-label-3d">Chief Health Complaint (Spoken or Typed Transcript)</label>
-              <textarea id="chiefComplaintText" class="input-text-3d" rows="3" placeholder="Speak or enter symptoms (e.g. sharp chest pain radiating to left arm, fever, knee pain)...">${this.patient.chiefComplaint}</textarea>
+              <label class="input-label-3d">${i18n.t("chief_complaint_label")}</label>
+              <textarea id="chiefComplaintText" class="input-text-3d" rows="3" placeholder="${i18n.t("chief_complaint_ph")}">${this.patient.chiefComplaint}</textarea>
+
+              <!-- Quick Common Symptoms Chips -->
+              <div style="margin-top: 10px;">
+                <label style="font-size: 0.76rem; color: var(--text-muted); display: block; margin-bottom: 5px;">${i18n.t("quick_symptoms_title")}</label>
+                <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                  <button type="button" class="quick-chip" onclick="window.app.appendSymptom('${i18n.t("sym_fever")}')">🤒 ${i18n.t("sym_fever")}</button>
+                  <button type="button" class="quick-chip" onclick="window.app.appendSymptom('${i18n.t("sym_cough")}')">🤧 ${i18n.t("sym_cough")}</button>
+                  <button type="button" class="quick-chip" onclick="window.app.appendSymptom('${i18n.t("sym_headache")}')">🤕 ${i18n.t("sym_headache")}</button>
+                  <button type="button" class="quick-chip" onclick="window.app.appendSymptom('${i18n.t("sym_chest_pain")}')">🫀 ${i18n.t("sym_chest_pain")}</button>
+                  <button type="button" class="quick-chip" onclick="window.app.appendSymptom('${i18n.t("sym_stomach_pain")}')">🤢 ${i18n.t("sym_stomach_pain")}</button>
+                  <button type="button" class="quick-chip" onclick="window.app.appendSymptom('${i18n.t("sym_breathless")}')">🫁 ${i18n.t("sym_breathless")}</button>
+                  <button type="button" class="quick-chip" onclick="window.app.appendSymptom('${i18n.t("sym_joint_pain")}')">🦴 ${i18n.t("sym_joint_pain")}</button>
+                  <button type="button" class="quick-chip" onclick="window.app.appendSymptom('${i18n.t("sym_vomiting")}')">🤮 ${i18n.t("sym_vomiting")}</button>
+                  <button type="button" class="quick-chip" onclick="window.app.appendSymptom('${i18n.t("sym_fatigue")}')">😴 ${i18n.t("sym_fatigue")}</button>
+                </div>
+              </div>
             </div>
           </div>
 
           <!-- AYUSH / Home Herbal Remedies Declaration -->
           <div class="card-3d" style="padding: 1.25rem; margin-bottom: 1.25rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <h4 style="font-size: 0.88rem; font-weight: 700; color: #5EEAD4;">🌿 Home Herbal Remedies (For Drug Conflict Checking)</h4>
-              <button class="btn-3d btn-3d-secondary" style="padding: 4px 10px; font-size: 0.72rem;" onclick="window.app.promptAddHerb()">+ Add Remedy</button>
+              <div>
+                <h4 style="font-size: 0.88rem; font-weight: 700; color: #5EEAD4;">${i18n.t("herbs_title")}</h4>
+                <p style="font-size: 0.72rem; color: var(--text-muted); margin: 0;">${i18n.t("herbs_sub")}</p>
+              </div>
+              <button class="btn-3d btn-3d-secondary" style="padding: 4px 10px; font-size: 0.72rem;" onclick="window.app.promptAddHerb()">${i18n.t("herbs_add_btn")}</button>
             </div>
             <div style="display: flex; flex-wrap: wrap; gap: 6px;">
               ${(this.patient.ayushHerbs || []).map((h, hIdx) => `
@@ -641,14 +686,14 @@ class MediKioskApp {
                 </span>
               `).join('')}
               ${(!this.patient.ayushHerbs || this.patient.ayushHerbs.length === 0) ? `
-                <span style="font-size: 0.78rem; color: var(--text-muted);">No herbal remedies declared. Click "+ Add Remedy" if you take Karela juice, Guggulu, Giloy, etc.</span>
+                <span style="font-size: 0.78rem; color: var(--text-muted);">${i18n.t("herbs_empty")}</span>
               ` : ''}
             </div>
           </div>
 
           <!-- SOCRATES Symptom Probing -->
           <div class="card-3d" style="padding: 1.25rem;">
-            <h4 style="font-size: 0.9rem; font-weight: 700; color: #93C5FD; margin-bottom: 10px;">🩺 Clinical Symptom Evaluation (SOCRATES)</h4>
+            <h4 style="font-size: 0.9rem; font-weight: 700; color: #93C5FD; margin-bottom: 10px;">${i18n.t("socrates_title")}</h4>
             
             <div style="margin-bottom: 12px;">
               <label class="input-label-3d">${SOCRATES_QUESTIONS.character.title}</label>
@@ -673,9 +718,9 @@ class MediKioskApp {
           ${this.isAyushMode ? this.renderAyushModule() : this.renderBodyMapModule()}
 
           <div style="display: flex; justify-content: space-between; margin-top: 1.25rem;">
-            <button class="btn-3d btn-3d-secondary" onclick="window.app.prevStep()">← Back</button>
+            <button class="btn-3d btn-3d-secondary" onclick="window.app.prevStep()">${i18n.t("btn_back")}</button>
             <button class="btn-3d ${this.patient.rppgVitals ? 'btn-3d-success' : 'btn-3d-primary'}" onclick="window.app.nextStep()">
-              ${this.patient.rppgVitals ? 'Proceed to Step 3 (Scan Records) ➔' : 'Proceed to Medical Records →'}
+              ${i18n.t("btn_next_records")}
             </button>
           </div>
         </div>
@@ -797,10 +842,10 @@ class MediKioskApp {
       <div class="card-3d">
         <div class="card-header-3d">
           <div>
-            <h2 class="card-title-3d">Diagnostic Records, Diseases & Prescription Digitization</h2>
-            <p class="card-subtitle-3d">Upload doctor prescriptions, lab panels, or clinical reports for automatic extraction of diseases, medicines, and biomarker flags</p>
+            <h2 class="card-title-3d">${i18n.t("doc_title")}</h2>
+            <p class="card-subtitle-3d">${i18n.t("doc_subtitle")}</p>
           </div>
-          <button class="btn-3d btn-3d-secondary" style="padding: 6px 14px; font-size: 0.78rem;" onclick="window.app.speakDocScanPrompt()">🔊 Audio Guide</button>
+          <button class="btn-3d btn-3d-secondary" style="padding: 6px 14px; font-size: 0.78rem;" onclick="window.app.speakDocScanPrompt()">${i18n.t("audio_guide_btn")}</button>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
@@ -808,10 +853,14 @@ class MediKioskApp {
           <div>
             <div class="scanner-dropzone-3d" id="uploadDropzone" onclick="window.app.triggerFileInput()">
               <div style="font-size: 2.5rem; margin-bottom: 6px;">📸</div>
-              <strong style="color: #60A5FA; font-size: 1rem;">Upload Prescription or Pathology Report</strong>
+              <strong style="color: #60A5FA; font-size: 1rem;">${i18n.t("upload_dropzone_title")}</strong>
               <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">
-                Drag & drop JPG, PNG, or PDF file to execute clinical entity extraction
+                ${i18n.t("upload_dropzone_desc")}
               </p>
+              <div style="margin-top: 10px; display: flex; gap: 8px; justify-content: center;">
+                <button type="button" class="btn-3d btn-3d-secondary" style="padding: 5px 12px; font-size: 0.74rem;">${i18n.t("upload_btn_photo")}</button>
+                <button type="button" class="btn-3d btn-3d-primary" style="padding: 5px 12px; font-size: 0.74rem;">${i18n.t("upload_btn_file")}</button>
+              </div>
               <input type="file" id="realDocUpload" accept="image/*,.pdf" capture="environment" style="display: none;" onchange="window.app.handleFileUpload(event)">
             </div>
 
@@ -823,7 +872,7 @@ class MediKioskApp {
 
             ${this.isOcrProcessing ? `
               <div style="margin-top: 10px; padding: 10px; border-radius: 10px; background: rgba(56, 189, 248, 0.15); border: 1px solid #38BDF8; font-size: 0.82rem; color: #38BDF8; text-align: center;">
-                ⚡ ${this.ocrProgressText || 'Digitizing medical document & extracting clinical entities...'}
+                ${i18n.t("ocr_processing_msg")}
               </div>
             ` : ''}
           </div>
@@ -832,48 +881,48 @@ class MediKioskApp {
           <div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
               <h4 style="font-size: 0.95rem; font-weight: 700; color: #93C5FD;">Digitized Clinical Findings</h4>
-              <span class="pill-3d pill-3d-emerald">${this.patient.documents.length} Files Processed</span>
+              <span class="pill-3d pill-3d-emerald">${this.patient.documents.length} ${i18n.t("files_processed")}</span>
             </div>
 
             ${latestDoc ? `
               <div style="background: rgba(30, 41, 59, 0.7); border: 1px solid #3B82F6; border-radius: 10px; padding: 12px; margin-bottom: 12px;">
-                <div style="display: flex; justify-content: space-between;">
-                  <span class="pill-3d pill-3d-blue">${latestDoc.categoryLabel || latestDoc.type}</span>
-                  <span style="font-size: 0.75rem; color: #34D399; font-weight: 700;">✓ Verified</span>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span class="pill-3d pill-3d-blue" style="font-weight: 700;">${latestDoc.categoryLabel || latestDoc.type || 'Medical Record'}</span>
+                  <span class="pill-3d pill-3d-emerald">${i18n.t("verified_badge")}</span>
                 </div>
-                <p style="font-size: 0.85rem; font-weight: 700; color: #FCA5A5; margin-top: 6px;">
-                  Primary Finding: ${latestDoc.rootCause || 'Diagnostic Evaluation Available'}
-                </p>
-                <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
-                  Anatomical Focus: ${latestDoc.anatomicalSite || 'Clinical Record'}
-                </p>
+                ${latestDoc.doctorName ? `
+                  <p style="font-size: 0.82rem; font-weight: 700; color: #93C5FD; margin-top: 6px; margin-bottom: 2px;">
+                    👨‍⚕️ Doctor: ${latestDoc.doctorName}
+                  </p>
+                ` : ''}
+                ${latestDoc.facility ? `
+                  <p style="font-size: 0.76rem; color: var(--text-muted); margin: 0;">
+                    🏥 Facility: ${latestDoc.facility}
+                  </p>
+                ` : ''}
               </div>
             ` : ''}
 
             <!-- Identified Diseases & Clinical Diagnoses Section -->
             <div style="margin-bottom: 14px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                <strong style="font-size: 0.8rem; color: #38BDF8; text-transform: uppercase;">🩺 Identified Diseases & Diagnoses (ICD-10):</strong>
+                <strong style="font-size: 0.8rem; color: #38BDF8; text-transform: uppercase;">${i18n.t("dx_heading")}</strong>
                 <span class="pill-3d pill-3d-blue" style="font-size: 0.7rem;">${allDiseases.length} Detected</span>
               </div>
               <div style="max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;">
                 ${allDiseases.length > 0 ? allDiseases.map(d => `
-                  <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; padding: 8px 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+                  <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
                     <div>
-                      <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                        <strong style="color: #FFFFFF; font-size: 0.84rem;">${d.name}</strong>
-                        <span class="pill-3d pill-3d-blue" style="font-size: 0.68rem;">ICD-10: ${d.icd10 || 'R69'}</span>
-                        <span class="pill-3d pill-3d-emerald" style="font-size: 0.68rem;">${d.acuity || 'Verified'}</span>
-                      </div>
-                      <p style="font-size: 0.72rem; color: #94A3B8; margin-top: 3px; margin-bottom: 0;">
-                        <strong>Evidence:</strong> ${d.source || 'Clinical Document Finding'}
+                      <strong style="color: #FFFFFF; font-size: 0.88rem;">${d.name}</strong>
+                      <p style="font-size: 0.72rem; color: #94A3B8; margin-top: 2px; margin-bottom: 0;">
+                        Detected from medical document
                       </p>
                     </div>
-                    <span style="font-size: 0.7rem; color: #38BDF8; font-weight: 700; white-space: nowrap;">✓ ${d.confidence || '99%'}</span>
+                    <span class="pill-3d pill-3d-blue" style="font-size: 0.7rem;">${i18n.t("verified_badge")}</span>
                   </div>
                 `).join('') : `
                   <div style="background: rgba(15, 23, 42, 0.5); border: 1px dashed rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 12px; font-size: 0.78rem; color: var(--text-muted);">
-                    Upload clinical documents, lab reports, or prescriptions to extract patient diseases & diagnoses automatically.
+                    ${i18n.t("dx_empty")}
                   </div>
                 `}
               </div>
@@ -882,33 +931,32 @@ class MediKioskApp {
             <!-- Prescribed Medications Section -->
             <div style="margin-bottom: 14px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                <strong style="font-size: 0.8rem; color: #34D399; text-transform: uppercase;">💊 Prescribed Medications (Validated):</strong>
-                <span class="pill-3d pill-3d-emerald" style="font-size: 0.7rem;">${allExtractedMeds.length} Active</span>
+                <strong style="font-size: 0.8rem; color: #34D399; text-transform: uppercase;">${i18n.t("rx_heading")}</strong>
+                <span class="pill-3d pill-3d-emerald" style="font-size: 0.7rem;">${allExtractedMeds.length} ${i18n.t("active_badge")}</span>
               </div>
               <div style="max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;">
                 ${allExtractedMeds.length > 0 ? allExtractedMeds.map(m => {
                   const name = typeof m === 'string' ? m : m.name;
-                  const brand = m.brandReported || name;
-                  const dosage = m.dosage || 'Standard Dose';
-                  const freq = m.freq || 'OD';
-                  const timing = m.timing || 'After Meals';
-                  const duration = m.duration || 'Ongoing';
-                  const snomed = m.snomedCode || '387517004';
-                  const drugClass = m.drugClass || 'Therapeutic Agent';
+                  const dosage = m.dosage || '';
+                  const freq = m.freq || 'Daily';
+                  const timing = m.timing || 'After Food';
+                  const duration = m.duration || '';
 
                   return `
                     <div class="medication-card-3d">
                       <div>
-                        <strong style="color: #FFFFFF;">${name} (${dosage})</strong>
-                        <p style="font-size: 0.72rem; color: #38BDF8; margin: 2px 0;">SNOMED: ${snomed} • ${drugClass}</p>
-                        <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">${freq} • ${timing} • ${duration}</p>
+                        <strong style="color: #FFFFFF; font-size: 0.88rem;">${name}</strong>
+                        ${dosage && dosage !== 'Standard Dose' ? `<span class="pill-3d pill-3d-blue" style="margin-left: 6px; font-size: 0.7rem;">${dosage}</span>` : ''}
+                        <p style="font-size: 0.75rem; color: #A7F3D0; margin: 3px 0 0 0;">
+                          ${freq} • ${timing} ${duration ? `• ${duration}` : ''}
+                        </p>
                       </div>
-                      <span class="pill-3d pill-3d-emerald">Validated</span>
+                      <span class="pill-3d pill-3d-emerald" style="font-size: 0.7rem;">${i18n.t("verified_badge")}</span>
                     </div>
                   `;
                 }).join('') : `
                   <div style="background: rgba(15, 23, 42, 0.5); border: 1px dashed rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 12px; font-size: 0.78rem; color: var(--text-muted);">
-                    No active medications extracted yet. Upload a prescription or clinical note above.
+                    ${i18n.t("rx_empty")}
                   </div>
                 `}
               </div>
@@ -917,7 +965,7 @@ class MediKioskApp {
             <!-- Lab Biomarkers Section -->
             <div>
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                <strong style="font-size: 0.8rem; color: #F87171; text-transform: uppercase;">🔬 Diagnostic Biomarkers & Flags:</strong>
+                <strong style="font-size: 0.8rem; color: #F87171; text-transform: uppercase;">${i18n.t("lab_heading")}</strong>
                 <span class="pill-3d pill-3d-crimson" style="font-size: 0.7rem;">${allFlags.length} Flags</span>
               </div>
               <div style="max-height: 140px; overflow-y: auto;">
@@ -930,27 +978,14 @@ class MediKioskApp {
                     <span class="pill-3d pill-3d-crimson">${(f.status || 'ABNORMAL').split(' ')[0]}</span>
                   </div>
                 `).join('') : `
-                  <p style="font-size: 0.78rem; color: var(--text-muted); padding: 6px;">No abnormal lab flags detected.</p>
+                  <p style="font-size: 0.78rem; color: var(--text-muted); padding: 6px;">${i18n.t("lab_empty")}</p>
                 `}
               </div>
             </div>
 
-            <!-- Full Extracted Report Text Stream (Collapsible/Viewable) -->
-            ${latestDoc && latestDoc.extractedText ? `
-              <div style="margin-top: 14px; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 10px 14px;">
-                <details style="cursor: pointer;">
-                  <summary style="font-size: 0.8rem; font-weight: 700; color: #38BDF8; display: flex; align-items: center; justify-content: space-between;">
-                    <span>📄 Extracted Report Text Stream (${latestDoc.categoryLabel || 'Report'})</span>
-                    <span class="pill-3d pill-3d-blue" style="font-size: 0.68rem;">View Raw Stream</span>
-                  </summary>
-                  <pre style="margin-top: 8px; margin-bottom: 0; font-family: monospace; font-size: 0.72rem; color: #E2E8F0; background: rgba(0, 0, 0, 0.45); padding: 10px; border-radius: 6px; max-height: 180px; overflow-y: auto; white-space: pre-wrap; word-break: break-word; line-height: 1.4;">${latestDoc.extractedText}</pre>
-                </details>
-              </div>
-            ` : ''}
-
             <div style="display: flex; justify-content: space-between; margin-top: 1.5rem;">
-              <button class="btn-3d btn-3d-secondary" onclick="window.app.prevStep()">← Back</button>
-              <button class="btn-3d btn-3d-primary" onclick="window.app.nextStep()">Generate Summary →</button>
+              <button class="btn-3d btn-3d-secondary" onclick="window.app.prevStep()">${i18n.t("btn_back")}</button>
+              <button class="btn-3d btn-3d-primary" onclick="window.app.nextStep()">${i18n.t("btn_gen_summary")}</button>
             </div>
           </div>
         </div>
@@ -964,31 +999,46 @@ class MediKioskApp {
   renderStep4Summary() {
     return `
       <div class="card-3d" style="max-width: 600px; margin: 0 auto; text-align: center;">
-        <div style="font-size: 2.5rem; margin-bottom: 6px;">🎉</div>
-        <h2 style="font-size: 1.5rem; font-weight: 800; color: #FFFFFF;">Clinical Intake Completed Successfully!</h2>
+        <div style="font-size: 2.8rem; margin-bottom: 8px;">🎉</div>
+        <h2 style="font-size: 1.5rem; font-weight: 800; color: #FFFFFF;">${i18n.t("summary_congrats")}</h2>
         <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
-          Your clinical history, contactless vitals, and digitized records have been securely transmitted to the OPD Doctor Desk.
+          ${i18n.t("summary_subtitle")}
         </p>
 
-        <div style="background: rgba(37, 99, 235, 0.15); border: 1.5px dashed #3B82F6; border-radius: 14px; padding: 1.5rem; margin: 1.5rem 0;">
-          <p style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: #93C5FD; font-weight: 700;">OPD Consultation Token</p>
-          <div style="font-family: var(--font-display); font-size: 3rem; font-weight: 900; color: #FFFFFF; line-height: 1.1; margin: 6px 0;">
-            ${this.patient.tokenNumber}
-          </div>
-          <p style="font-size: 0.82rem; color: var(--text-secondary);">
-            Patient: <strong>${this.patient.name || 'Walk-in Patient'}</strong> (${this.patient.age || '--'} Yrs / ${this.patient.gender})
+        <div style="background: rgba(37, 99, 235, 0.15); border: 2px dashed #3B82F6; border-radius: 16px; padding: 1.75rem; margin: 1.5rem 0;">
+          <p style="font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.08em; color: #93C5FD; font-weight: 800;">
+            ${i18n.t("opd_token_header")}
           </p>
+          <div style="font-family: var(--font-display); font-size: 3.5rem; font-weight: 900; color: #FFFFFF; line-height: 1.1; margin: 8px 0; text-shadow: 0 0 25px rgba(59, 130, 246, 0.5);">
+            ${this.patient.tokenNumber || 'TK-101'}
+          </div>
+          <div style="font-size: 0.88rem; color: #E2E8F0; margin-top: 8px;">
+            ${i18n.t("patient_info_label")}: <strong>${this.patient.name || 'Walk-in Patient'}</strong> (${this.patient.age || '--'} ${i18n.t("age_yrs")} / ${i18n.t("gender_" + (this.patient.gender || "Female").toLowerCase()) || this.patient.gender})
+          </div>
+          <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1); display: grid; grid-template-columns: 1fr 1fr; gap: 8px; text-align: left; font-size: 0.78rem;">
+            <div>
+              <span style="color: var(--text-muted);">${i18n.t("assigned_dept_label")}:</span><br>
+              <strong style="color: #60A5FA;">${i18n.t("default_dept")}</strong>
+            </div>
+            <div>
+              <span style="color: var(--text-muted);">${i18n.t("est_wait_label")}:</span><br>
+              <strong style="color: #34D399;">${i18n.t("est_wait_val")}</strong>
+            </div>
+          </div>
         </div>
 
-        <div style="display: flex; flex-direction: column; gap: 8px;">
-          <button class="btn-3d btn-3d-primary" onclick="window.app.openFhirModal()">
-            🌐 View ABDM HL7 FHIR R4 JSON Bundle
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <button class="btn-3d btn-3d-primary" style="padding: 12px;" onclick="window.print()">
+            ${i18n.t("btn_print_slip")}
           </button>
           <button class="btn-3d btn-3d-secondary" onclick="window.app.setMode('doctor')">
-            👨‍⚕️ Switch to Doctor OPD Screen →
+            ${i18n.t("btn_doctor_desk")}
           </button>
           <button class="btn-3d btn-3d-secondary" onclick="window.app.resetSession()">
-            ➕ Register Next Walk-In Patient
+            ${i18n.t("btn_next_patient")}
+          </button>
+          <button style="background: none; border: none; color: #64748B; font-size: 0.76rem; cursor: pointer; text-decoration: underline; margin-top: 6px;" onclick="window.app.openFhirModal()">
+            ${i18n.t("btn_view_fhir")}
           </button>
         </div>
       </div>
@@ -2493,10 +2543,10 @@ class MediKioskApp {
     if (speechService.isListening) {
       speechService.stopListening();
       if (micBtn) micBtn.classList.remove("listening");
-      if (micStatus) micStatus.textContent = "Tap Microphone to Speak Symptoms";
+      if (micStatus) micStatus.textContent = i18n.t("voice_mic_title");
     } else {
       if (micBtn) micBtn.classList.add("listening");
-      if (micStatus) micStatus.textContent = "Listening... Speak your symptoms now";
+      if (micStatus) micStatus.textContent = i18n.t("voice_listening");
 
       speechService.startListening(
         (interim) => {
@@ -2510,22 +2560,30 @@ class MediKioskApp {
             this.patient.chiefComplaint = final;
           }
           if (micBtn) micBtn.classList.remove("listening");
-          if (micStatus) micStatus.textContent = "Transcript Captured ✓";
+          if (micStatus) micStatus.textContent = "✓ " + i18n.t("voice_mic_title");
         },
         (err) => {
           console.warn(err);
           if (micBtn) micBtn.classList.remove("listening");
+          if (micStatus) micStatus.textContent = i18n.t("voice_mic_title");
         }
       );
     }
   }
 
   speakStep1Prompt() {
-    speechService.speak("Welcome to the clinical intake kiosk. Please enter your name and phone number to begin.", this.currentLanguage);
+    const prompt = i18n.getAudioPrompt("audio_step1");
+    speechService.speak(prompt, this.currentLanguage);
+  }
+
+  speakVitalsPrompt() {
+    const prompt = i18n.getAudioPrompt("audio_step2");
+    speechService.speak(prompt, this.currentLanguage);
   }
 
   speakDocScanPrompt() {
-    speechService.speak("Please place your medical prescriptions or diagnostic reports onto the scanner.", this.currentLanguage);
+    const prompt = i18n.getAudioPrompt("audio_step3");
+    speechService.speak(prompt, this.currentLanguage);
   }
 
   resetSession() {
