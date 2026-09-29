@@ -122,9 +122,11 @@ class OCREngine {
       const geminiResult = await geminiVisionService.analyzeDocument(file, onProgress, rawText, previewDataUrl);
       if (geminiResult) {
         if (!geminiResult.isValidMedical) {
-          // If gemini thought it was non-medical, verify with local classifier first before discarding
+          // If gemini thought it was non-medical, check if local classifier has verified drugs or lab flags
           const localCheck = await documentClassifier.classifyAndValidate(previewDataUrl, rawText, file.name);
-          if (localCheck.isValidMedical) {
+          const hasVerifiedDrugs = (prescriptionParser.parsePrescriptionText(rawText || file.name) || []).some(d => d.validated);
+          const hasVerifiedLabs = (labParser.parseLabReportText(rawText) || {}).flags?.length > 0;
+          if (localCheck.isValidMedical && (hasVerifiedDrugs || hasVerifiedLabs)) {
             return this.buildStructuredClinicalResult(localCheck, rawText, previewDataUrl, file.name, isPdf);
           }
           return {
@@ -135,14 +137,8 @@ class OCREngine {
           };
         }
 
-        // Check if geminiResult actually found clinical entities or if local classification should supplement
-        const hasFindings = (geminiResult.extractedMedications?.length > 0) ||
-          (geminiResult.extractedDiseases?.length > 0) ||
-          (geminiResult.labFlags?.length > 0);
-
-        if (hasFindings) {
-          return geminiResult;
-        }
+        // When Gemini confirms a valid medical document, return it directly
+        return geminiResult;
       }
     } catch (err) {
       console.warn("Gemini Multimodal Vision fallback trigger:", err);

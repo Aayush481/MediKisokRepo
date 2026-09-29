@@ -12,8 +12,9 @@ import { diseaseExtractor } from "./diseaseExtractor.js";
 const DEFAULT_API_KEY = typeof window !== "undefined" && window.__GEMINI_API_KEY__ ? window.__GEMINI_API_KEY__ : "";
 const CANDIDATE_MODELS = [
   "gemini-3.5-flash-lite",
-  "gemini-3.1-flash-lite",
-  "gemini-flash-lite-latest"
+  "gemini-flash-lite-latest",
+  "gemini-3.5-flash",
+  "gemini-flash-latest"
 ];
 
 class GeminiVisionService {
@@ -29,10 +30,16 @@ class GeminiVisionService {
     if (onProgress) onProgress("Uploading document to Gemini Multimodal Vision AI...");
 
     const dataUrl = previewDataUrl || (await this.readFileAsDataURL(file));
-    const mimeType = file.type || (dataUrl.startsWith("data:image/") ? "image/jpeg" : "application/pdf");
+    let mimeType = "image/jpeg";
+    if (dataUrl.startsWith("data:")) {
+      const match = dataUrl.match(/^data:([^;]+);base64,/);
+      if (match) mimeType = match[1];
+    } else if (file && file.type) {
+      mimeType = file.type;
+    }
     const base64Data = dataUrl.includes(",") ? dataUrl.split(",")[1] : dataUrl;
 
-    // 1. First attempt: Call local backend endpoint /api/analyze-document with 18s timeout
+    // 1. First attempt: Call local backend endpoint /api/analyze-document with 20s timeout
     try {
       if (onProgress) onProgress("Gemini Multimodal Neural Vision inspecting document...");
       
@@ -46,15 +53,13 @@ class GeminiVisionService {
           reportText: rawText,
           reportType: "Auto Detect"
         }),
-        signal: AbortSignal.timeout(18000)
+        signal: AbortSignal.timeout(20000)
       });
 
       if (res.ok) {
         const result = await res.json();
         if (result && typeof result.isValidMedical === "boolean") {
-          if (result.isValidMedical && (result.extractedMedications?.length > 0 || result.extractedDiseases?.length > 0 || result.labFlags?.length > 0 || (result.extractedText && result.extractedText.length > 30) || (result.fullGeminiText && result.fullGeminiText.length > 50))) {
-            return this.formatGeminiResult(result, dataUrl, file.name);
-          }
+          return this.formatGeminiResult(result, dataUrl, file.name);
         }
       }
     } catch (backendErr) {

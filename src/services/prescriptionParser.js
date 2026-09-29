@@ -688,7 +688,7 @@ export const SNOMED_DRUG_DICTIONARY = [
   },
   {
     generic: "Levocetirizine / Cetirizine",
-    brandNames: ["levocet", "levocet 5", "vozet", "vozet 5", "l-hist", "1-al", "cetirizine", "cetzine", "cetzine 10", "okacet", "alerid", "zyrtec"],
+    brandNames: ["levocet", "levocet 5", "vozet", "vozet 5", "l-hist", "1-al", "cetirizine", "cetzine", "cetzine 10", "okacet", "alerid", "zyrtec", "zyncet", "incid-l", "cetzine-od"],
     snomed: "387443001",
     drugClass: "2nd Gen H1-Antihistamine",
     standardDose: "5 mg / 10 mg",

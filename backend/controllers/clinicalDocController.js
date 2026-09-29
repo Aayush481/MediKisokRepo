@@ -7,8 +7,9 @@ import Tesseract from 'tesseract.js';
 const GEMINI_API_KEY = process.env.GOOGLE_API_KEY || "";
 const CANDIDATE_MODELS = [
   "gemini-3.5-flash-lite",
-  "gemini-3.1-flash-lite",
-  "gemini-flash-lite-latest"
+  "gemini-flash-lite-latest",
+  "gemini-3.5-flash",
+  "gemini-flash-latest"
 ];
 
 export class ClinicalDocController {
@@ -92,15 +93,19 @@ Structure your response strictly as:
 Always finish with: **NOT FOR CLINICAL USE WITHOUT PHYSICIAN REVIEW**`;
 
       let extractedOcrText = reportText || '';
-      if ((!extractedOcrText || extractedOcrText.trim().length < 40) && fileData) {
-        try {
-          const buffer = Buffer.from(fileData, 'base64');
-          const { data } = await Tesseract.recognize(buffer, 'eng');
-          if (data && data.text && data.text.trim()) {
-            extractedOcrText = data.text.trim();
-          }
-        } catch (tessErr) {
-          console.warn("Backend Tesseract OCR note:", tessErr.message);
+
+      // Auto-detect exact MIME type from base64 data to prevent 400 Bad Request
+      let detectedMime = mimeType;
+      if (fileData) {
+        const prefix = fileData.slice(0, 15);
+        if (prefix.startsWith('/9j/')) {
+          detectedMime = 'image/jpeg';
+        } else if (prefix.startsWith('iVBORw0KGgo')) {
+          detectedMime = 'image/png';
+        } else if (prefix.startsWith('JVBER')) {
+          detectedMime = 'application/pdf';
+        } else if (prefix.startsWith('UklGR')) {
+          detectedMime = 'image/webp';
         }
       }
 
@@ -108,7 +113,7 @@ Always finish with: **NOT FOR CLINICAL USE WITHOUT PHYSICIAN REVIEW**`;
       if (fileData) {
         parts.push({
           inlineData: {
-            mimeType: mimeType.startsWith('image/') || mimeType === 'application/pdf' ? mimeType : 'image/jpeg',
+            mimeType: detectedMime,
             data: fileData
           }
         });
@@ -128,13 +133,16 @@ Always finish with: **NOT FOR CLINICAL USE WITHOUT PHYSICIAN REVIEW**`;
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ contents: [{ role: 'user', parts: parts }] }),
-              signal: AbortSignal.timeout(12000)
+              signal: AbortSignal.timeout(20000)
             });
 
             if (geminiRes.ok) {
               const geminiData = await geminiRes.json();
               generatedText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || '';
               if (generatedText) break;
+            } else {
+              const errBody = await geminiRes.text().catch(() => '');
+              console.warn(`Remote vision model ${candidateModel} HTTP ${geminiRes.status}:`, errBody.slice(0, 200));
             }
           } catch (fetchErr) {
             console.warn(`Remote vision model ${candidateModel} note:`, fetchErr.message);
@@ -249,38 +257,6 @@ Always finish with: **NOT FOR CLINICAL USE WITHOUT PHYSICIAN REVIEW**`;
         lowerText.includes('no medical report') ||
         lowerText.includes('blank image');
 
-      let categoryType = 'medical_record';
-      let categoryLabel = detectedType;
-      let icon = '📄';
-      let badgeColor = 'pill-primary';
-
-      if (lowerType.includes('ecg') || lowerType.includes('ekg')) {
-        categoryType = 'ecg_report';
-        categoryLabel = '12-Lead ECG / EKG Strip';
-        icon = '💓';
-        badgeColor = rootCause.toLowerCase().includes('stemi') || rootCause.toLowerCase().includes('infarct') ? 'pill-danger' : 'pill-warning';
-      } else if (lowerType.includes('prescription') || lowerType.includes('rx') || lowerType.includes('doctor')) {
-        categoryType = 'prescription';
-        categoryLabel = 'Doctor Prescription (Rx)';
-        icon = '📄';
-        badgeColor = 'pill-success';
-      } else if (lowerType.includes('x-ray') || lowerType.includes('radiology') || lowerType.includes('radiograph') || lowerType.includes('ct scan') || /\bct\b/.test(lowerType)) {
-        categoryType = 'xray_report';
-        categoryLabel = detectedType.includes('(') ? detectedType : `X-Ray Radiograph (${anatomicalSite})`;
-        icon = '🩻';
-        badgeColor = rootCause.toLowerCase().includes('fracture') ? 'pill-danger' : 'pill-warning';
-      } else if (lowerType.includes('pathology') || lowerType.includes('lab') || lowerType.includes('blood') || lowerType.includes('biochemistry')) {
-        categoryType = 'pathology_report';
-        categoryLabel = 'Pathology & Biochemistry Report';
-        icon = '🔬';
-        badgeColor = 'pill-danger';
-      } else if (lowerType.includes('discharge')) {
-        categoryType = 'discharge_summary';
-        categoryLabel = 'Hospital Discharge Summary';
-        icon = '📋';
-        badgeColor = 'pill-primary';
-      }
-
       const combinedText = extractedOcrText ? `${extractedOcrText}\n\n${generatedText}` : `${reportText}\n${generatedText}`;
 
       // Extract medications from combined text and JSON block
@@ -292,6 +268,48 @@ Always finish with: **NOT FOR CLINICAL USE WITHOUT PHYSICIAN REVIEW**`;
         extractedMeds,
         rootCause
       ) : [];
+
+      let categoryType = 'medical_record';
+      let categoryLabel = detectedType;
+      let icon = '📄';
+      let badgeColor = 'pill-primary';
+
+      if (!isNonMedical) {
+        if (lowerType.includes('ecg') || lowerType.includes('ekg') || lowerType.includes('electrocardiogram')) {
+          categoryType = 'ecg_report';
+          categoryLabel = '12-Lead ECG / EKG Strip';
+          icon = '💓';
+          badgeColor = rootCause.toLowerCase().includes('stemi') || rootCause.toLowerCase().includes('infarct') ? 'pill-danger' : 'pill-warning';
+        } else if (lowerType.includes('x-ray') || lowerType.includes('radiology') || lowerType.includes('radiograph') || lowerType.includes('ct scan') || /\bct\b/.test(lowerType) || lowerType.includes('mri')) {
+          categoryType = 'xray_report';
+          categoryLabel = detectedType.includes('(') ? detectedType : `X-Ray Radiograph (${anatomicalSite})`;
+          icon = '🩻';
+          badgeColor = rootCause.toLowerCase().includes('fracture') ? 'pill-danger' : 'pill-warning';
+        } else if (labResults.flags.length > 0 || (labResults.normalValues && labResults.normalValues.length > 0) || /\b(pathology|biochemistry|hematology|haematology|lab\b|blood\s*test|lipid|glucose|cbc\b|kft\b|lft\b)\b/i.test(detectedType)) {
+          categoryType = 'pathology_report';
+          categoryLabel = 'Pathology & Biochemistry Report';
+          icon = '🔬';
+          badgeColor = 'pill-danger';
+        } else if (extractedMeds.length > 0 || /\b(prescription|rx\b|℞|medication|pharmacotherapy)\b/i.test(detectedType)) {
+          categoryType = 'prescription';
+          categoryLabel = 'Doctor Prescription (Rx)';
+          icon = '📄';
+          badgeColor = 'pill-success';
+          if (anatomicalSite === 'Clinical Record' || anatomicalSite === 'None') {
+            anatomicalSite = 'Outpatient Pharmacotherapy';
+          }
+        } else if (lowerType.includes('discharge')) {
+          categoryType = 'discharge_summary';
+          categoryLabel = 'Hospital Discharge Summary';
+          icon = '📋';
+          badgeColor = 'pill-primary';
+        } else {
+          categoryType = 'medical_record';
+          categoryLabel = detectedType || 'Clinical Care & Diagnostic Report';
+          icon = '📋';
+          badgeColor = 'pill-primary';
+        }
+      }
 
       res.json({
         success: !isNonMedical,
@@ -354,9 +372,18 @@ Always finish with: **NOT FOR CLINICAL USE WITHOUT PHYSICIAN REVIEW**`;
 
       // If an image/file is uploaded, process via Gemini Multimodal Vision with our specialized clinical prompt
       if (fileData) {
+        let detectedPrescMime = mimeType;
+        if (fileData) {
+          const prefix = fileData.slice(0, 15);
+          if (prefix.startsWith('/9j/')) detectedPrescMime = 'image/jpeg';
+          else if (prefix.startsWith('iVBORw0KGgo')) detectedPrescMime = 'image/png';
+          else if (prefix.startsWith('JVBER')) detectedPrescMime = 'application/pdf';
+          else if (prefix.startsWith('UklGR')) detectedPrescMime = 'image/webp';
+        }
+
         const parts = [{
           inlineData: {
-            mimeType: mimeType.startsWith('image/') || mimeType === 'application/pdf' ? mimeType : 'image/jpeg',
+            mimeType: detectedPrescMime,
             data: fileData
           }
         }];
@@ -418,7 +445,7 @@ Objectives:
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ contents: [{ role: 'user', parts }] }),
-              signal: AbortSignal.timeout(12000)
+              signal: AbortSignal.timeout(20000)
             });
 
             if (geminiRes.ok) {
