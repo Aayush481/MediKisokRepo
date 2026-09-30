@@ -38,8 +38,8 @@ app.use((req, res) => {
   res.sendFile(path.join(rootDir, 'frontend', 'index.html'));
 });
 
-// Start Server
-if (process.env.NODE_ENV !== 'test') {
+// Start Server (only when running as standalone process, not inside serverless environments)
+if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL && !process.env.NETLIFY) {
   app.listen(PORT, () => {
     console.log(`
 ======================================================

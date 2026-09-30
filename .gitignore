@@ -80,3 +80,6 @@ Desktop.ini
 *.swp
 *.swo
 .gemini/
+.vercel/
+.netlify/
+
