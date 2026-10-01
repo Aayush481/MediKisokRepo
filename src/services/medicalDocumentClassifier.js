@@ -32,7 +32,7 @@ class MedicalDocumentClassifier {
     const hasExtractedLabData = labFlagCount > 0 || labNormalCount > 0;
 
     const matchedDrugs = prescriptionParser.parsePrescriptionText(rawOcrText || text);
-    const validDrugs = matchedDrugs.filter(d => d.validated === true && d.name);
+    const validDrugs = matchedDrugs.filter(d => (d.validated === true || d.name) && d.name !== null && d.brandReported !== "Illegible / Unclear");
     const hasExtractedPrescriptions = validDrugs.length > 0;
 
     // 3. Strict Non-Medical Pattern Detection (Catches UI, Dev, Invoices, Receipts, Tickets, Social, Food, Gym, Academic)
@@ -53,19 +53,23 @@ class MedicalDocumentClassifier {
       (hasRadiologyHeader && hasRadiologyView && hasSkeletalSite && !visual.isColorfulPhoto);
 
     // C. Pathology / Biochemistry Report: Parsed analytes OR certified lab header + biomarker
-    const hasLabHeader = /\b(pathology\s*(?:report|lab|department|investigation)|biochemistry\s*(?:report|lab|department)|hematology\s*(?:report|lab|department)|haematology|laboratory\s*(?:investigation|report|test)|clinical\s*pathology|blood\s*test\s*report|complete\s*blood\s*count|lipid\s*profile|liver\s*function\s*test|kidney\s*function\s*test|renal\s*function\s*test|thyroid\s*profile|dr\s*lal\s*pathlabs|srl\s*diagnostics|metropolis\s*health|thyrocare|agilus\s*diagnostics|pathkind|pathkindlabs|apollo\s*diagnostics|max\s*lab|suburban\s*diagnostics|care\s*hospital|care\s*diagnostics?)\b/i.test(text);
-    const hasLabTableColumns = /\b(test\s*name|investigation|analyte)\b/i.test(text) && /\b(observed\s*value|result\s*value|patient\s*value|result)\b/i.test(text) && /\b(reference\s*(?:interval|range)|biological\s*ref|normal\s*range|ref\.\s*interval|unit)\b/i.test(text);
-    const hasLabBiomarkers = /\b(hemoglobin|haemoglobin|total\s*leukocyte|tlc\b|wbc\b|rbc\b|platelet|platelets|blood\s*glucose|fasting\s*blood|postprandial|hba1c|serum\s*creatinine|blood\s*urea|uric\s*acid|bilirubin|sgpt|sgot|serum\s*cholesterol|triglycerides|tsh\b|cbc\b|pcv\b|mcv\b|mch\b|mchc\b|rdw\b|mpv\b|neutrophil|lymphocyte|eosinophil|monocyte|basophil|hematocrit|haematocrit|anc\b|alc\b|aec\b)\b/i.test(text);
+    const hasLabHeader = /\b(pathology\s*(?:report|lab|department|investigation)?|biochemistry\s*(?:report|lab|department|investigation)?|hematology\s*(?:report|lab|department|investigation)?|haematology\s*(?:report|lab|department|investigation)?|clinical\s*pathology|laboratory\s*(?:report|investigation|test|services)?|complete\s*blood\s*count\s*(?:report|investigation)|path\s*lab|diagnostic\s*(?:lab|center|centre|services)|diagnostics\b|central\s*lab|dr\s*lal\s*pathlabs|srl\s*diagnostics|metropolis|thyrocare|pathkind|agilus|suburban\s*diagnostics|apollo\s*diagnostics|max\s*lab)\b/i.test(text);
+    const hasLabTableColumns = /\b(test\s*name|investigation|analyte|parameter)\b/i.test(text) && /\b(observed\s*value|result\s*value|patient\s*value|result|value)\b/i.test(text) && /\b(reference\s*(?:interval|range)|biological\s*ref|normal\s*range|ref\.\s*interval|units?)\b/i.test(text);
+    const hasLabUnits = /\b(mg\/dl|g\/dl|gm\/dl|mmol\/l|meq\/l|iu\/l|u\/l|cells\/cumm|\/cumm|\/ul|ng\/ml|pg\/ml|ug\/dl|µg\/dl|fl\b|pg\b|miu\/ml|g\/l)\b/i.test(text);
+    const hasLabBiomarkers = /\b(hemoglobin|haemoglobin|total\s*leukocyte|tlc\b|wbc\b|rbc\b|platelet|platelets|blood\s*glucose|fasting\s*blood\s*sugar|postprandial|hba1c|serum\s*creatinine|blood\s*urea|uric\s*acid|bilirubin|sgpt|sgot|serum\s*cholesterol|triglycerides|tsh\b|pcv\b|mcv\b|mch\b|mchc\b|rdw\b|mpv\b|neutrophil|lymphocyte|eosinophil|monocyte|basophil|hematocrit|haematocrit)\b/i.test(text);
     const hasLabSignal = hasExtractedLabData || 
-      (hasLabHeader && hasLabBiomarkers) || 
-      (hasLabTableColumns && hasLabBiomarkers) ||
-      /\b(complete\s*blood\s*count|cbc\b|pathkind|pathology\s*report|blood\s*test|hematology|haematology)\b/i.test(text) ||
-      (/\b(haemoglobin|hemoglobin|hb\b|wbc|rbc|platelet|tlc|pcv|mcv|mch|mchc|rdw)\b/i.test(text) && /\b(result|ref|unit|biological|interval|normal|sample|whole\s*blood|edta|blood)\b/i.test(text));
+      (hasLabTableColumns && (hasLabBiomarkers || hasLabUnits)) || 
+      (hasLabUnits && hasLabBiomarkers) ||
+      (hasLabHeader && (hasLabUnits || hasLabTableColumns || (!hasExtractedPrescriptions && hasLabBiomarkers)));
 
-    // D. Doctor Prescription: Requires validated medications AND clinical context / regimen
-    const hasRxHeader = /\b(rx\b|℞|prescribed|prescription|dr\.\s+[a-z]+|doctor|clinic|hospital|dispensary|consultant|opd|outpatient|consulting\s*physician|treatment\s*chart|medical\s*practitioner|reg(?:istration)?\s*no)\b/i.test(text);
+    // D. Doctor Prescription: Requires validated medications OR clinical context / Rx header with medicine signals
+    const hasRxHeader = /\b(rx\b|℞|prescribed|prescription|dispensary|consulting\s*physician|treatment\s*chart|doctor['’]?s\s*prescription|rx\s*orders?)\b/i.test(text);
     const hasRxDosageRegimen = validDrugs.some(d => d.dosage && /\b(od|bd|bid|tds|tid|qid|hs|sos|stat|1-0-1|1-0-0|0-0-1|1-1-1|0-1-0|daily|after\s*food|before\s*food|empty\s*stomach)\b/i.test(d.dosage + " " + (d.usage || "")));
-    const hasRxSignal = hasExtractedPrescriptions && (hasRxHeader || validDrugs.length >= 2 || hasRxDosageRegimen);
+    const hasRxKeywords = /\b(tab(?:let)?s?|cap(?:sule)?s?|syp(?:rup)?s?|inj(?:ection)?s?|dosage|take\s+\d+|po\b|prn\b|q\d+h|sig\b|dispense|refill|meals?|food)\b/i.test(text);
+    const hasRxSignal = (
+      (hasExtractedPrescriptions && (hasRxHeader || validDrugs.length >= 1 || hasRxDosageRegimen)) ||
+      (hasRxHeader && hasRxKeywords)
+    ) && !hasLabUnits && !hasLabTableColumns;
 
     // E. Hospital Discharge Summary: Inpatient discharge header AND at least two inpatient fields
     const hasDischargeHeader = /\b(discharge\s*summary|discharge\s*card|inpatient\s*(?:discharge|summary)|hospital\s*discharge)\b/i.test(text);
@@ -76,7 +80,7 @@ class MedicalDocumentClassifier {
 
     // 5. Explicit Non-Medical Rejection with Strict Verification Overrides
     if (isExplicitNonMedical) {
-      const hasVerifiedOverride = (hasExtractedPrescriptions && validDrugs.length >= 1 && (hasRxHeader || validDrugs.length >= 2)) ||
+      const hasVerifiedOverride = (hasExtractedPrescriptions && validDrugs.length >= 1 && (hasRxHeader || validDrugs.length >= 1)) ||
         (hasExtractedLabData && (labFlagCount >= 1 || labNormalCount >= 1)) ||
         visual.hasEcgGrid ||
         (visual.isMonochromeRadiograph && !visual.isColorfulPhoto);
@@ -128,21 +132,7 @@ class MedicalDocumentClassifier {
       };
     }
 
-    // C. Check Doctor Prescription (Prioritized when Rx header, multiple drugs, or no lab header)
-    if (!classification && hasRxSignal && (hasRxHeader || validDrugs.length >= 2 || !hasLabHeader)) {
-      classification = {
-        isValidMedical: true,
-        type: "prescription",
-        categoryLabel: "Doctor Prescription (Rx)",
-        icon: "📄",
-        badgeColor: "pill-success",
-        confidence: hasExtractedPrescriptions ? "98.9%" : "95.5%",
-        rootCause: this.deducePrescriptionRootCause(text, validDrugs),
-        anatomicalSite: "Outpatient Pharmacotherapy"
-      };
-    }
-
-    // D. Check Pathology Lab Report
+    // C. Check Pathology Lab Report (Prioritized over prescription when lab signals exist)
     if (!classification && hasLabSignal) {
       classification = {
         isValidMedical: true,
@@ -156,7 +146,7 @@ class MedicalDocumentClassifier {
       };
     }
 
-    // E. Doctor Prescription Secondary Gate
+    // D. Check Doctor Prescription (Only if not already classified as lab report)
     if (!classification && hasRxSignal) {
       classification = {
         isValidMedical: true,

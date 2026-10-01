@@ -179,6 +179,12 @@ class OCREngine {
 
     if (!isLabOrImaging && (classification.type === "prescription" || classification.type === "discharge_summary" || classification.type === "medical_record")) {
       extractedMedications = prescriptionParser.parsePrescriptionText(ocrText || fileName);
+      if (extractedMedications.length > 0 && classification.type === "medical_record") {
+        classification.type = "prescription";
+        classification.categoryLabel = "Doctor Prescription (Rx)";
+        classification.badgeColor = "pill-success";
+        classification.icon = "📄";
+      }
     } else {
       extractedMedications = [];
     }
@@ -279,8 +285,8 @@ class OCREngine {
         normalValues: labNormals,
         xrayFindings: xrayDetails
       },
-      extractedMedications: extractedMedications,
-      structuredPrescriptionJSON: prescriptionParser.parseToStructuredJSON(ocrText || fileName),
+      extractedMedications: isLabOrImaging ? [] : extractedMedications,
+      structuredPrescriptionJSON: (isLabOrImaging || extractedMedications.length === 0) ? null : prescriptionParser.parseToStructuredJSON(ocrText || fileName),
       extractedDiseases: extractedDiseases,
       labFlags: labFlags,
       confidence: classification.confidence

@@ -1001,26 +1001,42 @@ class PrescriptionParser {
    */
   matchDrug(token) {
     if (!token || token.length < 2) return null;
+
+    // Strict Clinical Safety Gate: Reject clinical pathology analytes and laboratory biomarkers immediately
+    if (/\b(hemoglobin|haemoglobin|bilirubin|creatinine|urea|uric\s*acid|cholesterol|triglycerides|ldl|hdl|vldl|sgpt|sgot|alt\b|ast\b|alp\b|alkaline\s*phosphatase|albumin|globulin|total\s*protein|calcium|phosphorus|phosphate|sodium|potassium|chloride|bicarbonate|glucose|sugar|blood\s*sugar|fasting\s*blood|postprandial|hba1c|tlc\b|wbc\b|rbc\b|platelet|platelets|pcv\b|mcv\b|mch\b|mchc\b|rdw\b|mpv\b|neutrophil|lymphocyte|eosinophil|monocyte|basophil|tsh\b|t3\b|t4\b|thyroxine|vitamin\s*d|vitamin\s*b12|ferritin|iron|transferrin|tibc|crp\b|esr\b|psa\b|pus\s*cells|epithelial\s*cells|differential\s*count|total\s*leukocyte|leukocyte\s*count|absolute\s*neutrophil|specimen|analyte)\b/i.test(token)) {
+      return null;
+    }
+
+    let stripped = token.toLowerCase();
+    stripped = stripped.replace(/^(?:rx[:\s]+|℞[:\s]+|\d+[\.\)\-:]\s*|[•\-\*]\s*)/gi, "");
+    stripped = stripped.replace(/\b(?:tab(?:let)?s?|cap(?:sule)?s?|syp(?:rup)?s?|inj(?:ection)?s?|oint(?:ment)?s?|gels?|creams?|drops?|inhalers?|respules?|susp(?:ension)?s?|pills?|lotions?)\b/gi, " ");
+    stripped = stripped.replace(/\b\d+(?:\.\d+)?\s*(?:mg|mcg|µg|gm|g|ml|iu|units?|k)\b/gi, " ");
+    stripped = stripped.replace(/\b\d+\b/g, " ");
+    stripped = stripped.replace(/\b(?:od|bd|bid|tds|tid|qid|hs|sos|prn|stat|1-0-1|1-1-1|1-0-0|0-0-1|ac|pc|po)\b/gi, " ");
+    const normalizedClean = stripped.replace(/[^a-z0-9]/g, "").trim();
+
     const cleanToken = token.toLowerCase().replace(/[^a-z0-9]/g, "");
-    if (cleanToken.length < 2) return null;
+    if (cleanToken.length < 2 && normalizedClean.length < 2) return null;
 
     // Reject non-medical English vocabulary, anatomy, UI terms, tutorial text, business/retail terms, chemistry terms, pathology analytes
-    if (/^(the|and|for|with|after|before|daily|during|fever|body|ache|pain|tablet|capsule|syrup|injection|tab|cap|syp|inj|dr|clinic|hospital|patient|date|time|review|print|screen|active|window|paste|save|folder|using|tool|sketch|area|choose|type|full|open|search|start|menu|press|hold|items|total|milk|bread|apple|rice|paid|thank|shopping|walmart|function|return|export|default|honda|city|quote|service|flight|seat|gate|delhi|mumbai|bangalore|india|airline|ticket|receipt|invoice|screenshot|snip|snapping|camera|photo|video|call|people|person|image|picture|view|finding|findings|impression|joint|space|knee|shoulder|chest|bone|spine|pelvis|tibia|femur|humerus|clavicle|lateral|radiograph|radiology|normal|abnormal|report|investigation|parameter|value|range|unit|result|status|target|fedex|order|summary|meeting|revenue|growth|focus|market|campaign|amazon|contract|weather|forecast|delay|notice|repair|bill|account|bank|email|letter|package|delivery|product|item|amount|balance|payment|card|credit|debit|salary|project|client|company|office|team|manager|director|employee|customer|student|school|college|university|exam|score|grade|class|subject|course|lesson|chapter|page|section|paragraph|sentence|word|text|data|code|system|server|network|internet|website|online|software|hardware|device|phone|mobile|laptop|computer|display|screen|monitor|keyboard|mouse|power|button|switch|cable|battery|charger|storage|memory|drive|folder|file|document|pdf|png|jpg|jpeg|gif|svg|audio|video|music|movie|game|play|pause|stop|record|sound|voice|volume|track|channel|media|sodium|potassium|calcium|acid|chloride|hydroxide|hydrochloric|titration|chemistry|experiment|reaction|solution|solvent|iron|albumin|glucose|creatinine|urea|bilirubin|sgpt|sgot|cholesterol|triglycerides|platelet|platelets|hemoglobin|haemoglobin|leukocyte|hematocrit|haematocrit|lymphocyte|neutrophil|eosinophil|monocyte|basophil|analyte|serum|plasma|specimen|biochemistry|hematology|pathology)$/i.test(cleanToken)) {
+    const testToken = normalizedClean.length >= 2 ? normalizedClean : cleanToken;
+    if (/^(the|and|for|with|after|before|daily|during|fever|body|ache|pain|tablet|capsule|syrup|injection|tab|cap|syp|inj|dr|clinic|hospital|patient|date|time|review|print|screen|active|window|paste|save|folder|using|tool|sketch|area|choose|type|full|open|search|start|menu|press|hold|items|total|milk|bread|apple|rice|paid|thank|shopping|walmart|function|return|export|default|honda|city|quote|service|flight|seat|gate|delhi|mumbai|bangalore|india|airline|ticket|receipt|invoice|screenshot|snip|snapping|camera|photo|video|call|people|person|image|picture|view|finding|findings|impression|joint|space|knee|shoulder|chest|bone|spine|pelvis|tibia|femur|humerus|clavicle|lateral|radiograph|radiology|normal|abnormal|report|investigation|parameter|value|range|unit|result|status|target|fedex|order|summary|meeting|revenue|growth|focus|market|campaign|amazon|contract|weather|forecast|delay|notice|repair|bill|account|bank|email|letter|package|delivery|product|item|amount|balance|payment|card|credit|debit|salary|project|client|company|office|team|manager|director|employee|customer|student|school|college|university|exam|score|grade|class|subject|course|lesson|chapter|page|section|paragraph|sentence|word|text|data|code|system|server|network|internet|website|online|software|hardware|device|phone|mobile|laptop|computer|display|screen|monitor|keyboard|mouse|power|button|switch|cable|battery|charger|storage|memory|drive|folder|file|document|pdf|png|jpg|jpeg|gif|svg|audio|video|music|movie|game|play|pause|stop|record|sound|voice|volume|track|channel|media|sodium|potassium|acid|chloride|hydroxide|hydrochloric|titration|chemistry|experiment|reaction|solution|solvent|iron|albumin|glucose|creatinine|urea|bilirubin|sgpt|sgot|cholesterol|triglycerides|platelet|platelets|hemoglobin|haemoglobin|leukocyte|hematocrit|haematocrit|lymphocyte|neutrophil|eosinophil|monocyte|basophil|analyte|serum|plasma|specimen|biochemistry|hematology|pathology)$/i.test(testToken)) {
       return null;
     }
 
     const SALT_STOP_WORDS = new Set([
-      "sodium", "potassium", "calcium", "acid", "chloride", "hcl", "phosphate", "sulfate", "sulphate",
+      "sodium", "potassium", "acid", "chloride", "hcl", "phosphate", "sulfate", "sulphate",
       "fumarate", "maleate", "succinate", "acetate", "citrate", "hydrate", "mesylate", "tartrate",
       "besylate", "nitrate", "oxide", "carbonate", "hydroxide", "gluconate", "hydrobromide", "bromide",
       "iodide", "lactate", "propionate", "dipropionate", "valerate", "pivalate", "stearate", "disodium",
       "dipotassium", "zinc", "magnesium", "aluminium", "aluminum"
     ]);
 
-    // Strip trailing dosage digits if present (e.g. "augmentin625" -> "augmentin", "dolo650" -> "dolo", "pan40" -> "pan")
+    const candidateTokens = [];
+    if (normalizedClean.length >= 2) candidateTokens.push(normalizedClean);
+    if (cleanToken.length >= 2 && cleanToken !== normalizedClean) candidateTokens.push(cleanToken);
     const cleanAlphaOnly = cleanToken.replace(/\d+/g, "").trim();
-    const candidateTokens = [cleanToken];
-    if (cleanAlphaOnly.length >= 3 && cleanAlphaOnly !== cleanToken) {
+    if (cleanAlphaOnly.length >= 3 && !candidateTokens.includes(cleanAlphaOnly)) {
       candidateTokens.push(cleanAlphaOnly);
     }
 
@@ -1031,6 +1047,7 @@ class PrescriptionParser {
       "amoxyclav": "augmentin",
       "augmntn": "augmentin",
       "augmntin": "augmentin",
+      "clavam": "augmentin",
       "azith": "azithromycin",
       "azithro": "azithromycin",
       "azi": "azithral",
@@ -1054,6 +1071,7 @@ class PrescriptionParser {
       "vovran": "voveran",
       "brufen": "ibuprofen",
       "pan": "pantoprazole",
+      "pand": "pantoprazole",
       "panto": "pantoprazole",
       "pantocid": "pantoprazole",
       "rabe": "rabeprazole",
@@ -1097,7 +1115,15 @@ class PrescriptionParser {
       "becosuls": "vitamin b-complex",
       "neurobion": "vitamin b-complex",
       "thyronorm": "levothyroxine",
-      "eltroxin": "levothyroxine"
+      "eltroxin": "levothyroxine",
+      "zifi": "cefixime",
+      "taxim": "cefixime",
+      "taximo": "cefixime",
+      "meftal": "mefenamic",
+      "meftalspas": "mefenamic",
+      "ondem": "ondansetron",
+      "rantac": "ranitidine",
+      "aciloc": "ranitidine"
     };
 
     // Check handwriting stem alias
@@ -1175,8 +1201,8 @@ class PrescriptionParser {
    */
   extractFrequency(line) {
     const upper = line.toUpperCase();
-    let code = "OD";
-    let text = "OD (Once Daily)";
+    let code = "AS_DIRECTED";
+    let text = "As Directed by Physician";
 
     if (/\b(1-1-1|TDS|TID|THRICE|3 TIMES|THREE TIMES)\b/i.test(upper)) {
       code = "TDS";
@@ -1222,7 +1248,8 @@ class PrescriptionParser {
    */
   extractDosage(line, defaultDose = "Standard Dose") {
     // 1. Explicit Strength Units (e.g. 625 mg, 500 mg, 40 mg, 10 mcg, 10 ml, 60,000 iu)
-    const unitMatch = line.match(/(\d+(?:,\d+)?(?:\.\d+)?)\s*(mg|mcg|µg|gm|g|ml|iu|units|drops?|puff|puffs)\b/i);
+    // Negative lookahead prevents matching laboratory concentration units per volume (e.g. 13.5 gm/dL, 1.1 mg/dL, 85 U/L)
+    const unitMatch = line.match(/(\d+(?:,\d+)?(?:\.\d+)?)\s*(mg|mcg|µg|gm|g|ml|iu|units|drops?|puff|puffs)\b(?!\s*\/[a-z])/i);
     if (unitMatch) {
       return `${unitMatch[1].replace(/,/g, "")} ${unitMatch[2].toLowerCase()}`;
     }
@@ -1338,10 +1365,45 @@ class PrescriptionParser {
   }
 
   /**
+   * Strictly detects whether a text stream originates from a Pathology / Biochemistry / Hematology Laboratory Report.
+   * Laboratory reports contain in vitro diagnostic measurements and reference intervals, NOT outpatient prescription orders.
+   */
+  isPathologyReportText(text) {
+    if (!text || typeof text !== "string") return false;
+    const lower = text.toLowerCase();
+
+    // 1. Direct Laboratory Organization / Department Header
+    const hasLabHeader = /\b(pathology\s*(?:report|lab|department|investigation)|biochemistry\s*(?:report|lab|department|investigation)|hematology\s*(?:report|lab|department|investigation)|haematology|clinical\s*pathology|laboratory\s*(?:investigation|report|test\s*report)|complete\s*blood\s*count\s*(?:report|investigation)|path\s*lab|diagnostic\s*lab|central\s*lab|dr\s*lal\s*pathlabs|srl\s*diagnostics|metropolis|thyrocare|pathkind|agilus|suburban\s*diagnostics|apollo\s*diagnostics|max\s*lab)\b/i.test(lower);
+
+    // 2. Standard Laboratory Table Column Headers
+    const hasLabColumns = /\b(test\s*name|investigation|analyte|parameter)\b/i.test(lower) && 
+                          /\b(result|observed\s*value|patient\s*value|value)\b/i.test(lower) && 
+                          /\b(reference\s*(?:interval|range)|biological\s*ref|normal\s*range|ref\.\s*interval|units?)\b/i.test(lower);
+
+    // 3. Laboratory Concentration Units per Volume (never used in outpatient prescriptions)
+    const labUnits = (lower.match(/\b(mg\/dl|g\/dl|gm\/dl|mmol\/l|meq\/l|iu\/l|u\/l|cells\/cumm|\/cumm|\/ul|ng\/ml|pg\/ml|ug\/dl|µg\/dl|fl\b|pg\b|miu\/ml|g\/l)\b/gi) || []).length;
+
+    // 4. Clinical Laboratory Analytes
+    const analyteMatches = (lower.match(/\b(hemoglobin|haemoglobin|bilirubin|creatinine|urea|uric\s*acid|cholesterol|triglycerides|sgpt|sgot|alt\b|ast\b|alp\b|albumin|globulin|calcium|phosphorus|sodium|potassium|chloride|glucose|fasting\s*blood|postprandial|hba1c|tlc\b|wbc\b|rbc\b|platelet|platelets|pcv\b|mcv\b|mch\b|mchc\b|rdw\b|neutrophil|lymphocyte|eosinophil|monocyte|basophil|tsh\b|t3\b|t4\b|serum|plasma|specimen|leukocyte)\b/gi) || []).length;
+
+    // A real laboratory report MUST have laboratory concentration units OR lab table columns with observed results
+    if (hasLabColumns && (labUnits >= 1 || analyteMatches >= 1)) return true;
+    if (hasLabHeader && (labUnits >= 1 || hasLabColumns)) return true;
+    if (labUnits >= 2 && analyteMatches >= 2) return true;
+    if (hasLabHeader && analyteMatches >= 3 && !/\b(rx\b|℞|tab\b|cap\b|syp\b|inj\b)\b/i.test(lower)) return true;
+
+    return false;
+  }
+
+  /**
    * Engine 1: Precision Grammar & Prescription Line Extractor
    * Handles all doctor prescription styles (printed, handwritten OCR, bulleted, numbered)
    */
   extractGrammarLines(rawOcrText) {
+    if (this.isPathologyReportText(rawOcrText)) {
+      return [];
+    }
+
     const lines = rawOcrText.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
     const parsedEntries = [];
 
@@ -1353,13 +1415,21 @@ class PrescriptionParser {
 
     // Line containing medication indicator or dose + frequency
     const rxContainsPattern = /\b(?:Tab|Tablet|Cap|Capsule|Syp|Syrup|Inj|Injection|Drops|Inhaler|Rx|℞)\b/i;
-    const hasDoseAndFreq = /\b(?:\d+\s*(?:mg|mcg|gm|ml|iu)|OD|BD|TDS|QID|HS|SOS|1-0-1|1-1-1|1-0-0|0-0-1)\b/i;
+    const hasDoseAndFreq = /\b(?:\d+\s*(?:mg|mcg|gm|ml|iu)(?!\s*\/[a-z])|OD|BD|TDS|QID|HS|SOS|1-0-1|1-1-1|1-0-0|0-0-1)\b/i;
+
+    const LAB_ANALYTE_REGEX = /\b(hemoglobin|haemoglobin|bilirubin|creatinine|urea|uric\s*acid|cholesterol|triglycerides|ldl|hdl|vldl|sgpt|sgot|alt\b|ast\b|alp\b|alkaline\s*phosphatase|albumin|globulin|total\s*protein|calcium|phosphorus|phosphate|sodium|potassium|chloride|bicarbonate|glucose|sugar|blood\s*sugar|fasting\s*blood|postprandial|hba1c|tlc\b|wbc\b|rbc\b|platelet|platelets|pcv\b|mcv\b|mch\b|mchc\b|rdw\b|mpv\b|neutrophil|lymphocyte|eosinophil|monocyte|basophil|tsh\b|t3\b|t4\b|thyroxine|vitamin\s*d|vitamin\s*b12|ferritin|iron|transferrin|tibc|crp\b|esr\b|psa\b|pus\s*cells|epithelial\s*cells|differential\s*count|total\s*leukocyte|leukocyte\s*count|absolute\s*neutrophil)\b/i;
 
     for (const line of lines) {
       if (line.length < 3) continue;
 
       // Skip non-prescription metadata headers
       if (/^(?:patient|name|age|gender|sex|date\b|dr\.|clinic|hospital|address|tel\s*[:\.\-]|telephone|phone|temp\s*[:\.\-]|bp\s*[:\.\-]|pulse\s*[:\.\-]|weight|bmi\b|lab\b|investigation|advice|review|using|press\b|active\b|full\b|save\b|snip\b|impression|report)/i.test(line)) continue;
+
+      // Skip laboratory result lines, concentration units, and diagnostic test rows
+      if (/\b(?:mg\/dl|g\/dl|gm\/dl|mmol\/l|meq\/l|iu\/l|u\/l|cells\/cumm|\/cumm|\/ul|ng\/ml|pg\/ml|ug\/dl|µg\/dl|fl\b|pg\b|miu\/ml|g\/l|ref\b|reference|interval|biological\s*ref|normal\s*range|observed\s*value|specimen|method|technique|analyte|test\s*name)\b/i.test(line)) continue;
+
+      // Skip clinical laboratory analytes
+      if (LAB_ANALYTE_REGEX.test(line)) continue;
 
       let drugNameCandidate = "";
       const matchPrefix = line.match(rxPrefixRegex);
@@ -1380,7 +1450,7 @@ class PrescriptionParser {
             .trim();
         }
       } else if (rxContainsPattern.test(line) && hasDoseAndFreq.test(line)) {
-        const doseIdx = line.search(/\b(?:\d+(?:\.\d+)?\s*(?:mg|mcg|gm|ml|iu|g)|1-0-1|1-1-1|1-0-0|0-0-1|OD|BD|TDS|QID|HS|SOS)\b/i);
+        const doseIdx = line.search(/\b(?:\d+(?:\.\d+)?\s*(?:mg|mcg|gm|ml|iu|g)(?!\s*\/[a-z])|1-0-1|1-1-1|1-0-0|0-0-1|OD|BD|TDS|QID|HS|SOS)\b/i);
         if (doseIdx > 0) {
           drugNameCandidate = line.substring(0, doseIdx)
             .replace(/^(?:\d+[\.\)\-:]\s*|Rx[:\s]+|℞[:\s]+|•\s*|-\s*)?(?:Tab(?:let)?\.?|Cap(?:sule)?\.?|Syp(?:rup)?\.?|Inj(?:ection)?\.?|Susp\.?|Drops?\.?)\s*/i, "")
@@ -1389,7 +1459,7 @@ class PrescriptionParser {
         }
       } else if (hasDoseAndFreq.test(line)) {
         // Cursive handwriting line without prefix: e.g. "Augmentin 625 TDS", "Dolo 650 SOS", "Pan-40 OD"
-        const doseIdx = line.search(/\b(?:\d+(?:\.\d+)?\s*(?:mg|mcg|gm|ml|iu|g)|1-0-1|1-1-1|1-0-0|0-0-1|OD|BD|TDS|QID|HS|SOS)\b/i);
+        const doseIdx = line.search(/\b(?:\d+(?:\.\d+)?\s*(?:mg|mcg|gm|ml|iu|g)(?!\s*\/[a-z])|1-0-1|1-1-1|1-0-0|0-0-1|OD|BD|TDS|QID|HS|SOS)\b/i);
         if (doseIdx > 1) {
           drugNameCandidate = line.substring(0, doseIdx)
             .replace(/^(?:\d+[\.\)\-:]\s*|Rx[:\s]+|℞[:\s]+|•\s*|-\s*)?/i, "")
@@ -1407,9 +1477,13 @@ class PrescriptionParser {
           .trim();
       }
 
+      if (drugNameCandidate && LAB_ANALYTE_REGEX.test(drugNameCandidate)) {
+        continue;
+      }
+
       if (drugNameCandidate && drugNameCandidate.length >= 2 && !/^(the|and|for|with|after|before|daily|during|fever|body|ache|using|print|screen|active|window|paste|snip)$/i.test(drugNameCandidate)) {
         const cleanName = drugNameCandidate.replace(/[^A-Za-z0-9\s\-\+\/]/g, "").trim();
-        if (cleanName.length >= 2) {
+        if (cleanName.length >= 2 && !LAB_ANALYTE_REGEX.test(cleanName)) {
           parsedEntries.push({
             rawLine: line,
             extractedName: cleanName
@@ -1426,6 +1500,12 @@ class PrescriptionParser {
    */
   parsePrescriptionText(rawOcrText) {
     if (!rawOcrText) return [];
+
+    // STRICT MEDICAL SAFETY GATE: If the document is a Pathology / Biochemistry / Laboratory report,
+    // it contains in vitro diagnostic test values, NEVER prescribed outpatient medications.
+    if (this.isPathologyReportText(rawOcrText)) {
+      return [];
+    }
 
     const extractedMeds = [];
     const seenGenericOrNames = new Set();
@@ -1457,10 +1537,11 @@ class PrescriptionParser {
 
         hasValidNamedMed = true;
         const dictMatch = this.matchDrug(j.medicine);
-        const freq = this.extractFrequency(j.usage || j.dosage || "");
+        const combinedDoseUsage = `${j.dosage || ""} ${j.usage || ""}`.trim();
+        const freq = this.extractFrequency(combinedDoseUsage);
         const dosage = j.dosage || (dictMatch ? dictMatch.standardDose : "Standard Dose");
-        const duration = this.extractDuration(j.usage || "");
-        const route = this.extractRoute(j.usage || j.dosage || "", dictMatch ? dictMatch.route : "Oral");
+        const duration = this.extractDuration(combinedDoseUsage);
+        const route = this.extractRoute(combinedDoseUsage, dictMatch ? dictMatch.route : "Oral");
 
         if (dictMatch) {
           const key = dictMatch.generic.toLowerCase();
@@ -1484,6 +1565,7 @@ class PrescriptionParser {
           });
         } else {
           seenGenericOrNames.add(j.medicine.toLowerCase());
+          const hasPrescriptionRegimen = j.validated === true || Boolean(j.dosage || j.usage);
           extractedMeds.push({
             name: j.medicine,
             brandReported: j.medicine,
@@ -1496,8 +1578,8 @@ class PrescriptionParser {
             duration: duration,
             route: route,
             schedule: "Schedule H",
-            validated: j.validated === true ? true : false,
-            reason: j.validated === true ? undefined : (j.reason || "Unrecognized medicine"),
+            validated: hasPrescriptionRegimen,
+            reason: hasPrescriptionRegimen ? undefined : (j.reason || "Unrecognized medicine"),
             confidence: "94% (AI Vision Extracted)"
           });
         }
@@ -1549,6 +1631,7 @@ class PrescriptionParser {
         const key = rawName.toLowerCase();
         if (!seenGenericOrNames.has(key)) {
           seenGenericOrNames.add(key);
+          const hasPrescriptionRegimen = freq.code !== "AS_DIRECTED" || dosage !== "Standard Dose" || duration !== "As Advised by Physician" || /\b(tab|cap|syp|inj|drops?)\b/i.test(line);
           extractedMeds.push({
             name: rawName,
             brandReported: rawName,
@@ -1561,9 +1644,9 @@ class PrescriptionParser {
             duration: duration,
             route: route,
             schedule: "Schedule H",
-            validated: false,
-            reason: "Unrecognized medicine",
-            confidence: "94% (Grammar Line Extracted)"
+            validated: hasPrescriptionRegimen,
+            reason: hasPrescriptionRegimen ? undefined : "Unrecognized medicine",
+            confidence: hasPrescriptionRegimen ? "94% (Grammar Line Extracted)" : "75% (Candidate Entity)"
           });
         }
       }
@@ -1577,8 +1660,15 @@ class PrescriptionParser {
       // Skip non-medical metadata
       if (/^(?:patient|name|age|gender|sex|date\b|dr\.|clinic|hospital|address|tel\s*[:\.\-]|telephone|phone|temp\s*[:\.\-]|bp\s*[:\.\-]|pulse\s*[:\.\-]|weight|bmi\b|lab\b|advice|review|using|press\b|active\b|full\b|save\b|snip\b|meeting|order|flight|invoice|receipt)/i.test(line)) continue;
 
+      // Skip laboratory result lines, concentration units, and diagnostic test rows
+      if (/\b(?:mg\/dl|g\/dl|gm\/dl|mmol\/l|meq\/l|iu\/l|u\/l|cells\/cumm|\/cumm|\/ul|ng\/ml|pg\/ml|ug\/dl|µg\/dl|fl\b|pg\b|miu\/ml|g\/l|ref\b|reference|interval|biological\s*ref|normal\s*range|observed\s*value|specimen|method|technique|analyte|test\s*name)\b/i.test(line)) continue;
+
+      // Skip lines matching clinical laboratory analytes
+      if (/\b(hemoglobin|haemoglobin|bilirubin|creatinine|urea|uric\s*acid|cholesterol|triglycerides|ldl|hdl|vldl|sgpt|sgot|alt\b|ast\b|alp\b|alkaline\s*phosphatase|albumin|globulin|total\s*protein|calcium|phosphorus|phosphate|sodium|potassium|chloride|bicarbonate|glucose|sugar|blood\s*sugar|fasting\s*blood|postprandial|hba1c|tlc\b|wbc\b|rbc\b|platelet|platelets|pcv\b|mcv\b|mch\b|mchc\b|rdw\b|mpv\b|neutrophil|lymphocyte|eosinophil|monocyte|basophil|tsh\b|t3\b|t4\b|thyroxine|vitamin\s*d|vitamin\s*b12|ferritin|iron|transferrin|tibc|crp\b|esr\b|psa\b|pus\s*cells|epithelial\s*cells|differential\s*count|total\s*leukocyte|leukocyte\s*count|absolute\s*neutrophil)\b/i.test(line)) continue;
+
       // To avoid false positives on arbitrary non-medical documents, only scan lines with clinical or prescription markers
-      const lineHasRxMarker = /\b(?:rx|℞|dr\.|tab|cap|syp|inj|drops?|tablet|capsule|syrup|injection|mg|mcg|ml|gm|od|bd|tds|qid|hs|sos|1-0-1|1-1-1|1-0-0|0-0-1|before food|after food|daily|stat)\b/i.test(line);
+      const lineHasRxMarker = /\b(?:rx|℞|tab|cap|syp|inj|drops?|tablet|capsule|syrup|injection|od|bd|tds|qid|hs|sos|1-0-1|1-1-1|1-0-0|0-0-1|before food|after food|daily|stat)\b/i.test(line) ||
+                              /\b(?:\d+\s*(?:mg|mcg|gm|ml|iu)(?!\s*\/[a-z]))\b/i.test(line);
       if (!lineHasRxMarker) {
         continue;
       }
@@ -1634,56 +1724,29 @@ class PrescriptionParser {
    *     "validated": true
    *   }
    * ]
-   * Or for unclear handwriting:
-   * {
-   *   "medicine": null,
-   *   "dosage": null,
-   *   "usage": null,
-   *   "validated": false,
-   *   "reason": "Unclear handwriting"
-   * }
+   * Returns null if document is a laboratory investigation or contains no authentic prescriptions.
    */
   parseToStructuredJSON(rawOcrText) {
     if (!rawOcrText || typeof rawOcrText !== "string" || !rawOcrText.trim()) {
-      return {
-        medicine: null,
-        dosage: null,
-        usage: null,
-        validated: false,
-        reason: "Unclear handwriting"
-      };
+      return null;
+    }
+
+    if (this.isPathologyReportText(rawOcrText)) {
+      return null;
     }
 
     const meds = this.parsePrescriptionText(rawOcrText);
     if (!meds || meds.length === 0) {
-      return {
-        medicine: null,
-        dosage: null,
-        usage: null,
-        validated: false,
-        reason: "Unclear handwriting"
-      };
+      return null;
     }
 
     const structured = meds.map(m => {
       if (!m.name && !m.brandReported) {
-        return {
-          medicine: null,
-          dosage: null,
-          usage: null,
-          validated: false,
-          reason: m.reason || "Unclear handwriting"
-        };
+        return null;
       }
 
       if (m.name === null || m.name === "Illegible / Unclear" || m.name === "null") {
-        return {
-          medicine: null,
-          dosage: null,
-          usage: null,
-          validated: false,
-          reason: m.reason || "Unclear handwriting"
-        };
+        return null;
       }
 
       let medName = m.brandReported || m.name;
@@ -1694,13 +1757,7 @@ class PrescriptionParser {
         .trim();
 
       if (!medName || medName.length < 2 || /^(the|and|for|with|after|before|daily|during|fever|body|ache)$/i.test(medName)) {
-        return {
-          medicine: null,
-          dosage: null,
-          usage: null,
-          validated: false,
-          reason: "Unclear handwriting"
-        };
+        return null;
       }
 
       // Construct clean dosage: e.g. "250 mg TDS"
@@ -1750,18 +1807,12 @@ class PrescriptionParser {
       return item;
     });
 
-    const validItems = structured.filter(s => s.medicine !== null);
+    const validItems = structured.filter(s => s && s.medicine !== null);
     if (validItems.length === 0) {
-      return {
-        medicine: null,
-        dosage: null,
-        usage: null,
-        validated: false,
-        reason: "Unclear handwriting"
-      };
+      return null;
     }
 
-    return structured;
+    return validItems;
   }
 }
 

@@ -82,8 +82,15 @@ class GeminiVisionService {
 
     // 3. Local Neural Vision Fallback (offline / mesh)
     if (onProgress) onProgress("Executing On-Device Neural Vision Classification...");
+    const localClassification = await documentClassifier.classifyAndValidate(dataUrl, rawText, file.name);
     const isLabOrScan = localClassification.type === "pathology_report" || localClassification.type === "xray_report" || localClassification.type === "ecg_report" || (localClassification.categoryLabel || "").toLowerCase().includes("pathology") || (localClassification.categoryLabel || "").toLowerCase().includes("biochemistry") || (localClassification.categoryLabel || "").toLowerCase().includes("lab");
-    const localMeds = (!isLabOrScan && (localClassification.type === "prescription" || localClassification.type === "discharge_summary")) ? prescriptionParser.parsePrescriptionText(rawText || file.name) : [];
+    const localMeds = (!isLabOrScan && (localClassification.type === "prescription" || localClassification.type === "discharge_summary" || localClassification.type === "medical_record")) ? prescriptionParser.parsePrescriptionText(rawText || file.name) : [];
+    if (localMeds.length > 0 && localClassification.type === "medical_record") {
+      localClassification.type = "prescription";
+      localClassification.categoryLabel = "Doctor Prescription (Rx)";
+      localClassification.badgeColor = "pill-success";
+      localClassification.icon = "📄";
+    }
     const localLab = labParser.parseLabReportText(rawText);
     const localDiseases = diseaseExtractor.extractDiseases(
       rawText || file.name,
@@ -227,13 +234,13 @@ Always finish with: **NOT FOR CLINICAL USE WITHOUT PHYSICIAN REVIEW**`;
     let anatomicalSite = "Clinical Ingestion";
     let rootCause = "Diagnostic Evaluation";
 
-    const reportTypeMatch = text.match(/## Report Type\s*\n+([^\n#]+)/i);
+    const reportTypeMatch = text.match(/(?:##|\*\*|###)?\s*Report Type\s*[:\-]?\s*([^\n#]+)/i);
     if (reportTypeMatch) reportType = reportTypeMatch[1].trim();
 
-    const anatomicalMatch = text.match(/## Anatomical Site[^\n]*\n+([^\n#]+)/i);
+    const anatomicalMatch = text.match(/(?:##|\*\*|###)?\s*Anatomical Site[^\n:]*[:\-]?\s*([^\n#]+)/i);
     if (anatomicalMatch) anatomicalSite = anatomicalMatch[1].trim();
 
-    const rootCauseMatch = text.match(/## Root Clinical Cause[^\n]*\n+([^\n#]+)/i);
+    const rootCauseMatch = text.match(/(?:##|\*\*|###)?\s*Root Clinical Cause[^\n:]*[:\-]?\s*([^\n#]+)/i);
     if (rootCauseMatch) rootCause = rootCauseMatch[1].trim();
 
     const lowerType = reportType.toLowerCase();
@@ -264,38 +271,70 @@ Always finish with: **NOT FOR CLINICAL USE WITHOUT PHYSICIAN REVIEW**`;
     let icon = isNonMedical ? "⚠️" : "📄";
     let badgeColor = isNonMedical ? "pill-danger" : "pill-primary";
 
+    const isLabReport = lowerType.includes("pathology") || 
+                        lowerType.includes("lab") || 
+                        lowerType.includes("biochemistry") || 
+                        lowerType.includes("blood") ||
+                        lowerType.includes("hematology") ||
+                        lowerType.includes("haematology") ||
+                        lowerType.includes("lipid") ||
+                        lowerType.includes("glucose") ||
+                        lowerType.includes("cbc") ||
+                        lowerType.includes("kft") ||
+                        lowerType.includes("lft") ||
+                        lowerType.includes("urine");
+
     if (!isNonMedical) {
       if (lowerType.includes("ecg") || lowerType.includes("ekg")) {
         type = "ecg_report";
         categoryLabel = "12-Lead ECG / EKG Strip";
         icon = "💓";
         badgeColor = rootCause.toLowerCase().includes("stemi") || rootCause.toLowerCase().includes("infarct") ? "pill-danger" : "pill-warning";
-      } else if (lowerType.includes("prescription") || lowerType.includes("rx") || lowerType.includes("doctor")) {
-        type = "prescription";
-        categoryLabel = "Doctor Prescription (Rx)";
-        icon = "📄";
-        badgeColor = "pill-success";
-      } else if (lowerType.includes("pathology") || lowerType.includes("lab") || lowerType.includes("biochemistry") || lowerType.includes("blood")) {
-        type = "pathology_report";
-        categoryLabel = "Pathology & Biochemistry Report";
-        icon = "🔬";
-        badgeColor = "pill-danger";
-      } else if (lowerType.includes("x-ray") || lowerType.includes("radiology") || lowerType.includes("radiograph") || lowerType.includes("ct scan") || /\bct\b/.test(lowerType)) {
+      } else if (lowerType.includes("x-ray") || lowerType.includes("radiology") || lowerType.includes("radiograph") || lowerType.includes("ct scan") || /\bct\b/.test(lowerType) || lowerType.includes("mri")) {
         type = "xray_report";
         categoryLabel = reportType.includes("(") ? reportType : `X-Ray Radiograph (${anatomicalSite})`;
         icon = "🩻";
         badgeColor = rootCause.toLowerCase().includes("fracture") ? "pill-danger" : "pill-warning";
+      } else if (isLabReport) {
+        type = "pathology_report";
+        categoryLabel = "Pathology & Biochemistry Report";
+        icon = "🔬";
+        badgeColor = "pill-danger";
       } else if (lowerType.includes("discharge")) {
         type = "discharge_summary";
         categoryLabel = "Hospital Discharge Summary";
         icon = "📋";
         badgeColor = "pill-primary";
+      } else if (lowerType.includes("prescription") || lowerType.includes("rx") || lowerType.includes("pharmacotherapy")) {
+        type = "prescription";
+        categoryLabel = "Doctor Prescription (Rx)";
+        icon = "📄";
+        badgeColor = "pill-success";
       }
     }
 
     // Extract medications, lab results, and diseases
-    const isPathologyOrImaging = type === "pathology_report" || type === "xray_report" || type === "ecg_report" || (categoryLabel || "").toLowerCase().includes("pathology") || (categoryLabel || "").toLowerCase().includes("biochemistry") || (categoryLabel || "").toLowerCase().includes("lab");
-    const extractedMedications = (!isNonMedical && !isPathologyOrImaging && (type === "prescription" || type === "discharge_summary")) ? prescriptionParser.parsePrescriptionText(text) : [];
+    const isPathologyOrImaging = type === "pathology_report" || 
+                                 type === "xray_report" || 
+                                 type === "ecg_report" || 
+                                 isLabReport ||
+                                 (categoryLabel || "").toLowerCase().includes("pathology") || 
+                                 (categoryLabel || "").toLowerCase().includes("biochemistry") || 
+                                 (categoryLabel || "").toLowerCase().includes("laboratory") ||
+                                 (categoryLabel || "").toLowerCase().includes("blood");
+
+    let extractedMedications = [];
+    if (!isNonMedical && !isPathologyOrImaging) {
+      extractedMedications = prescriptionParser.parsePrescriptionText(text);
+      if (extractedMedications.length > 0 && type !== "discharge_summary") {
+        type = "prescription";
+        categoryLabel = "Doctor Prescription (Rx)";
+        icon = "📄";
+        badgeColor = "pill-success";
+      }
+    } else {
+      extractedMedications = [];
+    }
     const labResults = !isNonMedical ? labParser.parseLabReportText(text) : { flags: [], normalValues: [], artifacts: [] };
     const extractedDiseases = !isNonMedical ? diseaseExtractor.extractDiseases(
       text,
@@ -335,7 +374,15 @@ Always finish with: **NOT FOR CLINICAL USE WITHOUT PHYSICIAN REVIEW**`;
       };
     }
 
-    const meds = parsed.extractedMedications || parsed.entities?.medications || [];
+    const isPathologyOrDiagnostic = parsed.type === "pathology_report" || 
+                                    parsed.type === "xray_report" || 
+                                    parsed.type === "ecg_report" || 
+                                    (parsed.categoryLabel || "").toLowerCase().includes("pathology") || 
+                                    (parsed.categoryLabel || "").toLowerCase().includes("biochemistry") || 
+                                    (parsed.categoryLabel || "").toLowerCase().includes("laboratory") ||
+                                    (parsed.categoryLabel || "").toLowerCase().includes("blood");
+
+    const meds = isPathologyOrDiagnostic ? [] : (parsed.extractedMedications || parsed.entities?.medications || []);
     const flags = parsed.labFlags || parsed.entities?.flags || [];
     const normals = parsed.labNormals || parsed.entities?.normalValues || [];
     const diseases = parsed.extractedDiseases || parsed.entities?.diseases || diseaseExtractor.extractDiseases(
@@ -357,7 +404,7 @@ Always finish with: **NOT FOR CLINICAL USE WITHOUT PHYSICIAN REVIEW**`;
       isValidMedical: true,
       docId: `DOC-${Date.now().toString().slice(-4)}`,
       title: `${parsed.categoryLabel} (${fileName})`,
-      type: parsed.type,
+      type: isPathologyOrDiagnostic && parsed.type === "medical_record" ? "pathology_report" : parsed.type,
       categoryLabel: parsed.categoryLabel,
       badgeColor: parsed.badgeColor,
       icon: parsed.icon,
@@ -374,7 +421,7 @@ Always finish with: **NOT FOR CLINICAL USE WITHOUT PHYSICIAN REVIEW**`;
         normalValues: normals
       },
       extractedMedications: meds,
-      structuredPrescriptionJSON: parsed.structuredPrescriptionJSON || prescriptionParser.parseToStructuredJSON(parsed.fullGeminiText || parsed.extractedText || ""),
+      structuredPrescriptionJSON: (isPathologyOrDiagnostic || meds.length === 0) ? null : (parsed.structuredPrescriptionJSON || prescriptionParser.parseToStructuredJSON(parsed.fullGeminiText || parsed.extractedText || "")),
       extractedDiseases: diseases,
       labFlags: flags,
       confidence: parsed.confidence

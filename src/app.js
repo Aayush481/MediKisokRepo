@@ -827,9 +827,11 @@ class MediKioskApp {
     const latestDoc = (this.patient.documents && this.patient.documents.length > 0) ? this.patient.documents[0] : null;
     const allFlags = (this.patient.documents || []).flatMap(d => d.flags || []);
     
-    // Aggregate medications across patient and all documents
+    // Aggregate medications across patient and all documents (prescriptions & discharge summaries only)
     const seenMeds = new Set();
-    const docMeds = (this.patient.documents || []).flatMap(d => d.medications || []);
+    const docMeds = (this.patient.documents || [])
+      .filter(d => (d.type === "prescription" || d.type === "discharge_summary") && !((d.categoryLabel || "").toLowerCase().includes("pathology") || (d.categoryLabel || "").toLowerCase().includes("biochemistry")))
+      .flatMap(d => d.medications || []);
     const allExtractedMeds = [...(this.patient.allopathicMeds || []), ...docMeds].filter(m => {
       const name = ((typeof m === "string" ? m : (m.name || m.brandReported || "")) || "").toLowerCase();
       if (!name || seenMeds.has(name)) return false;
@@ -1004,6 +1006,45 @@ class MediKioskApp {
     `;
   }
 
+  generateBarcodeSvg(text) {
+    const CODE39 = {
+      '0': '000110100', '1': '100100001', '2': '001100001', '3': '101100000',
+      '4': '000110001', '5': '100110000', '6': '001110000', '7': '000100101',
+      '8': '100100100', '9': '001100100', 'A': '100001001', 'B': '001001001',
+      'C': '101001000', 'D': '000011001', 'E': '100011000', 'F': '001011000',
+      'G': '000001101', 'H': '100001100', 'I': '001001100', 'J': '000011100',
+      'K': '100000011', 'L': '001000011', 'M': '101000010', 'N': '000010011',
+      'O': '100010010', 'P': '001010010', 'Q': '000000111', 'R': '100000110',
+      'S': '001000110', 'T': '000010110', 'U': '110000001', 'V': '011000001',
+      'W': '111000000', 'X': '010010001', 'Y': '110010000', 'Z': '011010000',
+      '-': '010000101', '.': '110000100', ' ': '011000100', '$': '010101000',
+      '/': '010100010', '+': '010001010', '%': '000101010', '*': '010010100'
+    };
+
+    const clean = '*' + (text || 'A-15').toUpperCase().replace(/[^A-Z0-9\-\.\ \$\/\+\%]/g, '') + '*';
+    let x = 6;
+    const narrow = 2;
+    const wide = 5;
+    const height = 30;
+    const rects = [];
+
+    for (const ch of clean) {
+      const pattern = CODE39[ch] || CODE39['-'];
+      for (let i = 0; i < 9; i++) {
+        const isBar = (i % 2 === 0);
+        const w = pattern[i] === '1' ? wide : narrow;
+        if (isBar) {
+          rects.push(`<rect x="${x}" y="0" width="${w}" height="${height}" fill="#94A3B8"/>`);
+        }
+        x += w;
+      }
+      x += narrow;
+    }
+
+    const totalW = x + 6;
+    return `<svg viewBox="0 0 ${totalW} ${height}" width="${Math.min(260, totalW)}" height="28" style="opacity: 0.9;">${rects.join('')}</svg>`;
+  }
+
   // ========================================================
   // STEP 4: OPD TOKEN & ENCOUNTER SUMMARY
   // ========================================================
@@ -1012,73 +1053,137 @@ class MediKioskApp {
     const qPosition = qIdx >= 0 ? qIdx + 1 : this.doctorQueue.length;
     const patientsAhead = Math.max(0, qPosition - 1);
     const estWaitMin = patientsAhead === 0 ? 5 : Math.round(patientsAhead * 7.5);
+    const token = this.patient.tokenNumber || 'A-15';
+    const regUhid = this.patient.id || `MED-${Date.now().toString().slice(-5)}`;
+    const nowStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ' • ' + new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
     return `
-      <div class="card-3d" style="max-width: 600px; margin: 0 auto; text-align: center;">
-        <div style="font-size: 2.8rem; margin-bottom: 8px;">🎉</div>
-        <h2 style="font-size: 1.5rem; font-weight: 800; color: #FFFFFF;">${i18n.t("summary_congrats")}</h2>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
-          ${i18n.t("summary_subtitle")}
-        </p>
-
-        <div style="background: rgba(37, 99, 235, 0.15); border: 2px dashed #3B82F6; border-radius: 16px; padding: 1.75rem; margin: 1.5rem 0;">
-          <p style="font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.08em; color: #93C5FD; font-weight: 800;">
-            ${i18n.t("opd_token_header")}
+      <div class="opd-ticket-wrapper">
+        <!-- Top Status Callout -->
+        <div style="text-align: center; margin-bottom: 1.25rem;">
+          <h2 style="font-size: 1.45rem; font-weight: 800; color: #FFFFFF; letter-spacing: -0.01em;">
+            ${i18n.t("summary_congrats")}
+          </h2>
+          <p style="font-size: 0.84rem; color: #94A3B8; margin-top: 4px;">
+            ${i18n.t("summary_subtitle")}
           </p>
-          <div style="font-family: var(--font-display); font-size: 3.5rem; font-weight: 900; color: #FFFFFF; line-height: 1.1; margin: 8px 0; text-shadow: 0 0 25px rgba(59, 130, 246, 0.5);">
-            ${this.patient.tokenNumber || 'TK-101'}
-          </div>
-          <div style="font-size: 0.88rem; color: #E2E8F0; margin-top: 8px;">
-            ${i18n.t("patient_info_label")}: <strong>${this.patient.name || 'Walk-in Patient'}</strong> (${this.patient.age || '--'} ${i18n.t("age_yrs")} / ${i18n.t("gender_" + (this.patient.gender || "Female").toLowerCase()) || this.patient.gender})
-          </div>
-          <div style="font-size: 0.82rem; color: #93C5FD; margin-top: 4px;">
-            📱 Registered Mobile: <strong>${this.patient.mobile || '+91 98765 43210'}</strong>
-          </div>
+        </div>
 
-          <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1); display: grid; grid-template-columns: 1fr 1fr; gap: 8px; text-align: left; font-size: 0.78rem;">
-            <div>
-              <span style="color: var(--text-muted);">${i18n.t("assigned_dept_label")}:</span><br>
-              <strong style="color: #60A5FA;">${i18n.t("default_dept")}</strong>
+        <!-- Official Hospital OPD Slip Card -->
+        <div class="opd-ticket-card">
+          <!-- Hospital Header Band -->
+          <div class="ticket-header-band">
+            <div class="ticket-clinic-info">
+              <div class="ticket-clinic-emblem">🏥</div>
+              <div>
+                <div class="ticket-clinic-title">MediKiosk Outpatient Department</div>
+                <div class="ticket-clinic-subtitle">ABDM First-Mile Triage & Digital Queue Pass</div>
+              </div>
             </div>
-            <div>
-              <span style="color: var(--text-muted);">${i18n.t("est_wait_label")}:</span><br>
-              <strong style="color: #34D399;">~${estWaitMin} Minutes (${patientsAhead} Ahead)</strong>
+            <div class="ticket-status-chip">
+              <span class="ticket-status-dot"></span>
+              <span>Live Queue</span>
             </div>
           </div>
 
-          <!-- Real-Time Mobile SMS Tracker Card -->
-          <div style="margin-top: 14px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 12px; padding: 12px 14px; text-align: left;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-size: 0.82rem; font-weight: 700; color: #38BDF8;">📲 Real-Time 30-Min Mobile Alert</span>
-              <span class="pill-3d ${this.patient.smsAlertSent ? 'pill-3d-emerald' : 'pill-3d-blue'}" id="kioskSmsStatusPill">
-                ${this.patient.smsAlertSent ? '✓ 30-Min SMS Sent' : '⏳ 30-Min Alert Scheduled'}
+          <div class="ticket-body">
+            <!-- Hero Token Display -->
+            <div class="ticket-token-hero">
+              <div>
+                <div class="token-label-text">${i18n.t("opd_token_header")}</div>
+                <div class="token-number-hero">${token}</div>
+                <div class="token-dept-badge">
+                  <span>📍</span>
+                  <span>${i18n.t("default_dept")}</span>
+                </div>
+              </div>
+              <div class="token-cabin-pill">
+                <div class="token-cabin-label">Attending Desk</div>
+                <div class="token-cabin-value">Cabin 04</div>
+                <div style="font-size: 0.72rem; color: #94A3B8; margin-top: 2px;">Dr. Sharma (MD)</div>
+              </div>
+            </div>
+
+            <!-- Perforated Tear Line -->
+            <div class="ticket-perforation">
+              <div class="ticket-notch-left"></div>
+              <div class="ticket-tear-line"></div>
+              <div class="ticket-notch-right"></div>
+            </div>
+
+            <!-- Patient Demographics Grid -->
+            <div class="ticket-meta-grid">
+              <div class="ticket-meta-item">
+                <span class="ticket-meta-label">${i18n.t("patient_info_label")}</span>
+                <span class="ticket-meta-value">${this.patient.name || 'Walk-in Patient'} (${this.patient.age || '--'} ${i18n.t("age_yrs")} / ${i18n.t("gender_" + (this.patient.gender || "Female").toLowerCase()) || this.patient.gender})</span>
+              </div>
+              <div class="ticket-meta-item">
+                <span class="ticket-meta-label">Registration UHID</span>
+                <span class="ticket-meta-value" style="font-family: var(--font-mono);">${regUhid}</span>
+              </div>
+              <div class="ticket-meta-item">
+                <span class="ticket-meta-label">Registered Mobile</span>
+                <span class="ticket-meta-value">${this.patient.mobile || '+91 98765 43210'}</span>
+              </div>
+              <div class="ticket-meta-item">
+                <span class="ticket-meta-label">Issued Date & Time</span>
+                <span class="ticket-meta-value">${nowStr}</span>
+              </div>
+            </div>
+
+            <!-- Live Queue Status Tracker -->
+            <div class="ticket-queue-section">
+              <div class="ticket-queue-header">
+                <span class="ticket-queue-title">${i18n.t("est_wait_label")}</span>
+                <span class="ticket-wait-pill">~${estWaitMin} Mins (${patientsAhead} Ahead)</span>
+              </div>
+              <div class="ticket-queue-stepper">
+                <div class="queue-step-node active-now" title="Currently inside doctor cabin">1</div>
+                <div class="queue-step-node">2</div>
+                <div class="queue-step-node">3</div>
+                <div class="queue-step-node patient-target" title="Your turn">★</div>
+              </div>
+              <div class="queue-step-caption">
+                <span>Now Serving at Cabin 04</span>
+                <span style="color: #34D399; font-weight: 700;">Your Position (${token})</span>
+              </div>
+            </div>
+
+            <!-- Real-Time SMS Notification Confirmation -->
+            <div class="ticket-sms-box">
+              <div class="ticket-sms-icon">🔔</div>
+              <div class="ticket-sms-content">
+                <div class="ticket-sms-title">Real-Time Mobile SMS Notification Active</div>
+                <p class="ticket-sms-desc">
+                  An automated SMS alert will be dispatched to <strong>${this.patient.mobile || '+91 98765 43210'}</strong> exactly 30 minutes before your consultation call.
+                </p>
+              </div>
+              <span class="pill-3d pill-3d-blue" style="font-size: 0.68rem; align-self: center; white-space: nowrap;">
+                ${this.patient.smsAlertSent ? '✓ Alert Sent' : '✓ Scheduled'}
               </span>
             </div>
-            <p style="font-size: 0.76rem; color: #CBD5E1; margin: 0 0 8px 0; line-height: 1.4;">
-              ${this.patient.smsAlertSent ? 
-                `SMS dispatched in real time to registered mobile <strong>${this.patient.mobile || '+91 98765 43210'}</strong>: <em>"Appointment with Dr. Sharma (Cabin 3) is scheduled in ~${estWaitMin} mins (Token ${this.patient.tokenNumber}). Please be near Waiting Area B."</em>` : 
-                `An automated SMS & WhatsApp notification will be sent to your registered mobile <strong>${this.patient.mobile || '+91 98765 43210'}</strong> exactly 30 minutes before your consultation.`
-              }
-            </p>
-            <div style="display: flex; justify-content: flex-end;">
-              <button type="button" class="btn-3d btn-3d-secondary" style="padding: 5px 12px; font-size: 0.74rem;" onclick="window.app.triggerPatient30MinTestSms()">
-                📲 Test Send 30-Min SMS to Registered Mobile Now
-              </button>
+
+            <!-- Authentic Medical Barcode Graphic (Dynamically Encoded Code 39) -->
+            <div class="ticket-barcode-wrap">
+              ${this.generateBarcodeSvg(token)}
+              <div class="barcode-code-text">*${token}*</div>
             </div>
           </div>
         </div>
 
-        <div style="display: flex; flex-direction: column; gap: 10px;">
-          <button class="btn-3d btn-3d-primary" style="padding: 12px;" onclick="window.print()">
+        <!-- Clean Action Toolbar -->
+        <div class="ticket-actions-row">
+          <button class="btn-3d btn-3d-primary" style="padding: 12px; font-weight: 800; font-size: 0.92rem;" onclick="window.print()">
             ${i18n.t("btn_print_slip")}
           </button>
-          <button class="btn-3d btn-3d-secondary" onclick="window.app.setMode('doctor')">
-            ${i18n.t("btn_doctor_desk")}
-          </button>
-          <button class="btn-3d btn-3d-secondary" onclick="window.app.resetSession()">
+          <button class="btn-3d btn-3d-secondary" style="padding: 12px; font-weight: 700; font-size: 0.88rem;" onclick="window.app.resetSession()">
             ${i18n.t("btn_next_patient")}
           </button>
-          <button style="background: none; border: none; color: #64748B; font-size: 0.76rem; cursor: pointer; text-decoration: underline; margin-top: 6px;" onclick="window.app.openFhirModal()">
+        </div>
+
+        <!-- Optional Patient Health Record View -->
+        <div class="ticket-footer-sublinks" style="justify-content: center;">
+          <button type="button" class="ticket-sublink-btn" onclick="window.app.openFhirModal()">
             ${i18n.t("btn_view_fhir")}
           </button>
         </div>
@@ -1101,13 +1206,15 @@ class MediKioskApp {
     const reasoningMap = clinicalGraphService.generateReasoningMap(p);
 
     const allDocs = p.documents || [];
-    const rxDocs = allDocs.filter(d => d.type === "prescription" || d.categoryLabel === "Prescription");
-    const labDocs = allDocs.filter(d => d.type === "lab_report" || d.type === "radiology" || d.categoryLabel === "Lab Report" || d.categoryLabel === "Diagnostic Scan" || d.categoryLabel === "Imaging Scan");
+    const rxDocs = allDocs.filter(d => (d.type === "prescription" || (d.categoryLabel || '').toLowerCase().includes("prescription")) && !((d.categoryLabel || "").toLowerCase().includes("pathology") || (d.categoryLabel || "").toLowerCase().includes("biochemistry") || d.type === "pathology_report"));
+    const labDocs = allDocs.filter(d => d.type === "pathology_report" || d.type === "xray_report" || d.type === "ecg_report" || d.type === "lab_report" || d.type === "radiology" || (d.categoryLabel || "").toLowerCase().includes("pathology") || (d.categoryLabel || "").toLowerCase().includes("biochemistry") || (d.categoryLabel || "").toLowerCase().includes("lab") || (d.categoryLabel || "").toLowerCase().includes("x-ray") || (d.categoryLabel || "").toLowerCase().includes("ecg"));
     const allFlags = allDocs.flatMap(d => d.flags || []);
     const abnormalFlags = allFlags.filter(f => f.status === "HIGH" || f.status === "LOW" || f.status === "ABNORMAL" || f.status === "MILD STENOSIS");
 
     const seenMeds = new Set();
-    const docMeds = allDocs.flatMap(d => d.medications || []);
+    const docMeds = allDocs
+      .filter(d => (d.type === "prescription" || d.type === "discharge_summary") && !((d.categoryLabel || "").toLowerCase().includes("pathology") || (d.categoryLabel || "").toLowerCase().includes("biochemistry")))
+      .flatMap(d => d.medications || []);
     let allMeds = [...(p.allopathicMeds || []), ...docMeds].filter(m => {
       const name = ((typeof m === "string" ? m : (m.name || m.brandReported || "")) || "").toLowerCase();
       if (!name || seenMeds.has(name)) return false;
@@ -1141,6 +1248,16 @@ class MediKioskApp {
               <p style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">OPD Cabin 3 • Dr. Sharma</p>
             </div>
             <span class="pill-3d pill-3d-emerald">${this.doctorQueue.length} Active</span>
+          </div>
+
+          <!-- Barcode / Token Scanner Lookup Input -->
+          <div style="margin-bottom: 10px;">
+            <div style="position: relative;">
+              <input type="text" id="queueBarcodeSearch" placeholder="🔍 Scan Barcode / Token (e.g. A-15)..." 
+                style="width: 100%; padding: 7px 32px 7px 10px; background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 8px; color: #FFFFFF; font-size: 0.76rem; outline: none;" 
+                onkeydown="if(event.key === 'Enter') { window.app.handleBarcodeScan(this.value); this.value = ''; }" />
+              <span style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 0.82rem; cursor: pointer;" title="Scan Barcode with Optical Scanner" onclick="const val = document.getElementById('queueBarcodeSearch').value; if(val) { window.app.handleBarcodeScan(val); document.getElementById('queueBarcodeSearch').value = ''; }">📟</span>
+            </div>
           </div>
 
           <div id="queueList" style="display: flex; flex-direction: column; gap: 8px;">
@@ -1757,7 +1874,29 @@ class MediKioskApp {
                                ocrResult.type === "ecg_report" ||
                                (ocrResult.categoryLabel || "").toLowerCase().includes("pathology") ||
                                (ocrResult.categoryLabel || "").toLowerCase().includes("biochemistry") ||
-                               (ocrResult.categoryLabel || "").toLowerCase().includes("laboratory");
+                               (ocrResult.categoryLabel || "").toLowerCase().includes("laboratory") ||
+                               (ocrResult.categoryLabel || "").toLowerCase().includes("blood") ||
+                               (ocrResult.categoryLabel || "").toLowerCase().includes("cbc") ||
+                               (ocrResult.categoryLabel || "").toLowerCase().includes("lipid") ||
+                               (ocrResult.categoryLabel || "").toLowerCase().includes("liver") ||
+                               (ocrResult.categoryLabel || "").toLowerCase().includes("kidney") ||
+                               (ocrResult.categoryLabel || "").toLowerCase().includes("urine") ||
+                               (ocrResult.labFlags && ocrResult.labFlags.length > 0) ||
+                               (ocrResult.entities?.flags && ocrResult.entities.flags.length > 0) ||
+                               (ocrResult.labNormals && ocrResult.labNormals.length > 0) ||
+                               (ocrResult.entities?.normalValues && ocrResult.entities.normalValues.length > 0);
+
+      if (isPathologyOrLab) {
+        if (ocrResult.type === "prescription" || ocrResult.type === "medical_record") {
+          ocrResult.type = "pathology_report";
+          ocrResult.categoryLabel = "Pathology & Biochemistry Report";
+          ocrResult.badgeColor = "pill-danger";
+          ocrResult.icon = "🔬";
+        }
+        ocrResult.extractedMedications = [];
+        if (ocrResult.entities) ocrResult.entities.medications = [];
+        ocrResult.structuredPrescriptionJSON = null;
+      }
 
       // Strictly zero out medications if the document is a pathology lab report or diagnostic scan
       const newMeds = isPathologyOrLab ? [] : (ocrResult.entities?.medications || ocrResult.extractedMedications || []);
@@ -1783,8 +1922,8 @@ class MediKioskApp {
         anatomicalSite: ocrResult.anatomicalSite,
         flags: labFlags,
         normalValues: labNormals,
-        medications: newMeds,
-        structuredPrescriptionJSON: isPathologyOrLab ? null : (ocrResult.structuredPrescriptionJSON || prescriptionParser.parseToStructuredJSON(ocrResult.extractedText || '')),
+        medications: isPathologyOrLab ? [] : newMeds,
+        structuredPrescriptionJSON: isPathologyOrLab ? null : (ocrResult.structuredPrescriptionJSON || (newMeds.length > 0 ? prescriptionParser.parseToStructuredJSON(ocrResult.extractedText || '') : null)),
         extractedText: ocrResult.extractedText || ocrResult.rawOcrText || '',
         diseases: allExtractedDiseases
       });
@@ -2152,6 +2291,36 @@ class MediKioskApp {
     if (found) {
       this.selectedQueuePatient = found;
       this.render();
+    }
+  }
+
+  handleBarcodeScan(rawCode) {
+    if (!rawCode || !rawCode.trim()) return;
+    let clean = rawCode.trim().replace(/^\*+|\*+$/g, "");
+    
+    // Extract token part if formatted as TOKEN-MEDIKIOSK-YYYY
+    const tokenMatch = clean.match(/^([A-Z0-9\-]+)-MEDIKIOSK/i);
+    const tokenCandidate = tokenMatch ? tokenMatch[1] : clean;
+
+    const match = this.doctorQueue.find(p => {
+      const pToken = (p.tokenNumber || "").toLowerCase();
+      const pId = (p.id || "").toLowerCase();
+      const pAbha = (p.abhaId || "").toLowerCase();
+      const target = tokenCandidate.toLowerCase();
+      const rawTarget = clean.toLowerCase();
+      return pToken === target || pToken === rawTarget || 
+             pId === target || pId === rawTarget || 
+             pAbha === target || pAbha === rawTarget ||
+             (target.length >= 3 && pToken.includes(target));
+    });
+
+    if (match) {
+      this.selectedQueuePatient = match;
+      this.showDoctorToast(`✓ Barcode Verified: Patient ${match.name} (Token ${match.tokenNumber}) loaded`);
+      speechService.speak(`Patient ${match.name}, Token ${match.tokenNumber} verified by scanner.`);
+      this.render();
+    } else {
+      this.showDoctorToast(`⚠️ Barcode Scanned: No patient matching "${clean}" in active queue.`);
     }
   }
 

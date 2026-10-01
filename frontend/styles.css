@@ -1229,16 +1229,443 @@ body {
   padding: 8px;
 }
 
-/* Print Slip Styles */
+/* ========================================================
+   AUTHENTIC HOSPITAL OPD TOKEN SLIP & TICKET DESIGN
+   ======================================================== */
+.opd-ticket-wrapper {
+  max-width: 580px;
+  margin: 0 auto;
+}
+
+.opd-ticket-card {
+  background: linear-gradient(180deg, #0F172A 0%, #090D1A 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  position: relative;
+  overflow: hidden;
+  text-align: left;
+}
+
+.ticket-header-band {
+  background: linear-gradient(90deg, #1E293B 0%, #0F172A 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ticket-clinic-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ticket-clinic-emblem {
+  width: 38px;
+  height: 38px;
+  background: rgba(14, 165, 233, 0.15);
+  border: 1px solid rgba(14, 165, 233, 0.4);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+.ticket-clinic-title {
+  font-size: 0.84rem;
+  font-weight: 800;
+  color: #F8FAFC;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.ticket-clinic-subtitle {
+  font-size: 0.7rem;
+  color: #94A3B8;
+  letter-spacing: 0.03em;
+}
+
+.ticket-status-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #34D399;
+  letter-spacing: 0.04em;
+}
+
+.ticket-status-dot {
+  width: 7px;
+  height: 7px;
+  background: #10B981;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #10B981;
+  animation: pulse-dot 2s infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.ticket-body {
+  padding: 1.5rem;
+}
+
+/* Prominent Token Display */
+.ticket-token-hero {
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.token-label-text {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94A3B8;
+}
+
+.token-number-hero {
+  font-family: var(--font-display);
+  font-size: 3.4rem;
+  font-weight: 900;
+  color: #FFFFFF;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  margin: 4px 0;
+}
+
+.token-dept-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  color: #38BDF8;
+  font-weight: 700;
+}
+
+.token-cabin-pill {
+  background: #1E293B;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 8px 14px;
+  border-radius: 10px;
+  text-align: right;
+}
+
+.token-cabin-label {
+  font-size: 0.68rem;
+  color: #94A3B8;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.token-cabin-value {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #60A5FA;
+}
+
+/* Perforated Divider */
+.ticket-perforation {
+  display: flex;
+  align-items: center;
+  margin: 1.25rem -1.5rem;
+  position: relative;
+}
+
+.ticket-notch-left, .ticket-notch-right {
+  width: 22px;
+  height: 22px;
+  background-color: var(--bg-darkest);
+  border-radius: 50%;
+  position: relative;
+  z-index: 2;
+}
+
+.ticket-notch-left {
+  margin-left: -11px;
+  box-shadow: inset -2px 0 4px rgba(0, 0, 0, 0.5);
+}
+
+.ticket-notch-right {
+  margin-right: -11px;
+  box-shadow: inset 2px 0 4px rgba(0, 0, 0, 0.5);
+}
+
+.ticket-tear-line {
+  flex: 1;
+  border-top: 2px dashed rgba(255, 255, 255, 0.16);
+}
+
+/* Patient Metadata Grid */
+.ticket-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 1.25rem;
+}
+
+.ticket-meta-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.ticket-meta-label {
+  font-size: 0.7rem;
+  color: #64748B;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.ticket-meta-value {
+  font-size: 0.86rem;
+  color: #F1F5F9;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+/* Live Queue Status Track */
+.ticket-queue-section {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 1.25rem;
+}
+
+.ticket-queue-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.ticket-queue-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #94A3B8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ticket-wait-pill {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #34D399;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+.ticket-queue-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  margin: 10px 0 6px 0;
+}
+
+.ticket-queue-stepper::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 20px;
+  right: 20px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.12);
+  z-index: 1;
+}
+
+.queue-step-node {
+  position: relative;
+  z-index: 2;
+  background: #1E293B;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #94A3B8;
+}
+
+.queue-step-node.active-now {
+  background: #0284C7;
+  border-color: #38BDF8;
+  color: #FFFFFF;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.5);
+}
+
+.queue-step-node.patient-target {
+  background: #059669;
+  border-color: #34D399;
+  color: #FFFFFF;
+  box-shadow: 0 0 14px rgba(52, 211, 153, 0.5);
+}
+
+.queue-step-caption {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: #64748B;
+  font-weight: 600;
+  margin-top: 6px;
+}
+
+/* SMS Alert Notification Box */
+.ticket-sms-box {
+  background: rgba(14, 165, 233, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 1.25rem;
+}
+
+.ticket-sms-icon {
+  font-size: 1.2rem;
+  line-height: 1;
+  color: #38BDF8;
+  margin-top: 2px;
+}
+
+.ticket-sms-content {
+  flex: 1;
+}
+
+.ticket-sms-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #38BDF8;
+  margin-bottom: 2px;
+}
+
+.ticket-sms-desc {
+  font-size: 0.74rem;
+  color: #CBD5E1;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* SVG Barcode Strip */
+.ticket-barcode-wrap {
+  text-align: center;
+  padding: 12px 0 4px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.barcode-code-text {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  color: #64748B;
+  margin-top: 4px;
+}
+
+/* Action Toolbar */
+.ticket-actions-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 12px;
+  margin-top: 1.25rem;
+}
+
+.ticket-footer-sublinks {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ticket-sublink-btn {
+  background: none;
+  border: none;
+  color: #64748B;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  transition: color 0.2s ease;
+}
+
+.ticket-sublink-btn:hover {
+  color: #94A3B8;
+}
+
+/* High-Quality Print Styles */
 @media print {
-  .navbar, .kiosk-quick-bar, .kiosk-stepper, .btn-3d, .mode-toggle-group, .lang-select {
+  body {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+  }
+  .navbar, .kiosk-quick-bar, .kiosk-stepper, .ticket-actions-row, .ticket-footer-sublinks, .mode-toggle-group, .lang-select {
     display: none !important;
   }
-  body, .main-wrapper, .card-3d {
-    background: #FFF !important;
-    color: #000 !important;
+  .opd-ticket-wrapper {
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+  .opd-ticket-card {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+    border: 2px solid #000000 !important;
     box-shadow: none !important;
-    border: none !important;
+  }
+  .ticket-header-band {
+    background: #F1F5F9 !important;
+    border-bottom: 2px solid #000000 !important;
+  }
+  .ticket-clinic-title, .token-number-hero, .ticket-meta-value, .token-cabin-value {
+    color: #000000 !important;
+    text-shadow: none !important;
+  }
+  .ticket-token-hero, .ticket-meta-grid, .ticket-queue-section, .ticket-sms-box {
+    background: #FAFAFA !important;
+    border: 1px solid #CCCCCC !important;
+    color: #000000 !important;
+  }
+  .ticket-status-chip, .token-dept-badge, .ticket-wait-pill {
+    background: #E2E8F0 !important;
+    color: #000000 !important;
+    border: 1px solid #94A3B8 !important;
+  }
+  .ticket-barcode-wrap svg rect {
+    fill: #000000 !important;
+  }
+  .ticket-tear-line {
+    border-top: 2px dashed #000000 !important;
   }
 }
 

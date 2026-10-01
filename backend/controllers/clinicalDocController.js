@@ -65,6 +65,16 @@ This document/image does not contain authentic medical or clinical records and h
 ]
 \`\`\`
 
+6. STRICT CLINICAL RULE FOR PATHOLOGY & BIOCHEMISTRY LAB REPORTS:
+   - If the document is a Pathology Report, Blood Test, Laboratory Investigation, Urine Report, Complete Blood Count (CBC), or Biochemistry Panel:
+     ## Report Type MUST BE: Pathology & Biochemistry Report
+     Do NOT extract laboratory analytes, blood parameters, or chemical test names (such as Calcium, Serum Iron, Vitamin D, Vitamin B12, Thyroxine / T4, Albumin, Glucose, Potassium, Sodium, Hemoglobin, Platelets) as prescribed medications!
+     The structured JSON medications code block MUST be completely empty:
+\`\`\`json
+[]
+\`\`\`
+   - Lab reports report in vitro diagnostic measurements, NOT outpatient prescription orders.
+
 Structure your response strictly as:
 ## Report Type
 [One of: 12-Lead ECG / EKG Strip | X-Ray Radiograph (<Anatomical Region>) | Pathology & Biochemistry Report | Doctor Prescription (Rx) | Hospital Discharge Summary | Clinical Care & Diagnostic Report | Non-Medical / Unrecognized Image]
@@ -191,7 +201,8 @@ Always finish with: **NOT FOR CLINICAL USE WITHOUT PHYSICIAN REVIEW**`;
 
         // Parse medications, lab results, and diseases on extracted text
         const parseSubject = extractedOcrText || fileName;
-        const extractedMeds = prescriptionParser.parsePrescriptionText(parseSubject);
+        const isLabOrScan = localClass.type === 'pathology_report' || localClass.type === 'xray_report' || localClass.type === 'ecg_report' || (localClass.categoryLabel || '').toLowerCase().includes('pathology') || (localClass.categoryLabel || '').toLowerCase().includes('biochemistry') || (localClass.categoryLabel || '').toLowerCase().includes('lab') || (localClass.categoryLabel || '').toLowerCase().includes('blood') || (localClass.categoryLabel || '').toLowerCase().includes('cbc') || (localClass.categoryLabel || '').toLowerCase().includes('lipid');
+        const extractedMeds = isLabOrScan ? [] : prescriptionParser.parsePrescriptionText(parseSubject);
         const labResults = labParser.parseLabReportText(extractedOcrText);
         const extractedDiseases = diseaseExtractor.extractDiseases(
           parseSubject,
@@ -211,8 +222,8 @@ Always finish with: **NOT FOR CLINICAL USE WITHOUT PHYSICIAN REVIEW**`;
           rootCause: localClass.rootCause,
           fullGeminiText: `[Local Neural OCR & Classification]: ${localClass.categoryLabel}\nRoot Cause: ${localClass.rootCause}\nAnatomical Focus: ${localClass.anatomicalSite}\n\n[Extracted Report Text Stream]:\n${extractedOcrText || 'No digital text stream'}`,
           extractedText: extractedOcrText,
-          extractedMedications: extractedMeds,
-          structuredPrescriptionJSON: prescriptionParser.parseToStructuredJSON(parseSubject),
+          extractedMedications: isLabOrScan ? [] : extractedMeds,
+          structuredPrescriptionJSON: (isLabOrScan || extractedMeds.length === 0) ? null : prescriptionParser.parseToStructuredJSON(parseSubject),
           extractedDiseases: extractedDiseases,
           labFlags: labResults.flags || [],
           labNormals: labResults.normalValues || [],
@@ -225,13 +236,13 @@ Always finish with: **NOT FOR CLINICAL USE WITHOUT PHYSICIAN REVIEW**`;
       let anatomicalSite = 'Clinical Record';
       let rootCause = 'Diagnostic Evaluation Extracted';
 
-      const typeMatch = generatedText.match(/## Report Type\s*\n+([^\n#]+)/i);
+      const typeMatch = generatedText.match(/(?:##|\*\*|###)?\s*Report Type\s*[:\-]?\s*([^\n#]+)/i);
       if (typeMatch) detectedType = typeMatch[1].trim();
 
-      const siteMatch = generatedText.match(/## Anatomical Site[^\n]*\n+([^\n#]+)/i);
+      const siteMatch = generatedText.match(/(?:##|\*\*|###)?\s*Anatomical Site[^\n:]*[:\-]?\s*([^\n#]+)/i);
       if (siteMatch) anatomicalSite = siteMatch[1].trim();
 
-      const causeMatch = generatedText.match(/## Root Clinical Cause[^\n]*\n+([^\n#]+)/i);
+      const causeMatch = generatedText.match(/(?:##|\*\*|###)?\s*Root Clinical Cause[^\n:]*[:\-]?\s*([^\n#]+)/i);
       if (causeMatch) rootCause = causeMatch[1].trim();
 
       const lowerType = detectedType.toLowerCase();
@@ -269,13 +280,37 @@ Always finish with: **NOT FOR CLINICAL USE WITHOUT PHYSICIAN REVIEW**`;
         rootCause
       ) : [];
 
+      const isLabReport = lowerType.includes('pathology') ||
+                          lowerType.includes('biochemistry') ||
+                          lowerType.includes('hematology') ||
+                          lowerType.includes('haematology') ||
+                          lowerType.includes('laboratory') ||
+                          lowerType.includes('blood test') ||
+                          lowerType.includes('lipid') ||
+                          lowerType.includes('glucose') ||
+                          lowerType.includes('cbc') ||
+                          lowerType.includes('kft') ||
+                          lowerType.includes('lft') ||
+                          (/\b(pathology|biochemistry|hematology|haematology|lab\b|blood\s*test|lipid|glucose|cbc\b|kft\b|lft\b)\b/i.test(detectedType)) ||
+                          (/\b(pathology\s*(?:report|lab)|biochemistry|hematology|haematology|complete\s*blood\s*count|lipid\s*profile|liver\s*function|renal\s*function|kidney\s*function)\b/i.test(combinedText) && (labResults.flags.length > 0 || (labResults.normalValues && labResults.normalValues.length > 0)));
+
+      const isImaging = lowerType.includes('x-ray') || lowerType.includes('radiology') || lowerType.includes('radiograph') || lowerType.includes('ct scan') || /\bct\b/.test(lowerType) || lowerType.includes('mri') || lowerType.includes('ecg') || lowerType.includes('ekg') || lowerType.includes('electrocardiogram');
+
       let categoryType = 'medical_record';
       let categoryLabel = detectedType;
       let icon = '📄';
       let badgeColor = 'pill-primary';
 
       if (!isNonMedical) {
-        if (lowerType.includes('ecg') || lowerType.includes('ekg') || lowerType.includes('electrocardiogram')) {
+        if (isLabReport) {
+          categoryType = 'pathology_report';
+          categoryLabel = 'Pathology & Biochemistry Report';
+          icon = '🔬';
+          badgeColor = 'pill-danger';
+          if (anatomicalSite === 'Clinical Record' || anatomicalSite === 'None') {
+            anatomicalSite = 'Clinical Pathology / Blood Biomarkers';
+          }
+        } else if (lowerType.includes('ecg') || lowerType.includes('ekg') || lowerType.includes('electrocardiogram')) {
           categoryType = 'ecg_report';
           categoryLabel = '12-Lead ECG / EKG Strip';
           icon = '💓';
@@ -285,12 +320,12 @@ Always finish with: **NOT FOR CLINICAL USE WITHOUT PHYSICIAN REVIEW**`;
           categoryLabel = detectedType.includes('(') ? detectedType : `X-Ray Radiograph (${anatomicalSite})`;
           icon = '🩻';
           badgeColor = rootCause.toLowerCase().includes('fracture') ? 'pill-danger' : 'pill-warning';
-        } else if (labResults.flags.length > 0 || (labResults.normalValues && labResults.normalValues.length > 0) || /\b(pathology|biochemistry|hematology|haematology|lab\b|blood\s*test|lipid|glucose|cbc\b|kft\b|lft\b)\b/i.test(detectedType)) {
-          categoryType = 'pathology_report';
-          categoryLabel = 'Pathology & Biochemistry Report';
-          icon = '🔬';
-          badgeColor = 'pill-danger';
-        } else if (extractedMeds.length > 0 || /\b(prescription|rx\b|℞|medication|pharmacotherapy)\b/i.test(detectedType)) {
+        } else if (lowerType.includes('discharge')) {
+          categoryType = 'discharge_summary';
+          categoryLabel = 'Hospital Discharge Summary';
+          icon = '📋';
+          badgeColor = 'pill-primary';
+        } else if (/\b(prescription|rx\b|℞|medication|pharmacotherapy|consultation|opd|outpatient|treatment\s*sheet)\b/i.test(detectedType) || (/\b(prescription|dr\.\s+[a-z]+|rx\b|℞)\b/i.test(combinedText) && extractedMeds.length > 0) || (extractedMeds.length > 0 && !isLabReport && !isImaging)) {
           categoryType = 'prescription';
           categoryLabel = 'Doctor Prescription (Rx)';
           icon = '📄';
@@ -298,11 +333,11 @@ Always finish with: **NOT FOR CLINICAL USE WITHOUT PHYSICIAN REVIEW**`;
           if (anatomicalSite === 'Clinical Record' || anatomicalSite === 'None') {
             anatomicalSite = 'Outpatient Pharmacotherapy';
           }
-        } else if (lowerType.includes('discharge')) {
-          categoryType = 'discharge_summary';
-          categoryLabel = 'Hospital Discharge Summary';
-          icon = '📋';
-          badgeColor = 'pill-primary';
+        } else if (labResults.flags.length > 0 || (labResults.normalValues && labResults.normalValues.length > 0)) {
+          categoryType = 'pathology_report';
+          categoryLabel = 'Pathology & Biochemistry Report';
+          icon = '🔬';
+          badgeColor = 'pill-danger';
         } else {
           categoryType = 'medical_record';
           categoryLabel = detectedType || 'Clinical Care & Diagnostic Report';
@@ -310,6 +345,9 @@ Always finish with: **NOT FOR CLINICAL USE WITHOUT PHYSICIAN REVIEW**`;
           badgeColor = 'pill-primary';
         }
       }
+
+      // Strictly zero out medications if the document is a pathology lab report or diagnostic scan
+      const finalMeds = (categoryType === 'pathology_report' || categoryType === 'xray_report' || categoryType === 'ecg_report' || isLabReport || isImaging || isNonMedical) ? [] : extractedMeds;
 
       res.json({
         success: !isNonMedical,
@@ -322,8 +360,8 @@ Always finish with: **NOT FOR CLINICAL USE WITHOUT PHYSICIAN REVIEW**`;
         rootCause: isNonMedical ? 'No Medical Content Identified' : rootCause,
         fullGeminiText: generatedText,
         extractedText: extractedOcrText || generatedText,
-        extractedMedications: isNonMedical ? [] : extractedMeds,
-        structuredPrescriptionJSON: !isNonMedical ? prescriptionParser.parseToStructuredJSON(combinedText) : null,
+        extractedMedications: finalMeds,
+        structuredPrescriptionJSON: (finalMeds.length > 0 && categoryType === 'prescription') ? prescriptionParser.parseToStructuredJSON(combinedText) : null,
         extractedDiseases: isNonMedical ? [] : extractedDiseases,
         labFlags: isNonMedical ? [] : labResults.flags,
         labNormals: isNonMedical ? [] : labResults.normalValues,
