@@ -193,7 +193,7 @@ export class PDFHelper {
 
     ctx.fillStyle = "#38BDF8";
     ctx.font = "bold 16px Inter, sans-serif";
-    ctx.fillText("📄 Digitized Clinical Multi-Page PDF", 20, 36);
+    ctx.fillText("Digitized Clinical Multi-Page PDF", 20, 36);
 
     ctx.fillStyle = "#64748B";
     ctx.font = "12px Inter, sans-serif";

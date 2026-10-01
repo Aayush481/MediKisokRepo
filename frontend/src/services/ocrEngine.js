@@ -108,8 +108,10 @@ class OCREngine {
       const classification = await documentClassifier.classifyAndValidate(previewDataUrl, rawText, file.name);
 
       const hasClinicalEntities = (classification.type === "prescription" && (prescriptionParser.parsePrescriptionText(rawText).length > 0)) ||
-        (classification.type === "pathology_report" && (labParser.parseLabReportText(rawText).flags.length > 0)) ||
-        rawText.trim().length >= 350;
+        (classification.type === "pathology_report" && ((labParser.parseLabReportText(rawText).flags || []).length > 0 || (labParser.parseLabReportText(rawText).normalValues || []).length > 0)) ||
+        (classification.type === "xray_report") ||
+        (classification.type === "ecg_report") ||
+        (classification.type === "discharge_summary");
 
       if (classification.isValidMedical && hasClinicalEntities) {
         return this.buildStructuredClinicalResult(classification, rawText, previewDataUrl, file.name, isPdf);
@@ -132,7 +134,9 @@ class OCREngine {
           return {
             success: false,
             isValidMedical: false,
-            errorMessage: geminiResult.errorMessage || `❌ Non-Medical File Rejected: "${file.name}" does not contain recognizable clinical records.`,
+            type: "non_medical",
+            categoryLabel: "Non-Medical / Unrecognized Document",
+            errorMessage: geminiResult.errorMessage || `The file "${file.name}" does not contain recognizable clinical records. Please upload a clear prescription or lab report.`,
             rawOcrText: rawText || geminiResult.rawOcrText || ""
           };
         }
@@ -153,6 +157,8 @@ class OCREngine {
       return {
         success: false,
         isValidMedical: false,
+        type: "non_medical",
+        categoryLabel: "Non-Medical / Unrecognized Document",
         errorMessage: classification.errorMessage,
         rawOcrText: ocrText
       };
@@ -183,7 +189,7 @@ class OCREngine {
         classification.type = "prescription";
         classification.categoryLabel = "Doctor Prescription (Rx)";
         classification.badgeColor = "pill-success";
-        classification.icon = "📄";
+        classification.icon = "";
       }
     } else {
       extractedMedications = [];

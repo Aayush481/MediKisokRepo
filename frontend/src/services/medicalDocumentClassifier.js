@@ -89,12 +89,12 @@ class MedicalDocumentClassifier {
         return {
           isValidMedical: false,
           type: "non_medical",
-          categoryLabel: "Non-Medical / Unrecognized Image",
-          icon: "⚠️",
+          categoryLabel: "Non-Medical / Unrecognized Document",
+          icon: "",
           badgeColor: "pill-danger",
           confidence: "99.9%",
           rootCause: "No authentic clinical prescriptions, laboratory biomarkers, radiographs, or ECGs detected in uploaded file.",
-          errorMessage: `❌ Non-Medical Image Rejected: MediKiosk Neural Vision AI analyzed this document and verified that "${filename || 'uploaded file'}" does not contain authentic medical prescriptions, pathology reports, X-Rays, or ECGs. Please upload an authentic clinical record.`
+          errorMessage: `The file "${filename || 'uploaded file'}" does not contain a recognizable medical document. Please upload a clear prescription, pathology report, X-Ray, or ECG.`
         };
       }
     }
@@ -108,8 +108,8 @@ class MedicalDocumentClassifier {
       classification = {
         isValidMedical: true,
         type: "ecg_report",
-        categoryLabel: "12-Lead ECG / EKG Strip",
-        icon: "💓",
+        categoryLabel: "12-Lead ECG",
+        icon: "",
         badgeColor: ecgCause.includes("STEMI") ? "pill-danger" : (ecgCause.includes("Tachycardia") || ecgCause.includes("Ischemia") ? "pill-warning" : "pill-success"),
         confidence: visual.hasEcgGrid ? "99.5%" : "97.0%",
         rootCause: ecgCause,
@@ -124,7 +124,7 @@ class MedicalDocumentClassifier {
         isValidMedical: true,
         type: "xray_report",
         categoryLabel: `X-Ray Radiograph (${xraySite.site})`,
-        icon: "🩻",
+        icon: "",
         badgeColor: xraySite.isAcute ? "pill-danger" : "pill-warning",
         confidence: "98.8%",
         rootCause: xraySite.cause,
@@ -138,7 +138,7 @@ class MedicalDocumentClassifier {
         isValidMedical: true,
         type: "pathology_report",
         categoryLabel: "Pathology & Biochemistry Report",
-        icon: "🔬",
+        icon: "",
         badgeColor: "pill-danger",
         confidence: hasExtractedLabData ? "99.4%" : "96.5%",
         rootCause: this.deducePathologyRootCause(text, parsedLab),
@@ -152,7 +152,7 @@ class MedicalDocumentClassifier {
         isValidMedical: true,
         type: "prescription",
         categoryLabel: "Doctor Prescription (Rx)",
-        icon: "📄",
+        icon: "",
         badgeColor: "pill-success",
         confidence: hasExtractedPrescriptions ? "98.9%" : "95.5%",
         rootCause: this.deducePrescriptionRootCause(text, validDrugs),
@@ -166,7 +166,7 @@ class MedicalDocumentClassifier {
         isValidMedical: true,
         type: "discharge_summary",
         categoryLabel: "Hospital Discharge Summary",
-        icon: "📋",
+        icon: "",
         badgeColor: "pill-primary",
         confidence: "96.5%",
         rootCause: "Inpatient Clinical Encounter & Procedural Summary",
@@ -175,18 +175,24 @@ class MedicalDocumentClassifier {
     }
 
     // F. General Clinical Document, Health Record & Clinical Care Evaluation Gate
-    // If not explicit non-medical, and filename or text exhibits clinical care context
-    const hasClinicalCareContext = /\b(care|healthcare|patient|clinical|medical|diagnostic|hospital|clinic|doctor|health|case|investigation|evaluation|opd|ipd|cbc|lab|rx|prescription|report|doc|scan|blood)\b/i.test(text) ||
-      /\b(care|health|medical|patient|report|cbc|lab|prescription|doc|scan)\b/i.test(normalizedFilename);
+    // Requires genuine co-occurring clinical care evidence (not isolated generic tokens like 'doc' or 'report')
+    const hasClinicalProvider = /\b(dr\b|dr\.|doctor|physician|consultant|hospital|clinic|dispensary|nursing\s*home|opd\b|ipd\b|medical\s*center|department\s*of)\b/i.test(text);
+    const hasClinicalSubject = /\b(patient|pt\b|diagnosis|clinical\s*impression|provisional\s*diagnosis|chief\s*complaint|presenting\s*complaint|physical\s*examination|on\s*examination|o\/e\b|clinical\s*history|h\/o\b|vitals?|investigation|treatment\s*plan|advised)\b/i.test(text);
+    const hasClinicalCondition = /\b(hypertension|htn\b|diabetes|type\s*[12]\s*dm|asthma|copd|fever|pyrexia|infection|fracture|tachycardia|bradycardia|dyspnea|chest\s*pain|angina|edema|cough|headache|vomiting|diarrhea|abdominal\s*pain|hypothyroidism|hyperthyroidism|arthritis|osteoarthritis|pneumonia|bronchitis|gastritis|anemia|jaundice|nephropathy|neuropathy|dermatitis|trauma|lesion|carcinoma|acute|chronic)\b/i.test(text);
 
-    if (!classification && hasClinicalCareContext && !isExplicitNonMedical) {
+    const hasLegitimateClinicalCare = !isExplicitNonMedical && !visual.isColorfulPhoto && (
+      (hasClinicalProvider && hasClinicalSubject && hasClinicalCondition) ||
+      (hasClinicalProvider && (hasClinicalSubject || hasClinicalCondition) && (hasExtractedPrescriptions || hasExtractedLabData))
+    );
+
+    if (!classification && hasLegitimateClinicalCare) {
       classification = {
         isValidMedical: true,
         type: "medical_record",
-        categoryLabel: "Clinical Care & Diagnostic Report",
-        icon: "📋",
+        categoryLabel: "Clinical Diagnostic Report",
+        icon: "",
         badgeColor: "pill-primary",
-        confidence: "96.0%",
+        confidence: "95.0%",
         rootCause: "Clinical Care Record & Diagnostic Evaluation Ingestion",
         anatomicalSite: "General Clinical Medicine & Diagnostics"
       };
@@ -197,12 +203,12 @@ class MedicalDocumentClassifier {
       return {
         isValidMedical: false,
         type: "non_medical",
-        categoryLabel: "Non-Medical / Unrecognized Image",
-        icon: "⚠️",
+        categoryLabel: "Non-Medical / Unrecognized Document",
+        icon: "",
         badgeColor: "pill-danger",
         confidence: "99.9%",
         rootCause: "No authentic clinical prescriptions, laboratory biomarkers, radiographs, or ECGs detected in uploaded file.",
-        errorMessage: `❌ Non-Medical Image Rejected: MediKiosk Neural Vision AI analyzed this document and verified that "${filename || 'uploaded file'}" does not contain authentic medical prescriptions, pathology reports, X-Rays, or ECGs. Please upload an authentic clinical record.`
+        errorMessage: `The file "${filename || 'uploaded file'}" does not contain a recognizable medical document. Please upload a clear prescription, pathology report, X-Ray, or ECG.`
       };
     }
 

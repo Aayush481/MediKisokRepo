@@ -11,16 +11,15 @@ import { diseaseExtractor } from "./diseaseExtractor.js";
 
 const DEFAULT_API_KEY = typeof window !== "undefined" && window.__GEMINI_API_KEY__ ? window.__GEMINI_API_KEY__ : "";
 const CANDIDATE_MODELS = [
-  "gemini-3.5-flash-lite",
+  "gemini-3.1-flash-lite",
   "gemini-flash-lite-latest",
-  "gemini-3.5-flash",
-  "gemini-flash-latest"
+  "gemini-3.5-flash-lite"
 ];
 
 class GeminiVisionService {
   constructor() {
     this.apiKey = DEFAULT_API_KEY;
-    this.model = "gemini-3.5-flash-lite";
+    this.model = "gemini-3.1-flash-lite";
   }
 
   /**
@@ -89,7 +88,7 @@ class GeminiVisionService {
       localClassification.type = "prescription";
       localClassification.categoryLabel = "Doctor Prescription (Rx)";
       localClassification.badgeColor = "pill-success";
-      localClassification.icon = "📄";
+      localClassification.icon = "";
     }
     const localLab = labParser.parseLabReportText(rawText);
     const localDiseases = diseaseExtractor.extractDiseases(
@@ -267,8 +266,8 @@ Always finish with: **NOT FOR CLINICAL USE WITHOUT PHYSICIAN REVIEW**`;
       lowerText.includes("blank image");
 
     let type = isNonMedical ? "non_medical" : "medical_record";
-    let categoryLabel = isNonMedical ? "Non-Medical / Unrecognized Image" : reportType;
-    let icon = isNonMedical ? "⚠️" : "📄";
+    let categoryLabel = isNonMedical ? "Non-Medical / Unrecognized Document" : reportType;
+    let icon = "";
     let badgeColor = isNonMedical ? "pill-danger" : "pill-primary";
 
     const isLabReport = lowerType.includes("pathology") || 
@@ -287,28 +286,28 @@ Always finish with: **NOT FOR CLINICAL USE WITHOUT PHYSICIAN REVIEW**`;
     if (!isNonMedical) {
       if (lowerType.includes("ecg") || lowerType.includes("ekg")) {
         type = "ecg_report";
-        categoryLabel = "12-Lead ECG / EKG Strip";
-        icon = "💓";
+        categoryLabel = "12-Lead ECG";
+        icon = "";
         badgeColor = rootCause.toLowerCase().includes("stemi") || rootCause.toLowerCase().includes("infarct") ? "pill-danger" : "pill-warning";
       } else if (lowerType.includes("x-ray") || lowerType.includes("radiology") || lowerType.includes("radiograph") || lowerType.includes("ct scan") || /\bct\b/.test(lowerType) || lowerType.includes("mri")) {
         type = "xray_report";
         categoryLabel = reportType.includes("(") ? reportType : `X-Ray Radiograph (${anatomicalSite})`;
-        icon = "🩻";
+        icon = "";
         badgeColor = rootCause.toLowerCase().includes("fracture") ? "pill-danger" : "pill-warning";
       } else if (isLabReport) {
         type = "pathology_report";
         categoryLabel = "Pathology & Biochemistry Report";
-        icon = "🔬";
+        icon = "";
         badgeColor = "pill-danger";
       } else if (lowerType.includes("discharge")) {
         type = "discharge_summary";
         categoryLabel = "Hospital Discharge Summary";
-        icon = "📋";
+        icon = "";
         badgeColor = "pill-primary";
       } else if (lowerType.includes("prescription") || lowerType.includes("rx") || lowerType.includes("pharmacotherapy")) {
         type = "prescription";
         categoryLabel = "Doctor Prescription (Rx)";
-        icon = "📄";
+        icon = "";
         badgeColor = "pill-success";
       }
     }
@@ -329,7 +328,7 @@ Always finish with: **NOT FOR CLINICAL USE WITHOUT PHYSICIAN REVIEW**`;
       if (extractedMedications.length > 0 && type !== "discharge_summary") {
         type = "prescription";
         categoryLabel = "Doctor Prescription (Rx)";
-        icon = "📄";
+        icon = "";
         badgeColor = "pill-success";
       }
     } else {
@@ -343,22 +342,38 @@ Always finish with: **NOT FOR CLINICAL USE WITHOUT PHYSICIAN REVIEW**`;
       rootCause
     ) : [];
 
+    if (!isNonMedical && type === "medical_record") {
+      const hasClinicalEntities = extractedMedications.length > 0 ||
+        (labResults.flags && labResults.flags.length > 0) ||
+        (labResults.normalValues && labResults.normalValues.length > 0) ||
+        extractedDiseases.length > 0 ||
+        /\b(clinical|diagnostic|consultation|opd|ipd|physician|doctor|hospital|patient)\b/i.test(reportType);
+
+      if (!hasClinicalEntities) {
+        type = "non_medical";
+        categoryLabel = "Non-Medical / Unrecognized Document";
+        badgeColor = "pill-danger";
+      }
+    }
+
+    const finalIsNonMedical = isNonMedical || type === "non_medical";
+
     return {
-      success: !isNonMedical,
-      isValidMedical: !isNonMedical,
-      type,
-      categoryLabel,
+      success: !finalIsNonMedical,
+      isValidMedical: !finalIsNonMedical,
+      type: finalIsNonMedical ? "non_medical" : type,
+      categoryLabel: finalIsNonMedical ? "Non-Medical / Unrecognized Document" : categoryLabel,
       icon,
-      badgeColor,
-      anatomicalSite: isNonMedical ? "None" : anatomicalSite,
-      rootCause: isNonMedical ? "No Medical Content Identified" : rootCause,
+      badgeColor: finalIsNonMedical ? "pill-danger" : badgeColor,
+      anatomicalSite: finalIsNonMedical ? "None" : anatomicalSite,
+      rootCause: finalIsNonMedical ? "No Medical Content Identified" : rootCause,
       fullGeminiText: text,
-      extractedMedications: isNonMedical ? [] : extractedMedications,
-      extractedDiseases: isNonMedical ? [] : extractedDiseases,
-      labFlags: isNonMedical ? [] : labResults.flags,
-      labNormals: isNonMedical ? [] : labResults.normalValues,
-      confidence: isNonMedical ? "99.9%" : "99.2% (Gemini Multimodal Vision)",
-      errorMessage: isNonMedical ? `❌ Non-Medical Image Rejected: Gemini Vision AI verified that "${fileName}" does not contain authentic clinical prescriptions, lab reports, X-Rays, or ECGs.` : null
+      extractedMedications: finalIsNonMedical ? [] : extractedMedications,
+      extractedDiseases: finalIsNonMedical ? [] : extractedDiseases,
+      labFlags: finalIsNonMedical ? [] : labResults.flags,
+      labNormals: finalIsNonMedical ? [] : labResults.normalValues,
+      confidence: finalIsNonMedical ? "99.9%" : "99.2% (Gemini Multimodal Vision)",
+      errorMessage: finalIsNonMedical ? `The file "${fileName}" does not contain a recognizable medical document. Please upload a clear clinical record.` : null
     };
   }
 
@@ -370,7 +385,13 @@ Always finish with: **NOT FOR CLINICAL USE WITHOUT PHYSICIAN REVIEW**`;
       return {
         success: false,
         isValidMedical: false,
-        errorMessage: parsed.errorMessage || `❌ Non-Medical Image Rejected: "${fileName}" is not an authentic clinical record.`
+        type: "non_medical",
+        categoryLabel: parsed.categoryLabel || "Non-Medical / Unrecognized Document",
+        icon: "",
+        badgeColor: "pill-danger",
+        confidence: parsed.confidence || "99.9%",
+        rootCause: parsed.rootCause || "No authentic clinical prescriptions, laboratory biomarkers, radiographs, or ECGs detected in uploaded file.",
+        errorMessage: parsed.errorMessage || `The file "${fileName}" is not an authentic clinical record.`
       };
     }
 

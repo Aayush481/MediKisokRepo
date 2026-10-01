@@ -43,9 +43,9 @@ if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL && !process.env.NETLI
   app.listen(PORT, () => {
     console.log(`
 ======================================================
-🏥 MediKiosk MERN Clinical Server Live: http://localhost:${PORT}
-👁️ Python Face Detector & Optical rPPG Service: CONNECTED
-🤖 Gemini Multimodal Clinical Vision: ACTIVE
+MediKiosk Clinical Server Live: http://localhost:${PORT}
+Optical rPPG Service: CONNECTED
+Gemini Multimodal Clinical Vision: ACTIVE
 ======================================================
 `);
   });

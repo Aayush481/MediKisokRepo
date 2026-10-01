@@ -224,7 +224,7 @@ class MediKioskApp {
     if (dBtn) dBtn.textContent = i18n.t("mode_doctor");
 
     const quickIntake = document.querySelector(".quick-bar-left span");
-    if (quickIntake) quickIntake.innerHTML = `🏥 <strong>${i18n.t("quick_intake_mode")}</strong>`;
+    if (quickIntake) quickIntake.innerHTML = ` <strong>${i18n.t("quick_intake_mode")}</strong>`;
 
     const quickChips = document.querySelectorAll(".quick-bar-actions .quick-chip");
     if (quickChips.length >= 3) {
@@ -341,21 +341,21 @@ class MediKioskApp {
         <!-- 3D Kiosk Hardware Stepper -->
         <div class="kiosk-stepper">
           <div class="step-node ${this.currentStep === 1 ? 'active' : ''} ${this.currentStep > 1 ? 'completed' : ''}" onclick="window.app.goToStep(1)">
-            <div class="step-number">${this.currentStep > 1 ? '✓' : '1'}</div>
+            <div class="step-number">${this.currentStep > 1 ? '' : '1'}</div>
             <div>
               <div class="step-label">${i18n.t("step1_title")}</div>
               <div class="step-subtext">${i18n.t("step1_sub")}</div>
             </div>
           </div>
           <div class="step-node ${this.currentStep === 2 ? 'active' : ''} ${this.currentStep > 2 ? 'completed' : ''}" onclick="window.app.goToStep(2)">
-            <div class="step-number">${this.currentStep > 2 ? '✓' : '2'}</div>
+            <div class="step-number">${this.currentStep > 2 ? '' : '2'}</div>
             <div>
               <div class="step-label">${i18n.t("step2_title")}</div>
               <div class="step-subtext">${i18n.t("step2_sub")}</div>
             </div>
           </div>
           <div class="step-node ${this.currentStep === 3 ? 'active' : ''} ${this.currentStep > 3 ? 'completed' : ''}" onclick="window.app.goToStep(3)">
-            <div class="step-number">${this.currentStep > 3 ? '✓' : '3'}</div>
+            <div class="step-number">${this.currentStep > 3 ? '' : '3'}</div>
             <div>
               <div class="step-label">${i18n.t("step3_title")}</div>
               <div class="step-subtext">${i18n.t("step3_sub")}</div>
@@ -433,7 +433,7 @@ class MediKioskApp {
           </div>
 
           <div style="background: rgba(13, 148, 136, 0.12); border: 1px solid rgba(13, 148, 136, 0.4); border-radius: 12px; padding: 12px 14px; display: flex; align-items: flex-start; gap: 10px; margin-top: 6px;">
-            <span style="font-size: 1.2rem;">🔒</span>
+            <span style="font-size: 1.2rem;"></span>
             <div>
               <strong style="font-size: 0.82rem; color: #5EEAD4;">${i18n.t("dpdp_title")}</strong>
               <p style="font-size: 0.76rem; color: var(--text-muted); margin-top: 2px;">
@@ -493,7 +493,7 @@ class MediKioskApp {
             </div>
 
             <button class="btn-3d ${this.isAyushMode ? 'btn-3d-success' : 'btn-3d-secondary'}" style="padding: 6px 12px; font-size: 0.76rem;" onclick="window.app.toggleAyushMode()">
-              🌿 ${this.isAyushMode ? 'AYUSH Active' : i18n.t("ayush_mode_btn")}
+               ${this.isAyushMode ? 'AYUSH Active' : i18n.t("ayush_mode_btn")}
             </button>
           </div>
         </div>
@@ -503,7 +503,7 @@ class MediKioskApp {
           <div>
             ${this.patient.rppgVitals ? `
               <div style="height: 200px; border-radius: 14px; background: linear-gradient(135deg, rgba(6, 78, 59, 0.4) 0%, rgba(15, 23, 42, 0.85) 100%); border: 2px solid #10B981; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 1rem; box-shadow: 0 0 20px rgba(16, 185, 129, 0.25);">
-                <div style="font-size: 2.5rem; line-height: 1; margin-bottom: 6px;">✓</div>
+                <div style="font-size: 2.5rem; line-height: 1; margin-bottom: 6px;"></div>
                 <strong style="color: #6EE7B7; font-size: 0.95rem;">${i18n.t("vitals_calibrated")}</strong>
                 <p style="font-size: 0.74rem; color: #A7F3D0; margin-top: 2px;">${i18n.t("vitals_calibrated_sub")}</p>
                 <span class="pill-3d pill-3d-emerald" style="margin-top: 8px;">
@@ -514,7 +514,7 @@ class MediKioskApp {
               <div class="camera-hardware-lens" id="rppgCameraFeedContainer" style="cursor: pointer;" onclick="if(!window.app.patient.rppgVitals && window.app.cameraError) window.app.requestCameraDirectly();">
                 <div class="reticle-hud ${isLocked ? 'locked' : ''}">
                   <span class="reticle-status-badge">
-                    ${this.cameraError ? '🔴 ' + i18n.t("camera_req_btn") : (this.faceLockState.message || (this.isRppgScanning ? i18n.t("btn_scanning_vitals") : 'ALIGNING FACE...'))}
+                    ${this.cameraError ? ' ' + i18n.t("camera_req_btn") : (this.faceLockState.message || (this.isRppgScanning ? i18n.t("btn_scanning_vitals") : 'ALIGNING FACE...'))}
                   </span>
                 </div>
               </div>
@@ -530,19 +530,19 @@ class MediKioskApp {
             <!-- 5-Point Alignment Status Checklist -->
             <div class="checklist-pill-bar">
               <div class="pill-check ${this.patient.rppgVitals || checks.faceDetected ? 'pass' : ''}">
-                <span>${this.patient.rppgVitals || checks.faceDetected ? '✓' : '○'}</span> Face
+                <span>${this.patient.rppgVitals || checks.faceDetected ? '' : '○'}</span> Face
               </div>
               <div class="pill-check ${this.patient.rppgVitals || checks.isCentered ? 'pass' : ''}">
-                <span>${this.patient.rppgVitals || checks.isCentered ? '✓' : '○'}</span> Center
+                <span>${this.patient.rppgVitals || checks.isCentered ? '' : '○'}</span> Center
               </div>
               <div class="pill-check ${this.patient.rppgVitals || checks.isOptimalDistance ? 'pass' : ''}">
-                <span>${this.patient.rppgVitals || checks.isOptimalDistance ? '✓' : '○'}</span> Distance
+                <span>${this.patient.rppgVitals || checks.isOptimalDistance ? '' : '○'}</span> Distance
               </div>
               <div class="pill-check ${this.patient.rppgVitals || checks.isStill ? 'pass' : ''}">
-                <span>${this.patient.rppgVitals || checks.isStill ? '✓' : '○'}</span> Still
+                <span>${this.patient.rppgVitals || checks.isStill ? '' : '○'}</span> Still
               </div>
               <div class="pill-check ${this.patient.rppgVitals || checks.hasValidROIs ? 'pass' : ''}">
-                <span>${this.patient.rppgVitals || checks.hasValidROIs ? '✓' : '○'}</span> Skin ROI
+                <span>${this.patient.rppgVitals || checks.hasValidROIs ? '' : '○'}</span> Skin ROI
               </div>
             </div>
           </div>
@@ -580,9 +580,9 @@ class MediKioskApp {
               <!-- Real-Time Capillary Pulse Wave Oscilloscope Visualizer -->
               <div class="oscilloscope-container-3d">
                 <div class="oscilloscope-legend">
-                  <span>📈 Live Photoplethysmogram Oscilloscope (Pulse Waveform)</span>
+                  <span> Live Photoplethysmogram Oscilloscope (Pulse Waveform)</span>
                   <span style="color: ${this.isRppgScanning ? '#34D399' : (this.patient.rppgVitals ? '#6EE7B7' : 'var(--text-muted)')}; font-weight: 700;">
-                    ${this.isRppgScanning ? '● SAMPLING 30 FPS' : (this.patient.rppgVitals ? '✓ CAPTURE LOCKED' : '○ STANDBY')}
+                    ${this.isRppgScanning ? '● SAMPLING 30 FPS' : (this.patient.rppgVitals ? ' CAPTURE LOCKED' : '○ STANDBY')}
                   </span>
                 </div>
                 <canvas id="rppgOscilloscopeCanvas" width="480" height="52" class="oscilloscope-canvas-3d"></canvas>
@@ -593,7 +593,7 @@ class MediKioskApp {
                 <div class="telemetry-card ${vitals.heartRate > 100 ? 'highlight' : ''}">
                   <div class="telemetry-value">${vitals.heartRate}<span class="telemetry-unit">${i18n.t("telemetry_hr_unit")}</span></div>
                   <div class="telemetry-label">${i18n.t("telemetry_hr")}</div>
-                  <div class="telemetry-status">${vitals.heartRate > 100 ? '⚠️ High Rate' : (vitals.heartRate !== '--' ? i18n.t("status_resting") : '--')}</div>
+                  <div class="telemetry-status">${vitals.heartRate > 100 ? ' High Rate' : (vitals.heartRate !== '--' ? i18n.t("status_resting") : '--')}</div>
                 </div>
 
                 <div class="telemetry-card ${vitals.spO2 < 95 && vitals.spO2 !== '--' ? 'highlight' : ''}">
@@ -632,7 +632,7 @@ class MediKioskApp {
               <!-- Reassuring Clinical Vitals Verification -->
               ${this.patient.rppgVitals ? `
                 <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 10px; padding: 10px 14px; margin-top: 10px; font-size: 0.8rem; color: #6EE7B7; display: flex; align-items: center; gap: 8px;">
-                  <span style="font-size: 1.2rem;">✓</span>
+                  <span style="font-size: 1.2rem;"></span>
                   <div>
                     <strong>${i18n.t("vitals_summary_badge")}</strong>
                     <p style="font-size: 0.74rem; color: #A7F3D0; margin: 2px 0 0 0;">
@@ -652,7 +652,7 @@ class MediKioskApp {
           <!-- Voice Station -->
           <div class="voice-station-3d">
             <button id="micBtn" class="mic-tactile-button" onclick="window.app.toggleSpeech()">
-              🎙️
+              
             </button>
             <h4 id="micStatusText" style="font-size: 1.05rem; margin-top: 10px; font-weight: 700;">${i18n.t("voice_mic_title")}</h4>
             <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">${i18n.t("voice_mic_sub")}</p>
@@ -665,15 +665,15 @@ class MediKioskApp {
               <div style="margin-top: 10px;">
                 <label style="font-size: 0.76rem; color: var(--text-muted); display: block; margin-bottom: 5px;">${i18n.t("quick_symptoms_title")}</label>
                 <div style="display: flex; flex-wrap: wrap; gap: 6px;">
-                  <button type="button" class="quick-chip" onclick="window.app.appendSymptom('${i18n.t("sym_fever")}')">🤒 ${i18n.t("sym_fever")}</button>
-                  <button type="button" class="quick-chip" onclick="window.app.appendSymptom('${i18n.t("sym_cough")}')">🤧 ${i18n.t("sym_cough")}</button>
-                  <button type="button" class="quick-chip" onclick="window.app.appendSymptom('${i18n.t("sym_headache")}')">🤕 ${i18n.t("sym_headache")}</button>
-                  <button type="button" class="quick-chip" onclick="window.app.appendSymptom('${i18n.t("sym_chest_pain")}')">🫀 ${i18n.t("sym_chest_pain")}</button>
-                  <button type="button" class="quick-chip" onclick="window.app.appendSymptom('${i18n.t("sym_stomach_pain")}')">🤢 ${i18n.t("sym_stomach_pain")}</button>
-                  <button type="button" class="quick-chip" onclick="window.app.appendSymptom('${i18n.t("sym_breathless")}')">🫁 ${i18n.t("sym_breathless")}</button>
-                  <button type="button" class="quick-chip" onclick="window.app.appendSymptom('${i18n.t("sym_joint_pain")}')">🦴 ${i18n.t("sym_joint_pain")}</button>
-                  <button type="button" class="quick-chip" onclick="window.app.appendSymptom('${i18n.t("sym_vomiting")}')">🤮 ${i18n.t("sym_vomiting")}</button>
-                  <button type="button" class="quick-chip" onclick="window.app.appendSymptom('${i18n.t("sym_fatigue")}')">😴 ${i18n.t("sym_fatigue")}</button>
+                  <button type="button" class="quick-chip" onclick="window.app.appendSymptom('${i18n.t("sym_fever")}')">${i18n.t("sym_fever")}</button>
+                  <button type="button" class="quick-chip" onclick="window.app.appendSymptom('${i18n.t("sym_cough")}')">${i18n.t("sym_cough")}</button>
+                  <button type="button" class="quick-chip" onclick="window.app.appendSymptom('${i18n.t("sym_headache")}')">${i18n.t("sym_headache")}</button>
+                  <button type="button" class="quick-chip" onclick="window.app.appendSymptom('${i18n.t("sym_chest_pain")}')">${i18n.t("sym_chest_pain")}</button>
+                  <button type="button" class="quick-chip" onclick="window.app.appendSymptom('${i18n.t("sym_stomach_pain")}')">${i18n.t("sym_stomach_pain")}</button>
+                  <button type="button" class="quick-chip" onclick="window.app.appendSymptom('${i18n.t("sym_breathless")}')">${i18n.t("sym_breathless")}</button>
+                  <button type="button" class="quick-chip" onclick="window.app.appendSymptom('${i18n.t("sym_joint_pain")}')">${i18n.t("sym_joint_pain")}</button>
+                  <button type="button" class="quick-chip" onclick="window.app.appendSymptom('${i18n.t("sym_vomiting")}')">${i18n.t("sym_vomiting")}</button>
+                  <button type="button" class="quick-chip" onclick="window.app.appendSymptom('${i18n.t("sym_fatigue")}')">${i18n.t("sym_fatigue")}</button>
                 </div>
               </div>
             </div>
@@ -691,7 +691,7 @@ class MediKioskApp {
             <div style="display: flex; flex-wrap: wrap; gap: 6px;">
               ${(this.patient.ayushHerbs || []).map((h, hIdx) => `
                 <span class="pill-3d pill-3d-emerald" style="cursor: pointer;" onclick="window.app.removeHerb(${hIdx})">
-                  🌿 ${h.name} ✕
+                  ${h.name} 
                 </span>
               `).join('')}
               ${(!this.patient.ayushHerbs || this.patient.ayushHerbs.length === 0) ? `
@@ -783,7 +783,7 @@ class MediKioskApp {
     return `
       <div class="bodymap-hardware-box" style="border-color: var(--teal);">
         <h4 style="font-size: 0.95rem; font-weight: 800; color: #5EEAD4; text-align: left;">
-          🌿 AYUSH Dashavidha Pariksha & Prakriti Assessment
+          AYUSH Dashavidha Pariksha & Prakriti Assessment
         </h4>
         <p style="font-size: 0.78rem; color: var(--text-muted); text-align: left;">
           Standardized Ayurvedic phenotypic constitutional evaluation
@@ -863,7 +863,7 @@ class MediKioskApp {
           <!-- Left: Real Upload Dropzone & File Preview -->
           <div>
             <div class="scanner-dropzone-3d" id="uploadDropzone" onclick="window.app.triggerFileInput()">
-              <div style="font-size: 2.5rem; margin-bottom: 6px;">📸</div>
+              <div style="font-size: 1.2rem; font-weight: 700; color: #60A5FA; margin-bottom: 8px;">Upload Document</div>
               <strong style="color: #60A5FA; font-size: 1rem;">${i18n.t("upload_dropzone_title")}</strong>
               <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">
                 ${i18n.t("upload_dropzone_desc")}
@@ -903,12 +903,12 @@ class MediKioskApp {
                 </div>
                 ${latestDoc.doctorName ? `
                   <p style="font-size: 0.82rem; font-weight: 700; color: #93C5FD; margin-top: 6px; margin-bottom: 2px;">
-                    👨‍⚕️ Doctor: ${latestDoc.doctorName}
+                    Doctor: ${latestDoc.doctorName}
                   </p>
                 ` : ''}
                 ${latestDoc.facility ? `
                   <p style="font-size: 0.76rem; color: var(--text-muted); margin: 0;">
-                    🏥 Facility: ${latestDoc.facility}
+                    Facility: ${latestDoc.facility}
                   </p>
                 ` : ''}
               </div>
@@ -989,7 +989,7 @@ class MediKioskApp {
                 }).join('') : `
                   <div style="background: rgba(15, 23, 42, 0.5); border: 1px dashed rgba(56, 189, 248, 0.2); border-radius: 8px; padding: 10px 14px; font-size: 0.78rem; color: #94A3B8;">
                     ${latestDoc && ((latestDoc.type || '').includes('pathology') || (latestDoc.categoryLabel || '').toLowerCase().includes('pathology') || (latestDoc.categoryLabel || '').toLowerCase().includes('lab')) ? 
-                      '🔬 <strong>Pathology Diagnostic Report:</strong> Laboratory test values & diagnostic biomarkers extracted above. (No outpatient prescribed medications in this lab report).' : 
+                      '<strong>Pathology Diagnostic Report:</strong> Laboratory test values & diagnostic biomarkers extracted above. (No outpatient prescribed medications in this lab report).' : 
                       i18n.t("rx_empty")}
                   </div>
                 `}
@@ -1074,7 +1074,7 @@ class MediKioskApp {
           <!-- Hospital Header Band -->
           <div class="ticket-header-band">
             <div class="ticket-clinic-info">
-              <div class="ticket-clinic-emblem">🏥</div>
+              <div class="ticket-clinic-emblem" style="font-size: 1.1rem; font-weight: 800; color: #38BDF8;">OPD</div>
               <div>
                 <div class="ticket-clinic-title">MediKiosk Outpatient Department</div>
                 <div class="ticket-clinic-subtitle">ABDM First-Mile Triage & Digital Queue Pass</div>
@@ -1093,7 +1093,7 @@ class MediKioskApp {
                 <div class="token-label-text">${i18n.t("opd_token_header")}</div>
                 <div class="token-number-hero">${token}</div>
                 <div class="token-dept-badge">
-                  <span>📍</span>
+                  
                   <span>${i18n.t("default_dept")}</span>
                 </div>
               </div>
@@ -1141,7 +1141,7 @@ class MediKioskApp {
                 <div class="queue-step-node active-now" title="Currently inside doctor cabin">1</div>
                 <div class="queue-step-node">2</div>
                 <div class="queue-step-node">3</div>
-                <div class="queue-step-node patient-target" title="Your turn">★</div>
+                <div class="queue-step-node patient-target" title="Your turn">4</div>
               </div>
               <div class="queue-step-caption">
                 <span>Now Serving at Cabin 04</span>
@@ -1151,15 +1151,15 @@ class MediKioskApp {
 
             <!-- Real-Time SMS Notification Confirmation -->
             <div class="ticket-sms-box">
-              <div class="ticket-sms-icon">🔔</div>
+              <div class="ticket-sms-icon" style="font-size: 0.82rem; font-weight: 700; color: #60A5FA;">SMS</div>
               <div class="ticket-sms-content">
-                <div class="ticket-sms-title">Real-Time Mobile SMS Notification Active</div>
+                <div class="ticket-sms-title">Automated SMS Notification</div>
                 <p class="ticket-sms-desc">
                   An automated SMS alert will be dispatched to <strong>${this.patient.mobile || '+91 98765 43210'}</strong> exactly 30 minutes before your consultation call.
                 </p>
               </div>
               <span class="pill-3d pill-3d-blue" style="font-size: 0.68rem; align-self: center; white-space: nowrap;">
-                ${this.patient.smsAlertSent ? '✓ Alert Sent' : '✓ Scheduled'}
+                ${this.patient.smsAlertSent ? ' Alert Sent' : ' Scheduled'}
               </span>
             </div>
 
@@ -1244,7 +1244,7 @@ class MediKioskApp {
         <div class="queue-panel-3d">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px;">
             <div>
-              <h3 style="font-size: 0.95rem; font-weight: 800; color: #FFFFFF; margin: 0;">📋 Section 4: Live Patient Queue</h3>
+              <h3 style="font-size: 0.95rem; font-weight: 800; color: #FFFFFF; margin: 0;">Live Outpatient Queue</h3>
               <p style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">OPD Cabin 3 • Dr. Sharma</p>
             </div>
             <span class="pill-3d pill-3d-emerald">${this.doctorQueue.length} Active</span>
@@ -1253,10 +1253,10 @@ class MediKioskApp {
           <!-- Barcode / Token Scanner Lookup Input -->
           <div style="margin-bottom: 10px;">
             <div style="position: relative;">
-              <input type="text" id="queueBarcodeSearch" placeholder="🔍 Scan Barcode / Token (e.g. A-15)..." 
+              <input type="text" id="queueBarcodeSearch" placeholder="Scan Barcode / Token (e.g. A-15)..." 
                 style="width: 100%; padding: 7px 32px 7px 10px; background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 8px; color: #FFFFFF; font-size: 0.76rem; outline: none;" 
                 onkeydown="if(event.key === 'Enter') { window.app.handleBarcodeScan(this.value); this.value = ''; }" />
-              <span style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 0.82rem; cursor: pointer;" title="Scan Barcode with Optical Scanner" onclick="const val = document.getElementById('queueBarcodeSearch').value; if(val) { window.app.handleBarcodeScan(val); document.getElementById('queueBarcodeSearch').value = ''; }">📟</span>
+              <span style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 0.72rem; font-weight: 700; color: #38BDF8; cursor: pointer;" title="Scan Barcode" onclick="const val = document.getElementById('queueBarcodeSearch').value; if(val) { window.app.handleBarcodeScan(val); document.getElementById('queueBarcodeSearch').value = ''; }">Scan</span>
             </div>
           </div>
 
@@ -1277,7 +1277,7 @@ class MediKioskApp {
                       <div style="font-size: 0.72rem; color: #38BDF8; font-family: monospace; margin-top: 2px;">ABHA: ${item.abhaId || 'Walk-in'}</div>
                     </div>
                     <span class="pill-3d ${item.isEmergency ? 'pill-3d-crimson' : (isCurrent ? 'pill-3d-emerald' : 'pill-3d-blue')}">
-                      ${item.isEmergency ? 'EMERGENCY' : (isCurrent ? '🟢 IN CABIN' : 'TOKEN ' + item.tokenNumber)}
+                      ${item.isEmergency ? 'EMERGENCY' : (isCurrent ? 'IN CONSULTATION' : 'TOKEN ' + item.tokenNumber)}
                     </span>
                   </div>
 
@@ -1296,17 +1296,17 @@ class MediKioskApp {
 
                     ${item.smsAlertSent ? `
                       <div class="queue-30min-badge sent" title="Automated notification dispatched 30 mins prior to appointment">
-                        🔔 30-Min Alert Sent (${item.smsAlertTime || '10:15 AM'})
+                        30-Min Alert Sent (${item.smsAlertTime || '10:15 AM'})
                       </div>
                     ` : (is30MinPatient ? `
                       <div class="queue-30min-badge" title="Appointment scheduled in ~30 mins (after 4 patients)">
-                        ⚠️ 30-Min Alert Window (~${waitMinutes}m)
+                        30-Min Alert Window (~${waitMinutes}m)
                       </div>
                     ` : '')}
 
                     <div style="display: flex; justify-content: flex-end; margin-top: 2px;">
                       <button class="btn-sms-alert-3d" onclick="event.stopPropagation(); window.app.sendManual30MinAlert('${item.id}')" title="Dispatch 30-minute advance appointment SMS/WhatsApp alert">
-                        📲 ${item.smsAlertSent ? 'Re-send 30-Min SMS' : 'Send 30-Min SMS'}
+                        ${item.smsAlertSent ? 'Re-send SMS' : 'Send 30-Min SMS'}
                       </button>
                     </div>
                   </div>
@@ -1326,11 +1326,11 @@ class MediKioskApp {
               <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                 <h2 style="font-size: 1.35rem; font-weight: 800; color: #FFFFFF; margin: 0;">${p.name || 'Walk-in Patient'}</h2>
                 <span class="pill-3d ${isViewingCurrent ? 'pill-3d-emerald' : 'pill-3d-blue'}" style="font-weight: 800;">
-                  ${isViewingCurrent ? '🟢 IN CABIN (CURRENT PATIENT)' : `📋 REVIEWING QUEUE PATIENT (#${selectedQueueIdx + 1})`}
+                  ${isViewingCurrent ? 'IN CONSULTATION (CURRENT PATIENT)' : `REVIEWING QUEUE PATIENT (#${selectedQueueIdx + 1})`}
                 </span>
-                <span class="pill-3d ${p.isEmergency ? 'pill-3d-crimson' : 'pill-3d-blue'}">${p.isEmergency ? '🚨 PRIORITY EMERGENCY' : 'TOKEN ' + p.tokenNumber}</span>
+                <span class="pill-3d ${p.isEmergency ? 'pill-3d-crimson' : 'pill-3d-blue'}">${p.isEmergency ? 'EMERGENCY PRIORITY' : 'TOKEN ' + p.tokenNumber}</span>
                 <span class="pill-3d pill-3d-blue">ABHA: ${p.abhaId || 'Walk-in'}</span>
-                ${p.smsAlertSent ? `<span class="pill-3d pill-3d-emerald">🔔 30-Min SMS Dispatched</span>` : ''}
+                ${p.smsAlertSent ? `<span class="pill-3d pill-3d-emerald">30-Min SMS Dispatched</span>` : ''}
               </div>
               <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; margin-bottom: 0;">
                 ${p.age || '--'} Years • ${p.gender} • Registered Mobile: <strong style="color: #6EE7B7;">${p.mobile || 'Not provided'}</strong> • Chief Complaint: <span style="color: #E2E8F0;">${p.chiefComplaint || 'None provided'}</span>
@@ -1346,16 +1346,16 @@ class MediKioskApp {
 
             <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
               <button class="btn-3d btn-3d-success" style="padding: 6px 14px; font-size: 0.8rem; font-weight: 700;" onclick="window.app.callNextPatient()" title="Complete consultation for current patient and advance queue">
-                ⏭️ Call Next Patient
+                Call Next Patient
               </button>
               <button class="btn-3d btn-3d-secondary" style="padding: 6px 12px; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;" onclick="window.app.openSmsLogModal()">
-                📨 30-Min SMS Logs (${this.smsDispatchLogs.length})
+                SMS Notifications (${this.smsDispatchLogs.length})
               </button>
               <button class="btn-3d btn-3d-secondary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="window.app.openFhirModal()">
                 FHIR JSON
               </button>
               <button class="btn-3d btn-3d-primary" style="padding: 6px 14px; font-size: 0.8rem;" onclick="window.app.acceptSummary()">
-                ✓ Accept & Push HIS
+                Push to HIS
               </button>
             </div>
           </div>
@@ -1363,16 +1363,16 @@ class MediKioskApp {
           <!-- Section Navigation Tabs -->
           <div class="doctor-tabs-3d">
             <button class="doctor-tab-btn ${this.doctorActiveTab === 'all' ? 'active' : ''}" onclick="window.app.setDoctorTab('all')">
-              📊 All Sections (Stacked)
+              All Records
             </button>
             <button class="doctor-tab-btn ${this.doctorActiveTab === 'summary' ? 'active' : ''}" onclick="window.app.setDoctorTab('summary')">
-              📑 Section 1: Summary of All Documents (${allDocs.length})
+              Clinical Summary (${allDocs.length})
             </button>
             <button class="doctor-tab-btn ${this.doctorActiveTab === 'prescriptions' ? 'active' : ''}" onclick="window.app.setDoctorTab('prescriptions')">
-              💊 Section 2: All Prescriptions Extracted (${allMeds.length})
+              Prescriptions (${allMeds.length})
             </button>
             <button class="doctor-tab-btn ${this.doctorActiveTab === 'previews' ? 'active' : ''}" onclick="window.app.setDoctorTab('previews')">
-              🖼️ Section 3: Document Previews Gallery (${allDocs.length})
+              Document Previews (${allDocs.length})
             </button>
           </div>
 
@@ -1383,7 +1383,7 @@ class MediKioskApp {
             <div id="sectionSummary" style="margin-bottom: 1.5rem; background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 1.25rem;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                 <div>
-                  <h3 style="font-size: 1.05rem; font-weight: 800; color: #38BDF8; margin: 0;">📑 Section 1: Summary of All Uploaded Documents</h3>
+                  <h3 style="font-size: 1.05rem; font-weight: 800; color: #38BDF8; margin: 0;">Summary of Uploaded Documents</h3>
                   <p style="font-size: 0.74rem; color: var(--text-muted); margin-top: 2px;">Synthesized Diagnostic Intelligence, OCR Multi-Page Aggregation, and Contactless Vitals</p>
                 </div>
                 <span class="pill-3d pill-3d-blue">${allDocs.length} Total Records</span>
@@ -1447,12 +1447,12 @@ class MediKioskApp {
               ${hdiResult.hasConflict ? `
                 <div class="hdi-alert-box-3d" style="margin-bottom: 1.25rem;">
                   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                    <strong style="color: #F87171; font-size: 0.92rem;">⚠️ HERB-DRUG CONTRAINDICATION ALERT</strong>
+                    <strong style="color: #F87171; font-size: 0.92rem;">Herb-Drug Interaction Alert</strong>
                     <span class="pill-3d pill-3d-crimson">${hdiResult.count} Conflict(s)</span>
                   </div>
                   ${hdiResult.conflicts.map(c => `
                     <div style="background: rgba(0,0,0,0.4); border-radius: 8px; padding: 8px 12px; margin-top: 6px;">
-                      <strong style="color: #FFFFFF; font-size: 0.84rem;">⚡ ${c.drug} ⟷ ${c.herb} (${c.herbBotanical})</strong>
+                      <strong style="color: #FFFFFF; font-size: 0.84rem;">${c.drug} — ${c.herb} (${c.herbBotanical})</strong>
                       <p style="font-size: 0.76rem; color: #FCA5A5; margin-top: 2px; margin-bottom: 2px;"><strong>Hazard:</strong> ${c.clinicalEffect}</p>
                       <p style="font-size: 0.74rem; color: #6EE7B7; margin: 0;"><strong>Recommendation:</strong> ${c.recommendation}</p>
                     </div>
@@ -1464,7 +1464,7 @@ class MediKioskApp {
               <div style="margin-bottom: 1.25rem;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                   <strong style="font-size: 0.85rem; color: #38BDF8; text-transform: uppercase;">
-                    🩺 Patient Diagnoses, Diseases & Active Pathologies:
+                    Active Diagnoses & Clinical Findings:
                   </strong>
                   <span class="pill-3d pill-3d-blue">${allDiseases.length} Verified</span>
                 </div>
@@ -1490,7 +1490,7 @@ class MediKioskApp {
               <!-- Document-by-Document Diagnostic Findings Breakdown -->
               <div style="margin-top: 1rem;">
                 <strong style="font-size: 0.85rem; color: #93C5FD; text-transform: uppercase; display: block; margin-bottom: 8px;">
-                  📋 Verified Clinical Records & Findings Breakdown:
+                  Clinical Records & Findings:
                 </strong>
                 ${allDocs.length > 0 ? `
                   <div style="display: flex; flex-direction: column; gap: 8px;">
@@ -1518,7 +1518,7 @@ class MediKioskApp {
                           ` : ''}
                         </div>
                         <button class="btn-3d btn-3d-secondary" style="padding: 4px 10px; font-size: 0.74rem; white-space: nowrap;" onclick="window.app.openDocInspectModal('${doc.id}')">
-                          🔍 Inspect Scan
+                          Inspect Document
                         </button>
                       </div>
                     `).join('')}
@@ -1537,7 +1537,7 @@ class MediKioskApp {
             <div id="sectionPrescriptions" style="margin-bottom: 1.5rem; background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 1.25rem;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
                 <div>
-                  <h3 style="font-size: 1.05rem; font-weight: 800; color: #34D399; margin: 0;">💊 Section 2: All Prescriptions Fetched Using Uploaded Prescriptions</h3>
+                  <h3 style="font-size: 1.05rem; font-weight: 800; color: #34D399; margin: 0;">Prescriptions & Active Medications</h3>
                   <p style="font-size: 0.74rem; color: var(--text-muted); margin-top: 2px;">Doctor Handwritten & Printed Prescriptions Standardized to SNOMED-CT Clinical Nomenclature</p>
                 </div>
                 <span class="pill-3d pill-3d-emerald">${allMeds.length} Active Prescriptions</span>
@@ -1587,7 +1587,7 @@ class MediKioskApp {
                           <td><code style="font-size: 0.72rem; color: #38BDF8; background: rgba(56,189,248,0.1); padding: 2px 6px; border-radius: 4px;">${snomed}</code></td>
                           <td><span class="pill-3d ${schedule === 'OTC' ? 'pill-3d-emerald' : 'pill-3d-amber'}" style="font-size: 0.68rem;">${schedule}</span></td>
                           <td style="font-size: 0.72rem; color: var(--text-muted); max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${source}</td>
-                          <td><span class="pill-3d pill-3d-emerald" style="font-size: 0.68rem;">✓ ${status}</span></td>
+                          <td><span class="pill-3d pill-3d-emerald" style="font-size: 0.68rem;"> ${status}</span></td>
                         </tr>
                       `;
                     }).join('') : `
@@ -1610,7 +1610,7 @@ class MediKioskApp {
             <div id="sectionPreviews" style="margin-bottom: 1.5rem; background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 1.25rem;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
                 <div>
-                  <h3 style="font-size: 1.05rem; font-weight: 800; color: #A78BFA; margin: 0;">🖼️ Section 3: All Uploaded Document Previews Gallery</h3>
+                  <h3 style="font-size: 1.05rem; font-weight: 800; color: #A78BFA; margin: 0;">Uploaded Clinical Documents</h3>
                   <p style="font-size: 0.74rem; color: var(--text-muted); margin-top: 2px;">Interactive Visual Scan Gallery with Optical Zoom Inspection (100% - 250%) & Clinical Cross-Verification</p>
                 </div>
                 <span class="pill-3d pill-3d-violet">${allDocs.length} Visual Scans</span>
@@ -1623,7 +1623,7 @@ class MediKioskApp {
                       <img src="${doc.previewUrl || ''}" alt="${doc.title}" loading="lazy" />
                       <div class="doc-card-thumb-overlay">
                         <button class="btn-3d btn-3d-primary" style="padding: 6px 14px; font-size: 0.75rem;">
-                          🔍 Inspect & Zoom
+                          Inspect Document
                         </button>
                       </div>
                     </div>
@@ -1642,7 +1642,7 @@ class MediKioskApp {
                       </p>
                       <div style="margin-top: auto; padding-top: 8px;">
                         <button class="btn-3d btn-3d-secondary" style="width: 100%; padding: 6px; font-size: 0.74rem;" onclick="window.app.openDocInspectModal('${doc.id}')">
-                          🔍 View Scan Details
+                          View Details
                         </button>
                       </div>
                     </div>
@@ -1661,8 +1661,8 @@ class MediKioskApp {
             <strong style="font-size: 0.85rem; color: #93C5FD; text-transform: uppercase;">Doctor's Consultation Assessment & Notes:</strong>
             <textarea class="input-text-3d" rows="3" style="margin-top: 8px;" placeholder="Add clinical examination findings, final diagnosis, and new prescriptions..."></textarea>
             <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px;">
-              <button class="btn-3d btn-3d-secondary" onclick="alert('Prescription printed successfully!')">🖨️ Print Prescription</button>
-              <button class="btn-3d btn-3d-success" onclick="alert('Encounter record successfully saved and pushed to ABDM & e-Hospital HIS!')">💾 Save & Close Encounter</button>
+              <button class="btn-3d btn-3d-secondary" onclick="alert('Prescription printed successfully!')">Print Prescription</button>
+              <button class="btn-3d btn-3d-success" onclick="alert('Encounter record successfully saved and pushed to ABDM & e-Hospital HIS!')">Save & Close Encounter</button>
             </div>
           </div>
         </div>
@@ -1686,11 +1686,11 @@ class MediKioskApp {
 
               <!-- Zoom Controls Toolbar -->
               <div style="display: flex; align-items: center; gap: 8px;">
-                <button class="btn-3d btn-3d-secondary" style="padding: 4px 10px; font-size: 0.82rem;" onclick="window.app.changeDocZoom(-0.25)" title="Zoom Out">➖</button>
+                <button class="btn-3d btn-3d-secondary" style="padding: 4px 10px; font-size: 0.82rem;" onclick="window.app.changeDocZoom(-0.25)" title="Zoom Out">-</button>
                 <span id="inspectZoomLabel" style="font-size: 0.78rem; font-family: monospace; color: #38BDF8; min-width: 44px; text-align: center; font-weight: bold;">${Math.round(this.docZoomLevel * 100)}%</span>
-                <button class="btn-3d btn-3d-secondary" style="padding: 4px 10px; font-size: 0.82rem;" onclick="window.app.changeDocZoom(0.25)" title="Zoom In">➕</button>
+                <button class="btn-3d btn-3d-secondary" style="padding: 4px 10px; font-size: 0.82rem;" onclick="window.app.changeDocZoom(0.25)" title="Zoom In">+</button>
                 <button class="btn-3d btn-3d-secondary" style="padding: 4px 8px; font-size: 0.75rem;" onclick="window.app.changeDocZoom(0)" title="Reset Zoom">100%</button>
-                <button class="btn-3d btn-3d-secondary" style="padding: 4px 12px; font-size: 0.82rem; margin-left: 8px; color: #F87171;" onclick="window.app.closeDocInspectModal()">✖ Close</button>
+                <button class="btn-3d btn-3d-secondary" style="padding: 4px 12px; font-size: 0.82rem; margin-left: 8px; color: #F87171;" onclick="window.app.closeDocInspectModal()">Close</button>
               </div>
             </div>
 
@@ -1707,7 +1707,7 @@ class MediKioskApp {
                 </div>
                 ${this.inspectedDoc.extractedText ? `
                   <button class="btn-3d btn-3d-secondary" style="padding: 2px 10px; font-size: 0.72rem;" onclick="const el = document.getElementById('inspectRawTextStream'); if(el) el.style.display = el.style.display === 'none' ? 'block' : 'none';">
-                    📄 Toggle Text Stream
+                    Toggle Text Stream
                   </button>
                 ` : ''}
               </div>
@@ -1728,14 +1728,14 @@ class MediKioskApp {
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 22px; background: rgba(30, 41, 59, 0.9); border-bottom: 1px solid rgba(255,255,255,0.08);">
             <div>
               <div style="display: flex; align-items: center; gap: 10px;">
-                <span style="font-size: 1.3rem;">📨</span>
+                
                 <h3 style="font-size: 1.1rem; font-weight: 800; color: #FFFFFF; margin: 0;">30-Minute Advance Patient Appointment SMS Dispatch Logs</h3>
               </div>
               <p style="font-size: 0.74rem; color: var(--text-muted); margin: 3px 0 0 0;">
                 Automated SMS & WhatsApp Cloud Gateway Dispatches Sent 30 Minutes Prior to Doctor Consultation (OPD Cabin 3)
               </p>
             </div>
-            <button class="btn-3d btn-3d-secondary" style="padding: 6px 14px; font-size: 0.8rem; color: #F87171;" onclick="window.app.closeSmsLogModal()">✖ Close</button>
+            <button class="btn-3d btn-3d-secondary" style="padding: 6px 14px; font-size: 0.8rem; color: #F87171;" onclick="window.app.closeSmsLogModal()">Close</button>
           </div>
 
           <!-- Modal Body Table -->
@@ -1865,7 +1865,7 @@ class MediKioskApp {
 
       if (!ocrResult || !ocrResult.isValidMedical) {
         this.render();
-        alert(ocrResult?.errorMessage || `❌ Non-Medical File Rejected: "${file.name}" does not contain recognizable clinical records.`);
+        alert(ocrResult?.errorMessage || `File Rejected: "${file.name}" does not contain recognizable clinical records.`);
         return;
       }
 
@@ -1891,7 +1891,7 @@ class MediKioskApp {
           ocrResult.type = "pathology_report";
           ocrResult.categoryLabel = "Pathology & Biochemistry Report";
           ocrResult.badgeColor = "pill-danger";
-          ocrResult.icon = "🔬";
+          ocrResult.icon = "";
         }
         ocrResult.extractedMedications = [];
         if (ocrResult.entities) ocrResult.entities.medications = [];
@@ -1946,12 +1946,12 @@ class MediKioskApp {
 
       this.render();
       const medNotice = isPathologyOrLab ? "• Prescribed Medications: None (Pathology Diagnostic Investigation)" : `• Prescribed Medications: ${newMeds.length}`;
-      alert(`✅ Verified Medical Document Digitized!\n\nClassification: [${ocrResult.categoryLabel}]\nDiagnostic Finding: ${ocrResult.rootCause}\n• Identified Diseases/Diagnoses: ${allExtractedDiseases.length}\n${medNotice}\n• Diagnostic Biomarkers: ${labFlags.length}`);
+      alert(`Medical Document Processed\n\nClassification: [${ocrResult.categoryLabel}]\nDiagnostic Finding: ${ocrResult.rootCause}\n• Identified Diseases/Diagnoses: ${allExtractedDiseases.length}\n${medNotice}\n• Diagnostic Biomarkers: ${labFlags.length}`);
     } catch (err) {
       this.isOcrProcessing = false;
       this.render();
       console.error("Processing error:", err);
-      alert(`⚠️ Error processing document: ${err.message || "Please upload a valid image."}`);
+      alert(`Error processing document: ${err.message || "Please upload a valid image."}`);
     }
   }
 
@@ -2000,7 +2000,7 @@ class MediKioskApp {
       hud.classList.toggle("locked", !!state.isFaceLocked);
     }
     if (statusBadge) {
-      statusBadge.textContent = state.message || (state.isFaceLocked ? "🟢 Face Validated & Locked" : "Aligning Face...");
+      statusBadge.textContent = state.message || (state.isFaceLocked ? "Face Validated & Locked" : "Aligning Face...");
     }
 
     // Update 5-Point Alignment Status Checklist
@@ -2008,19 +2008,19 @@ class MediKioskApp {
     const checks = state.checks || {};
     if (chkBoxes.length >= 5) {
       chkBoxes[0].classList.toggle("pass", !!(state.detected || checks.faceDetected));
-      chkBoxes[0].querySelector("span").textContent = (state.detected || checks.faceDetected) ? "✓" : "○";
+      chkBoxes[0].querySelector("span").textContent = (state.detected || checks.faceDetected) ? "" : "○";
 
       chkBoxes[1].classList.toggle("pass", !!checks.isCentered);
-      chkBoxes[1].querySelector("span").textContent = checks.isCentered ? "✓" : "○";
+      chkBoxes[1].querySelector("span").textContent = checks.isCentered ? "" : "○";
 
       chkBoxes[2].classList.toggle("pass", !!checks.isOptimalDistance);
-      chkBoxes[2].querySelector("span").textContent = checks.isOptimalDistance ? "✓" : "○";
+      chkBoxes[2].querySelector("span").textContent = checks.isOptimalDistance ? "" : "○";
 
       chkBoxes[3].classList.toggle("pass", !!checks.isStill);
-      chkBoxes[3].querySelector("span").textContent = checks.isStill ? "✓" : "○";
+      chkBoxes[3].querySelector("span").textContent = checks.isStill ? "" : "○";
 
       chkBoxes[4].classList.toggle("pass", !!checks.hasValidROIs);
-      chkBoxes[4].querySelector("span").textContent = checks.hasValidROIs ? "✓" : "○";
+      chkBoxes[4].querySelector("span").textContent = checks.hasValidROIs ? "" : "○";
     }
 
     // Auto-Scan Countdown Trigger when face is aligned and locked
@@ -2044,7 +2044,7 @@ class MediKioskApp {
       this.autoScanTimer = null;
       const scanBtn = document.getElementById("btnStartVitalsScan");
       if (scanBtn && !this.isRppgScanning) {
-        scanBtn.textContent = `⚡ Scan Vitals`;
+        scanBtn.textContent = `Scan Vitals`;
       }
     }
   }
@@ -2316,11 +2316,11 @@ class MediKioskApp {
 
     if (match) {
       this.selectedQueuePatient = match;
-      this.showDoctorToast(`✓ Barcode Verified: Patient ${match.name} (Token ${match.tokenNumber}) loaded`);
+      this.showDoctorToast(` Barcode Verified: Patient ${match.name} (Token ${match.tokenNumber}) loaded`);
       speechService.speak(`Patient ${match.name}, Token ${match.tokenNumber} verified by scanner.`);
       this.render();
     } else {
-      this.showDoctorToast(`⚠️ Barcode Scanned: No patient matching "${clean}" in active queue.`);
+      this.showDoctorToast(`Notice: Barcode Scanned: No patient matching "${clean}" in active queue.`);
     }
   }
 
@@ -2375,7 +2375,7 @@ class MediKioskApp {
     toast.className = "doctor-toast-3d";
     toast.innerHTML = `
       <div style="display: flex; align-items: flex-start; gap: 10px;">
-        <span style="font-size: 1.2rem;">🔔</span>
+        <span style="font-size: 0.8rem; font-weight: 700; color: #38BDF8;">SMS</span>
         <div style="flex: 1;">
           <strong style="color: #38BDF8; font-size: 0.85rem; display: block; margin-bottom: 2px;">OPD Notification Dispatched</strong>
           <p style="font-size: 0.78rem; color: #E2E8F0; line-height: 1.4; margin: 0;">${message}</p>
@@ -2415,13 +2415,13 @@ class MediKioskApp {
           patientsAhead: patientsAhead,
           scheduledTime: estTime,
           dispatchTimestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          status: "Delivered ✓",
+          status: "Delivered ",
           channel: "SMS Gateway + WhatsApp Cloud API",
           message: `Dear ${patient.name || 'Patient'}, your appointment with Dr. Sharma (OPD Cabin 3) is scheduled after ${patientsAhead} patients at approx ${estTime} (in ~${waitMinutes} mins). Token: ${patient.tokenNumber}. Please be ready near Waiting Zone B.`
         };
 
         this.smsDispatchLogs.unshift(logItem);
-        this.showDoctorToast(`📲 Real-Time 30-Min Alert Sent to Registered Mobile: ${mobileNum} (${patient.name || 'Patient'}) for approx ${estTime}!`);
+        this.showDoctorToast(`SMS Alert Sent to registered mobile: ${mobileNum} (${patient.name || 'Patient'}) for approx ${estTime}!`);
       }
     });
   }
@@ -2448,14 +2448,14 @@ class MediKioskApp {
       patientsAhead: patientsAhead,
       scheduledTime: estTime,
       dispatchTimestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      status: "Delivered ✓",
+      status: "Delivered ",
       channel: "SMS Gateway + WhatsApp Cloud API",
       message: `Dear ${patient.name || 'Patient'}, your appointment with Dr. Sharma (OPD Cabin 3) is scheduled after ${patientsAhead} patients at approx ${estTime} (approx ${waitMinutes} mins). Token: ${patient.tokenNumber}. Please be ready near Waiting Zone B.`
     };
 
     this.smsDispatchLogs.unshift(logItem);
-    this.showDoctorToast(`📲 Real-Time 30-Min SMS sent to registered mobile ${mobileNum} (${patient.name}) for approx ${estTime}!`);
-    alert(`📲 Real-Time SMS Alert Dispatched!\n\nTo Registered Mobile: ${mobileNum}\nPatient: ${patient.name}\nStatus: Delivered ✓\nMessage: "${logItem.message}"`);
+    this.showDoctorToast(`SMS sent to registered mobile ${mobileNum} (${patient.name}) for approx ${estTime}!`);
+    alert(`SMS Notification Dispatched\n\nTo Registered Mobile: ${mobileNum}\nPatient: ${patient.name}\nStatus: Delivered \nMessage: "${logItem.message}"`);
     this.render();
   }
 
@@ -2465,7 +2465,7 @@ class MediKioskApp {
       return;
     }
     const completed = this.doctorQueue.shift();
-    this.showDoctorToast(`✓ Consultation completed for ${completed.name} (Token ${completed.tokenNumber}). Queue updated.`);
+    this.showDoctorToast(` Consultation completed for ${completed.name} (Token ${completed.tokenNumber}). Queue updated.`);
     this.selectedQueuePatient = this.doctorQueue[0] || null;
     this.checkAndTrigger30MinAlerts();
     if (this.selectedQueuePatient) {
@@ -2499,14 +2499,14 @@ class MediKioskApp {
       patientsAhead: patientsAhead,
       scheduledTime: estTime,
       dispatchTimestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      status: "Delivered ✓",
+      status: "Delivered ",
       channel: "SMS Gateway + WhatsApp Cloud API",
       message: `Dear ${this.patient.name || 'Patient'}, your appointment with Dr. Sharma (OPD Cabin 3) is scheduled after ${patientsAhead} patients at approx ${estTime} (in ~${estWaitMin} mins). Token: ${this.patient.tokenNumber}. Please be ready near Waiting Zone B.`
     };
 
     this.smsDispatchLogs.unshift(logItem);
-    this.showDoctorToast(`📲 Real-Time 30-Min SMS Alert sent to registered mobile ${mobile} (${this.patient.name || 'Patient'})!`);
-    alert(`📲 Real-Time SMS Alert Dispatched!\n\nTo Registered Mobile: ${mobile}\nStatus: Delivered ✓\nMessage: "${logItem.message}"`);
+    this.showDoctorToast(` Real-Time 30-Min SMS Alert sent to registered mobile ${mobile} (${this.patient.name || 'Patient'})!`);
+    alert(`SMS Notification Dispatched\n\nTo Registered Mobile: ${mobile}\nStatus: Delivered \nMessage: "${logItem.message}"`);
     this.render();
   }
 
@@ -2799,7 +2799,7 @@ class MediKioskApp {
         patientsAhead: 4,
         scheduledTime: "10:15 AM",
         dispatchTimestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        status: "Delivered ✓",
+        status: "Delivered ",
         channel: "SMS Gateway + WhatsApp Cloud API",
         message: "Dear Priya Patel, your appointment with Dr. Sharma (OPD Cabin 3) is scheduled after 4 patients at approx 10:15 AM (approx 30 mins). Token: A-24. Please proceed to OPD Waiting Zone B."
       }
@@ -2810,7 +2810,7 @@ class MediKioskApp {
   }
 
   acceptSummary() {
-    alert("✅ Encounter Summary Accepted!\nClinical Record published to Hospital Information System (e-Hospital) & ABDM Gateway.");
+    alert("Encounter Summary Accepted.\nClinical Record published to Hospital Information System (e-Hospital) & ABDM Gateway.");
   }
 
   openFhirModal() {
@@ -2852,7 +2852,7 @@ class MediKioskApp {
             this.patient.chiefComplaint = final;
           }
           if (micBtn) micBtn.classList.remove("listening");
-          if (micStatus) micStatus.textContent = "✓ " + i18n.t("voice_mic_title");
+          if (micStatus) micStatus.textContent = " " + i18n.t("voice_mic_title");
         },
         (err) => {
           console.warn(err);

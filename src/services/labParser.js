@@ -1263,16 +1263,16 @@ class LabParser {
         summarySections.push(`\n### ${systemName}:`);
         if (group.abnormal.length > 0) {
           group.abnormal.forEach(f => {
-            summarySections.push(`  ⚠️ **${f.test}**: ${f.value} [Ref: ${f.ref}] — *${f.status}*`);
+            summarySections.push(`  • Abnormal: **${f.test}**: ${f.value} [Ref: ${f.ref}] — *${f.status}*`);
           });
         }
         if (group.normal.length > 0) {
           const normalNames = group.normal.map(n => `${n.test} (${n.value})`).join(", ");
-          summarySections.push(`  ✅ *Normal*: ${normalNames}`);
+          summarySections.push(`  • Normal: ${normalNames}`);
         }
         if (group.artifacts.length > 0) {
           group.artifacts.forEach(a => {
-            summarySections.push(`  🚫 *Excluded Artifact*: ${a.test} = ${a.value} (${a.status})`);
+            summarySections.push(`  • Excluded Artifact: ${a.test} = ${a.value} (${a.status})`);
           });
         }
       }

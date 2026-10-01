@@ -305,11 +305,11 @@ export class FaceROITracker {
       this.isFaceLocked = false;
       const reason = rawResult?.reason || "NO_FACE_DETECTED";
 
-      let message = "🔴 Align Face In Camera Frame";
-      if (reason.includes("EXCESSIVE")) message = "🟡 Hold Still (Minimizing Head Motion)";
-      else if (reason.includes("SMALL") || reason.includes("FAR")) message = "🔴 Move Closer (Face Too Small)";
-      else if (reason.includes("ANATOMY")) message = "🔴 Align Face Straight & Level";
-      else if (reason.includes("OCCLUDED")) message = "🔴 Ensure Forehead & Cheeks Are Visible";
+      let message = "Align Face in Camera Frame";
+      if (reason.includes("EXCESSIVE")) message = "Hold Still (Minimizing Head Motion)";
+      else if (reason.includes("SMALL") || reason.includes("FAR")) message = "Move Closer (Face Too Small)";
+      else if (reason.includes("ANATOMY")) message = "Align Face Straight & Level";
+      else if (reason.includes("OCCLUDED")) message = "Ensure Forehead & Cheeks Are Visible";
 
       return {
         detected: false,
@@ -354,14 +354,14 @@ export class FaceROITracker {
     this.isFaceLocked = this.stableLockCount >= this.lockThreshold;
     const lockProgress = Math.round((this.stableLockCount / this.lockThreshold) * 100);
 
-    let message = "🟢 Face Validated & Locked";
+    let message = "Face Validated & Locked";
     if (!this.isFaceLocked) {
-      if (!isCentered) message = "🔴 Center Face In Oval Guide";
-      else if (!isOptimalDistance && geometry.frameCoverage < 0.025) message = "🔴 Move Closer To Camera";
-      else if (!isOptimalDistance && geometry.frameCoverage > 0.85) message = "🔴 Move Back Slightly";
-      else if (!isStill) message = "🟡 Hold Still (Stabilizing...)";
-      else if (!hasValidROIs) message = "🔴 Ensure Forehead & Cheeks Uncovered";
-      else message = `🟢 Face Aligned — Locking (${lockProgress}%)`;
+      if (!isCentered) message = "Center Face In Oval Guide";
+      else if (!isOptimalDistance && geometry.frameCoverage < 0.025) message = "Move Closer To Camera";
+      else if (!isOptimalDistance && geometry.frameCoverage > 0.85) message = "Move Back Slightly";
+      else if (!isStill) message = "Hold Still (Stabilizing...)";
+      else if (!hasValidROIs) message = "Ensure Forehead & Cheeks Uncovered";
+      else message = `Face Aligned — Locking (${lockProgress}%)`;
     }
 
     return {

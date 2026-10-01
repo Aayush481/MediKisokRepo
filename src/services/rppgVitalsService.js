@@ -136,7 +136,7 @@ class RPPGVitalsService {
           });
           this.isTasksVision = true;
           this.isLandmarkerReady = true;
-          console.log("✅ @mediapipe/tasks-vision loaded with public/models/face_landmarker.task");
+          console.log("@mediapipe/tasks-vision loaded with public/models/face_landmarker.task");
           return;
         } else if (window.FaceMesh) {
           this.faceLandmarker = new window.FaceMesh({
@@ -857,7 +857,7 @@ class RPPGVitalsService {
 
     // Motion Robustness & Spectral SNR Gating: Reject motion-corrupted optical streams
     if (hrPOS.snr < 1.6 && validFrameRatio < 0.60) {
-      return this.failScan(`❌ Signal SNR Gated Out (Linear SNR: ${hrPOS.snr.toFixed(1)} < 1.6 threshold). Optical pulsatility was corrupted by head motion or lighting variations. Please remain steady and well-lit.`);
+      return this.failScan(`Signal quality insufficient (Linear SNR: ${hrPOS.snr.toFixed(1)} < 1.6 threshold). Optical pulse was affected by motion or lighting variations. Please remain steady and well-lit.`);
     }
 
     // 6. Time-Domain Systolic Peak & IBI Analysis
@@ -997,7 +997,7 @@ class RPPGVitalsService {
           const isDenied = camErr.name === "NotAllowedError" || camErr.name === "PermissionDeniedError";
           throw new Error(
             isDenied
-              ? "Camera permission denied. Please click [📷 Enable Live Camera] or allow camera access in browser settings."
+              ? "Camera permission denied. Please allow camera access in browser settings to continue."
               : `Webcam hardware unavailable (${camErr.message || "Device not found"}). Please connect a working camera.`
           );
         }
@@ -1151,7 +1151,7 @@ class RPPGVitalsService {
       this.alignmentFrameId = requestAnimationFrame(alignLoop);
     } catch (err) {
       console.error("Error starting face alignment:", err);
-      if (onFaceStatus) onFaceStatus({ detected: false, valid: false, message: `🔴 ${err.message || "Camera access error"}` });
+      if (onFaceStatus) onFaceStatus({ detected: false, valid: false, message: err.message || "Camera access error" });
       throw err;
     }
   }
@@ -1217,7 +1217,7 @@ class RPPGVitalsService {
 
         if (this.videoElement && this.videoElement.readyState >= 2) {
           let trackerSuccess = false;
-          let statusInfo = { detected: false, message: "🔴 Align Face In Camera Frame" };
+          let statusInfo = { detected: false, message: "Align Face in Camera Frame" };
 
           // 1. Try MediaPipe FaceROITracker 478-Landmark Detection
           if (this.faceTracker && this.faceTracker.initialized) {
@@ -1229,7 +1229,7 @@ class RPPGVitalsService {
                   trackerSuccess = true;
                   this.validSkinFrames++;
                   this.faceDetected = true;
-                  statusInfo = { detected: true, isFaceLocked: true, message: "🟢 Face Locked — Measuring Pulse Wave..." };
+                  statusInfo = { detected: true, isFaceLocked: true, message: "Face Centered — Measuring Pulse Wave..." };
                   this._skinRatios.push(0.70);
 
                   if (rgb.forehead && rgb.forehead.valid) {
@@ -1263,7 +1263,7 @@ class RPPGVitalsService {
                   const avgR = this.mean(this.redChannelHistory) || meanR || 1;
                   currentLivePulse = (meanG / avgG) - (meanR / avgR);
                 } else {
-                  statusInfo = { detected: false, message: "🔴 Inadequate Skin Pixels in ROI" };
+                  statusInfo = { detected: false, message: "Low Skin Contrast in ROI" };
                 }
 
                 // Draw live tracking HUD overlay
@@ -1279,13 +1279,13 @@ class RPPGVitalsService {
               } else if (trackerResult && !trackerResult.valid) {
                 const r = trackerResult.reason || "";
                 if (r.includes("EXCESSIVE")) {
-                  statusInfo = { detected: false, message: "🟡 Hold Still (Excessive Motion)" };
+                  statusInfo = { detected: false, message: "Hold Still (Excessive Motion)" };
                 } else if (r.includes("SMALL")) {
-                  statusInfo = { detected: false, message: "🔴 Move Closer (Face Too Small)" };
+                  statusInfo = { detected: false, message: "Move Closer to Camera" };
                 } else if (r.includes("ANATOMY")) {
-                  statusInfo = { detected: false, message: "🔴 Align Face (Forehead & Cheeks Visible)" };
+                  statusInfo = { detected: false, message: "Keep Forehead and Cheeks Visible" };
                 } else {
-                  statusInfo = { detected: false, message: "🔴 Align Face In Center Frame" };
+                  statusInfo = { detected: false, message: "Center Face in Frame" };
                 }
 
                 if (this.hudCanvas) {
@@ -1324,7 +1324,7 @@ class RPPGVitalsService {
               if (!badCheck.rejected && (fhStats.valid || lcStats.valid || rcStats.valid)) {
                 this.validSkinFrames++;
                 this.faceDetected = true;
-                statusInfo = { detected: true, isFaceLocked: true, message: "🟢 Face Validated — Pulse Active" };
+                statusInfo = { detected: true, isFaceLocked: true, message: "Face Validated — Pulse Active" };
                 this._skinRatios.push(skinRatio);
 
                 if (fhStats.valid) {
@@ -1359,7 +1359,7 @@ class RPPGVitalsService {
               } else {
                 this.rejectedFramesCount++;
                 this.faceDetected = false;
-                statusInfo = { detected: false, message: badCheck.reason ? `🔴 ${badCheck.reason}` : "🔴 Face Misaligned" };
+                statusInfo = { detected: false, message: badCheck.reason ? badCheck.reason : "Face Misaligned" };
               }
             } else {
               this.faceDetected = false;
@@ -1383,7 +1383,7 @@ class RPPGVitalsService {
 
         // Strict early face presence validation: If 3.0s passed and no valid face frames acquired, abort immediately
         if (elapsed > 3000 && this.validSkinFrames === 0) {
-          return this.failScan("❌ No human face or skin detected in frame. Please align your face inside the biometric reticle and try again.");
+          return this.failScan("No human face detected in frame. Please center your face inside the reticle and try again.");
         }
 
         if (elapsed < this.captureDuration) {

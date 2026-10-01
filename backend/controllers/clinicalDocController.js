@@ -6,10 +6,9 @@ import Tesseract from 'tesseract.js';
 
 const GEMINI_API_KEY = process.env.GOOGLE_API_KEY || "";
 const CANDIDATE_MODELS = [
-  "gemini-3.5-flash-lite",
+  "gemini-3.1-flash-lite",
   "gemini-flash-lite-latest",
-  "gemini-3.5-flash",
-  "gemini-flash-latest"
+  "gemini-3.5-flash-lite"
 ];
 
 export class ClinicalDocController {
@@ -169,34 +168,23 @@ Always finish with: **NOT FOR CLINICAL USE WITHOUT PHYSICIAN REVIEW**`;
         );
 
         if (!localClass.isValidMedical) {
-          const isCareDoc = /\b(care|healthcare|patient|clinical|medical|diagnostic|hospital|clinic|doctor|health|case|investigation|evaluation|opd|ipd|cbc|lab|rx|prescription|report|doc|scan|blood)\b/i.test((fileName || '').replace(/[_\-\.]+/g, ' '));
-          if (isCareDoc) {
-            localClass.isValidMedical = true;
-            localClass.type = 'medical_record';
-            localClass.categoryLabel = 'Clinical Care & Diagnostic Report';
-            localClass.icon = '📋';
-            localClass.badgeColor = 'pill-primary';
-            localClass.anatomicalSite = 'General Clinical Medicine & Diagnostics';
-            localClass.rootCause = 'Clinical Care Record & Diagnostic Evaluation Ingestion';
-          } else {
-            return res.json({
-              success: false,
-              isValidMedical: false,
-              type: 'non_medical',
-              categoryLabel: 'Non-Medical / Unrecognized Image',
-              icon: '⚠️',
-              badgeColor: 'pill-danger',
-              anatomicalSite: 'None',
-              rootCause: 'No Medical Content Identified',
-              fullGeminiText: 'On-device neural vision verified that this file does not contain authentic clinical records.',
-              extractedMedications: [],
-              extractedDiseases: [],
-              labFlags: [],
-              labNormals: [],
-              confidence: '99.9%',
-              errorMessage: `❌ Non-Medical File Rejected: "${fileName}" does not contain recognizable clinical prescriptions, laboratory panels, X-Rays, or ECGs.`
-            });
-          }
+          return res.json({
+            success: false,
+            isValidMedical: false,
+            type: 'non_medical',
+            categoryLabel: 'Non-Medical / Unrecognized Document',
+            icon: '',
+            badgeColor: 'pill-danger',
+            anatomicalSite: 'None',
+            rootCause: 'No Medical Content Identified',
+            fullGeminiText: 'On-device neural vision verified that this file does not contain authentic clinical records.',
+            extractedMedications: [],
+            extractedDiseases: [],
+            labFlags: [],
+            labNormals: [],
+            confidence: '99.9%',
+            errorMessage: `Non-Medical File Rejected: "${fileName}" does not contain recognizable clinical prescriptions, laboratory panels, X-Rays, or ECGs.`
+          });
         }
 
         // Parse medications, lab results, and diseases on extracted text
@@ -298,14 +286,14 @@ Always finish with: **NOT FOR CLINICAL USE WITHOUT PHYSICIAN REVIEW**`;
 
       let categoryType = 'medical_record';
       let categoryLabel = detectedType;
-      let icon = '📄';
+      let icon = '';
       let badgeColor = 'pill-primary';
 
       if (!isNonMedical) {
         if (isLabReport) {
           categoryType = 'pathology_report';
           categoryLabel = 'Pathology & Biochemistry Report';
-          icon = '🔬';
+          icon = '';
           badgeColor = 'pill-danger';
           if (anatomicalSite === 'Clinical Record' || anatomicalSite === 'None') {
             anatomicalSite = 'Clinical Pathology / Blood Biomarkers';
@@ -313,22 +301,22 @@ Always finish with: **NOT FOR CLINICAL USE WITHOUT PHYSICIAN REVIEW**`;
         } else if (lowerType.includes('ecg') || lowerType.includes('ekg') || lowerType.includes('electrocardiogram')) {
           categoryType = 'ecg_report';
           categoryLabel = '12-Lead ECG / EKG Strip';
-          icon = '💓';
+          icon = '';
           badgeColor = rootCause.toLowerCase().includes('stemi') || rootCause.toLowerCase().includes('infarct') ? 'pill-danger' : 'pill-warning';
         } else if (lowerType.includes('x-ray') || lowerType.includes('radiology') || lowerType.includes('radiograph') || lowerType.includes('ct scan') || /\bct\b/.test(lowerType) || lowerType.includes('mri')) {
           categoryType = 'xray_report';
           categoryLabel = detectedType.includes('(') ? detectedType : `X-Ray Radiograph (${anatomicalSite})`;
-          icon = '🩻';
+          icon = '';
           badgeColor = rootCause.toLowerCase().includes('fracture') ? 'pill-danger' : 'pill-warning';
         } else if (lowerType.includes('discharge')) {
           categoryType = 'discharge_summary';
           categoryLabel = 'Hospital Discharge Summary';
-          icon = '📋';
+          icon = '';
           badgeColor = 'pill-primary';
         } else if (/\b(prescription|rx\b|℞|medication|pharmacotherapy|consultation|opd|outpatient|treatment\s*sheet)\b/i.test(detectedType) || (/\b(prescription|dr\.\s+[a-z]+|rx\b|℞)\b/i.test(combinedText) && extractedMeds.length > 0) || (extractedMeds.length > 0 && !isLabReport && !isImaging)) {
           categoryType = 'prescription';
           categoryLabel = 'Doctor Prescription (Rx)';
-          icon = '📄';
+          icon = '';
           badgeColor = 'pill-success';
           if (anatomicalSite === 'Clinical Record' || anatomicalSite === 'None') {
             anatomicalSite = 'Outpatient Pharmacotherapy';
@@ -336,37 +324,45 @@ Always finish with: **NOT FOR CLINICAL USE WITHOUT PHYSICIAN REVIEW**`;
         } else if (labResults.flags.length > 0 || (labResults.normalValues && labResults.normalValues.length > 0)) {
           categoryType = 'pathology_report';
           categoryLabel = 'Pathology & Biochemistry Report';
-          icon = '🔬';
+          icon = '';
           badgeColor = 'pill-danger';
-        } else {
+        } else if (extractedDiseases.length > 0 || (extractedMeds.length > 0) || /\b(clinical|diagnostic|opd|ipd|consultation|patient|physician)\b/i.test(detectedType)) {
           categoryType = 'medical_record';
           categoryLabel = detectedType || 'Clinical Care & Diagnostic Report';
-          icon = '📋';
+          icon = '';
           badgeColor = 'pill-primary';
+        } else {
+          // Zero clinical entities and no clinical modality detected -> strict non-medical rejection
+          categoryType = 'non_medical';
+          categoryLabel = 'Non-Medical / Unrecognized Document';
+          icon = '';
+          badgeColor = 'pill-danger';
         }
       }
 
+      const finalIsNonMedical = isNonMedical || categoryType === 'non_medical';
+
       // Strictly zero out medications if the document is a pathology lab report or diagnostic scan
-      const finalMeds = (categoryType === 'pathology_report' || categoryType === 'xray_report' || categoryType === 'ecg_report' || isLabReport || isImaging || isNonMedical) ? [] : extractedMeds;
+      const finalMeds = (categoryType === 'pathology_report' || categoryType === 'xray_report' || categoryType === 'ecg_report' || isLabReport || isImaging || finalIsNonMedical) ? [] : extractedMeds;
 
       res.json({
-        success: !isNonMedical,
-        isValidMedical: !isNonMedical,
-        type: isNonMedical ? 'non_medical' : categoryType,
-        categoryLabel: isNonMedical ? 'Non-Medical / Unrecognized Image' : categoryLabel,
-        icon: isNonMedical ? '⚠️' : icon,
-        badgeColor: isNonMedical ? 'pill-danger' : badgeColor,
-        anatomicalSite: isNonMedical ? 'None' : anatomicalSite,
-        rootCause: isNonMedical ? 'No Medical Content Identified' : rootCause,
+        success: !finalIsNonMedical,
+        isValidMedical: !finalIsNonMedical,
+        type: finalIsNonMedical ? 'non_medical' : categoryType,
+        categoryLabel: finalIsNonMedical ? 'Non-Medical / Unrecognized Document' : categoryLabel,
+        icon: '',
+        badgeColor: finalIsNonMedical ? 'pill-danger' : badgeColor,
+        anatomicalSite: finalIsNonMedical ? 'None' : anatomicalSite,
+        rootCause: finalIsNonMedical ? 'No Medical Content Identified' : rootCause,
         fullGeminiText: generatedText,
         extractedText: extractedOcrText || generatedText,
         extractedMedications: finalMeds,
         structuredPrescriptionJSON: (finalMeds.length > 0 && categoryType === 'prescription') ? prescriptionParser.parseToStructuredJSON(combinedText) : null,
-        extractedDiseases: isNonMedical ? [] : extractedDiseases,
-        labFlags: isNonMedical ? [] : labResults.flags,
-        labNormals: isNonMedical ? [] : labResults.normalValues,
-        confidence: isNonMedical ? '99.9%' : '99.4% (Clinical Vision Verification)',
-        errorMessage: isNonMedical ? `❌ Non-Medical File Rejected: "${fileName}" does not contain recognizable clinical prescriptions, laboratory panels, X-Rays, or ECGs.` : null
+        extractedDiseases: finalIsNonMedical ? [] : extractedDiseases,
+        labFlags: finalIsNonMedical ? [] : labResults.flags,
+        labNormals: finalIsNonMedical ? [] : labResults.normalValues,
+        confidence: finalIsNonMedical ? '99.9%' : '99.4% (Clinical Vision Verification)',
+        errorMessage: finalIsNonMedical ? `Non-Medical File Rejected: "${fileName}" does not contain recognizable clinical prescriptions, laboratory panels, X-Rays, or ECGs.` : null
       });
     } catch (err) {
       console.error("Document analysis error:", err);
