@@ -29,13 +29,13 @@ function generateMedicalDocSvg(type, title, facility, items = [], rootCause = ""
   if (isRx) {
     bodyContent = `
       <g transform="translate(40, 220)">
-        <text x="0" y="0" font-family="Georgia, serif" font-size="36" font-weight="bold" fill="#0284C7">℞</text>
-        <line x1="0" y1="15" x2="520" y2="15" stroke="#CBD5E1" stroke-width="1.5"/>
+        <text x="0" y="0" font-family="'Inter', system-ui, serif" font-size="34" font-weight="900" fill="#000000">℞</text>
+        <line x1="0" y1="15" x2="520" y2="15" stroke="#E4E4E7" stroke-width="1.5"/>
         ${items.map((it, idx) => `
           <g transform="translate(0, ${45 + idx * 56})">
-            <text x="0" y="0" font-family="'Courier New', monospace" font-size="14" font-weight="bold" fill="#0F172A">${idx + 1}. ${typeof it === 'string' ? it : it.name} ${it.dosage || ''} - ${it.freq || 'OD'}</text>
-            <text x="20" y="20" font-family="system-ui, sans-serif" font-size="11" fill="#475569">Sig: ${it.timing || 'After Meals'} • Dur: ${it.duration || '5 days'} • Route: ${it.route || 'Oral'}</text>
-            <text x="20" y="34" font-family="system-ui, sans-serif" font-size="10" fill="#0284C7">SNOMED: ${it.snomedCode || '387517004'} | Class: ${it.schedule || 'Schedule H'}</text>
+            <text x="0" y="0" font-family="'JetBrains Mono', monospace" font-size="13" font-weight="bold" fill="#000000">${idx + 1}. ${typeof it === 'string' ? it : it.name} ${it.dosage || ''} - ${it.freq || 'OD'}</text>
+            <text x="20" y="20" font-family="system-ui, sans-serif" font-size="11" fill="#52525B">Sig: ${it.timing || 'After Meals'} • Dur: ${it.duration || '5 days'} • Route: ${it.route || 'Oral'}</text>
+            <text x="20" y="34" font-family="'JetBrains Mono', monospace" font-size="10" fill="#71717A">SNOMED: ${it.snomedCode || '387517004'} | Class: ${it.schedule || 'Schedule H'}</text>
           </g>
         `).join('')}
       </g>
@@ -43,21 +43,21 @@ function generateMedicalDocSvg(type, title, facility, items = [], rootCause = ""
   } else if (isLab) {
     bodyContent = `
       <g transform="translate(40, 220)">
-        <rect x="0" y="0" width="520" height="28" fill="#E2E8F0" rx="4"/>
-        <text x="12" y="19" font-family="system-ui, sans-serif" font-size="11" font-weight="bold" fill="#1E293B">INVESTIGATION / PARAMETER</text>
-        <text x="280" y="19" font-family="system-ui, sans-serif" font-size="11" font-weight="bold" fill="#1E293B">OBSERVED VALUE</text>
-        <text x="420" y="19" font-family="system-ui, sans-serif" font-size="11" font-weight="bold" fill="#1E293B">FLAG STATUS</text>
+        <rect x="0" y="0" width="520" height="28" fill="#F4F4F5" rx="3" stroke="#E4E4E7" stroke-width="1"/>
+        <text x="12" y="19" font-family="'JetBrains Mono', monospace" font-size="10" font-weight="bold" fill="#000000">INVESTIGATION / PARAMETER</text>
+        <text x="280" y="19" font-family="'JetBrains Mono', monospace" font-size="10" font-weight="bold" fill="#000000">OBSERVED VALUE</text>
+        <text x="420" y="19" font-family="'JetBrains Mono', monospace" font-size="10" font-weight="bold" fill="#000000">FLAG STATUS</text>
         ${items.map((it, idx) => {
           const isHigh = it.status === 'HIGH' || it.status === 'ABNORMAL';
           const isLow = it.status === 'LOW';
-          const color = isHigh ? '#EF4444' : isLow ? '#F59E0B' : '#10B981';
+          const isAbnormal = isHigh || isLow;
           return `
             <g transform="translate(0, ${48 + idx * 36})">
-              <text x="12" y="0" font-family="system-ui, sans-serif" font-size="12" fill="#0F172A">${it.name}</text>
-              <text x="280" y="0" font-family="monospace" font-size="12" font-weight="bold" fill="#0F172A">${it.value}</text>
-              <rect x="420" y="-12" width="70" height="18" fill="${color}" fill-opacity="0.15" rx="3" stroke="${color}" stroke-width="0.8"/>
-              <text x="455" y="0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" font-weight="bold" fill="${color}">${it.status}</text>
-              <line x1="0" y1="12" x2="520" y2="12" stroke="#F1F5F9" stroke-width="1"/>
+              <text x="12" y="0" font-family="system-ui, sans-serif" font-size="12" font-weight="500" fill="#18181B">${it.name}</text>
+              <text x="280" y="0" font-family="'JetBrains Mono', monospace" font-size="12" font-weight="bold" fill="#000000">${it.value}</text>
+              <rect x="420" y="-12" width="76" height="18" fill="${isAbnormal ? '#000000' : '#FAFAFA'}" rx="3" stroke="#27272A" stroke-width="1"/>
+              <text x="458" y="1" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="9" font-weight="bold" fill="${isAbnormal ? '#FFFFFF' : '#52525B'}">${it.status}</text>
+              <line x1="0" y1="12" x2="520" y2="12" stroke="#F4F4F5" stroke-width="1"/>
             </g>
           `;
         }).join('')}
@@ -66,47 +66,47 @@ function generateMedicalDocSvg(type, title, facility, items = [], rootCause = ""
   } else {
     bodyContent = `
       <g transform="translate(40, 220)">
-        <rect x="0" y="0" width="520" height="260" fill="#020617" rx="8" stroke="#334155" stroke-width="2"/>
-        <circle cx="260" cy="130" r="95" fill="none" stroke="#1E293B" stroke-dasharray="6,4"/>
-        <path d="M 180,80 C 140,110 130,170 170,220 C 190,200 200,160 190,110 Z" fill="#1E293B" opacity="0.6"/>
-        <path d="M 340,80 C 380,110 390,170 350,220 C 330,200 320,160 330,110 Z" fill="#1E293B" opacity="0.6"/>
-        <circle cx="345" cy="175" r="22" fill="#EF4444" fill-opacity="0.25" stroke="#EF4444" stroke-width="1.5" stroke-dasharray="3,2"/>
-        <text x="375" y="180" font-family="monospace" font-size="10" fill="#EF4444">Focal Finding</text>
-        <text x="20" y="30" font-family="monospace" font-size="11" fill="#38BDF8">DIGITAL RADIOGRAM 100kVp</text>
-        <text x="500" y="30" text-anchor="end" font-family="monospace" font-size="11" fill="#94A3B8">PA ERECT</text>
-        <text x="260" y="245" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="bold" fill="#F8FAFC">Diagnostic Impression: ${rootCause.slice(0, 48)}</text>
+        <rect x="0" y="0" width="520" height="260" fill="#000000" rx="6" stroke="#27272A" stroke-width="1.5"/>
+        <circle cx="260" cy="130" r="95" fill="none" stroke="#27272A" stroke-dasharray="6,4"/>
+        <path d="M 180,80 C 140,110 130,170 170,220 C 190,200 200,160 190,110 Z" fill="#18181B" opacity="0.8"/>
+        <path d="M 340,80 C 380,110 390,170 350,220 C 330,200 320,160 330,110 Z" fill="#18181B" opacity="0.8"/>
+        <circle cx="345" cy="175" r="22" fill="#FFFFFF" fill-opacity="0.12" stroke="#FFFFFF" stroke-width="1.5" stroke-dasharray="4,2"/>
+        <text x="375" y="180" font-family="'JetBrains Mono', monospace" font-size="10" font-weight="bold" fill="#FFFFFF">Focal Finding</text>
+        <text x="20" y="30" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="bold" fill="#FFFFFF">DIGITAL RADIOGRAM 100kVp</text>
+        <text x="500" y="30" text-anchor="end" font-family="'JetBrains Mono', monospace" font-size="11" fill="#A1A1AA">PA ERECT</text>
+        <text x="260" y="245" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="bold" fill="#FFFFFF">Diagnostic Impression: ${rootCause.slice(0, 48)}</text>
       </g>
     `;
   }
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="820" viewBox="0 0 600 820">
-    <rect width="600" height="820" fill="#FFFFFF" rx="8"/>
-    <rect x="12" y="12" width="576" height="796" fill="none" stroke="#CBD5E1" stroke-width="1.5" rx="6"/>
+    <rect width="600" height="820" fill="#FFFFFF" rx="4"/>
+    <rect x="12" y="12" width="576" height="796" fill="none" stroke="#18181B" stroke-width="1.5" rx="4"/>
     
-    <rect x="20" y="20" width="560" height="96" fill="#0F172A" rx="6"/>
-    <text x="40" y="52" font-family="system-ui, sans-serif" font-size="18" font-weight="800" fill="#38BDF8">${facility}</text>
-    <text x="40" y="74" font-family="system-ui, sans-serif" font-size="12" fill="#94A3B8">${title}</text>
-    <text x="40" y="94" font-family="system-ui, sans-serif" font-size="10" fill="#64748B">ABDM Health Facility Registry (HFR) Accredited • Telemetry Desk</text>
-    <text x="560" y="52" text-anchor="end" font-family="monospace" font-size="11" fill="#38BDF8">REF: #${Math.floor(100000 + Math.random() * 900000)}</text>
-    <text x="560" y="74" text-anchor="end" font-family="system-ui, sans-serif" font-size="11" fill="#94A3B8">${dateStr}</text>
+    <rect x="20" y="20" width="560" height="96" fill="#000000" rx="4"/>
+    <text x="40" y="52" font-family="system-ui, sans-serif" font-size="18" font-weight="800" fill="#FFFFFF">${facility}</text>
+    <text x="40" y="74" font-family="system-ui, sans-serif" font-size="12" fill="#D4D4D8">${title}</text>
+    <text x="40" y="94" font-family="'JetBrains Mono', monospace" font-size="9" fill="#A1A1AA">ABDM Health Facility Registry (HFR) Accredited • Telemetry Desk</text>
+    <text x="560" y="52" text-anchor="end" font-family="'JetBrains Mono', monospace" font-size="11" fill="#FFFFFF">REF: #${Math.floor(100000 + Math.random() * 900000)}</text>
+    <text x="560" y="74" text-anchor="end" font-family="'JetBrains Mono', monospace" font-size="11" fill="#A1A1AA">${dateStr}</text>
 
-    <text x="300" y="470" text-anchor="middle" font-family="system-ui, sans-serif" font-size="44" font-weight="900" fill="#F1F5F9" transform="rotate(-30 300 470)">${(type || 'DOCUMENT').toUpperCase()}</text>
+    <text x="300" y="470" text-anchor="middle" font-family="system-ui, sans-serif" font-size="44" font-weight="900" fill="#F4F4F5" transform="rotate(-30 300 470)">${(type || 'DOCUMENT').toUpperCase()}</text>
 
-    <rect x="25" y="130" width="550" height="52" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1" rx="4"/>
-    <text x="40" y="152" font-family="system-ui, sans-serif" font-size="11" font-weight="bold" fill="#0F172A">PATIENT: <tspan fill="#0284C7">${patientName.toUpperCase()}</tspan></text>
-    <text x="240" y="152" font-family="system-ui, sans-serif" font-size="11" fill="#475569">TOKEN: <tspan font-weight="bold" fill="#0F172A">${token}</tspan></text>
-    <text x="380" y="152" font-family="system-ui, sans-serif" font-size="11" fill="#475569">DATE: <tspan fill="#0F172A">${dateStr}</tspan></text>
-    <text x="40" y="170" font-family="system-ui, sans-serif" font-size="10" fill="#64748B">CLINICAL FINDING: <tspan font-weight="bold" fill="#0F172A">${rootCause}</tspan></text>
+    <rect x="25" y="130" width="550" height="52" fill="#FAFAFA" stroke="#E4E4E7" stroke-width="1" rx="3"/>
+    <text x="40" y="152" font-family="system-ui, sans-serif" font-size="11" font-weight="bold" fill="#000000">PATIENT: <tspan fill="#000000">${patientName.toUpperCase()}</tspan></text>
+    <text x="240" y="152" font-family="'JetBrains Mono', monospace" font-size="11" fill="#52525B">TOKEN: <tspan font-weight="bold" fill="#000000">${token}</tspan></text>
+    <text x="380" y="152" font-family="'JetBrains Mono', monospace" font-size="11" fill="#52525B">DATE: <tspan fill="#000000">${dateStr}</tspan></text>
+    <text x="40" y="170" font-family="system-ui, sans-serif" font-size="10" fill="#52525B">CLINICAL FINDING: <tspan font-weight="bold" fill="#000000">${rootCause}</tspan></text>
 
     ${bodyContent}
 
     <g transform="translate(360, 700)">
-      <rect x="0" y="0" width="200" height="65" fill="none" stroke="#0284C7" stroke-width="1.5" stroke-dasharray="4,2" rx="4"/>
-      <text x="100" y="24" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="bold" fill="#0284C7">DIGITALLY VERIFIED</text>
-      <text x="100" y="40" text-anchor="middle" font-family="system-ui, sans-serif" font-size="9" fill="#0F172A">Dr. Consultation Desk 3</text>
-      <text x="100" y="54" text-anchor="middle" font-family="monospace" font-size="8" fill="#64748B">REG NO: MCI-44912/2016</text>
+      <rect x="0" y="0" width="200" height="65" fill="#FAFAFA" stroke="#000000" stroke-width="1.5" stroke-dasharray="3,2" rx="3"/>
+      <text x="100" y="24" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="bold" fill="#000000">DIGITALLY VERIFIED</text>
+      <text x="100" y="40" text-anchor="middle" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#27272A">Dr. Consultation Desk 3</text>
+      <text x="100" y="54" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="8" fill="#71717A">REG NO: MCI-44912/2016</text>
     </g>
-    <text x="40" y="760" font-family="system-ui, sans-serif" font-size="10" fill="#94A3B8">MediKiosk Clinical Document Ingestion Engine • ISO 13606 / HL7 FHIR Compliant</text>
+    <text x="40" y="760" font-family="'JetBrains Mono', monospace" font-size="9" fill="#71717A">MediKiosk Clinical Ingestion Engine • ISO 13606 / HL7 FHIR Compliant</text>
   </svg>`;
 
   return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
@@ -433,10 +433,10 @@ class MediKioskApp {
             <input type="tel" id="patientMobileInput" class="input-text-3d" placeholder="${i18n.t("mobile_ph")}" value="${this.patient.mobile}">
           </div>
 
-          <div style="background: rgba(13, 148, 136, 0.12); border: 1px solid rgba(13, 148, 136, 0.4); border-radius: 12px; padding: 12px 14px; display: flex; align-items: flex-start; gap: 10px; margin-top: 6px;">
+          <div style="background: #08080A; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 8px; padding: 12px 14px; display: flex; align-items: flex-start; gap: 10px; margin-top: 6px;">
             <span style="font-size: 1.2rem;"></span>
             <div>
-              <strong style="font-size: 0.82rem; color: #5EEAD4;">${i18n.t("dpdp_title")}</strong>
+              <strong style="font-size: 0.82rem; color: #FFFFFF; font-family: var(--font-mono);">${i18n.t("dpdp_title")}</strong>
               <p style="font-size: 0.76rem; color: var(--text-muted); margin-top: 2px;">
                 ${i18n.t("dpdp_desc")}
               </p>
@@ -503,10 +503,10 @@ class MediKioskApp {
           <!-- Camera View / Verified Card -->
           <div>
             ${this.patient.rppgVitals ? `
-              <div style="height: 200px; border-radius: 14px; background: linear-gradient(135deg, rgba(6, 78, 59, 0.4) 0%, rgba(15, 23, 42, 0.85) 100%); border: 2px solid #10B981; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 1rem; box-shadow: 0 0 20px rgba(16, 185, 129, 0.25);">
+              <div style="height: 200px; border-radius: 12px; background: #000000; border: 1px solid #FFFFFF; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 1rem; box-shadow: 0 0 24px rgba(255, 255, 255, 0.08);">
                 <div style="font-size: 2.5rem; line-height: 1; margin-bottom: 6px;"></div>
-                <strong style="color: #6EE7B7; font-size: 0.95rem;">${i18n.t("vitals_calibrated")}</strong>
-                <p style="font-size: 0.74rem; color: #A7F3D0; margin-top: 2px;">${i18n.t("vitals_calibrated_sub")}</p>
+                <strong style="color: #FFFFFF; font-size: 0.95rem; font-family: var(--font-mono);">${i18n.t("vitals_calibrated")}</strong>
+                <p style="font-size: 0.74rem; color: var(--zinc-400); margin-top: 2px;">${i18n.t("vitals_calibrated_sub")}</p>
                 <span class="pill-3d pill-3d-emerald" style="margin-top: 8px;">
                   ${this.patient.rppgVitals.durationSeconds || 30}s • ${i18n.t("verified_badge")}
                 </span>
@@ -552,7 +552,7 @@ class MediKioskApp {
           <div style="display: flex; flex-direction: column; justify-content: space-between;">
             <div>
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                <span style="font-size: 0.78rem; color: #38BDF8; font-weight: 700;">
+                <span style="font-size: 0.78rem; color: #FFFFFF; font-weight: 700; font-family: var(--font-mono);">
                   ${this.scanDuration >= 60000 ? i18n.t("diagnostic_scan_btn") : i18n.t("rapid_scan_btn")}:
                 </span>
                 ${this.patient.rppgVitals ? `
@@ -567,13 +567,13 @@ class MediKioskApp {
               </div>
 
               ${this.isRppgScanning ? `
-                <div style="background: rgba(2, 6, 23, 0.9); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 10px; padding: 8px 12px; margin-bottom: 10px;">
-                  <div style="display: flex; justify-content: space-between; font-size: 0.76rem; color: #38BDF8; font-weight: 600;">
+                <div style="background: #000000; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; padding: 8px 12px; margin-bottom: 10px;">
+                  <div style="display: flex; justify-content: space-between; font-size: 0.76rem; color: #FFFFFF; font-family: var(--font-mono); font-weight: 600;">
                     <span id="rppgCountdownText">${this.rppgElapsedSec || '0.0'}s / ${(this.scanDuration/1000).toFixed(1)}s (Hold Still)</span>
                     <strong id="rppgProgressText">${this.rppgProgress}%</strong>
                   </div>
-                  <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; margin-top: 5px;">
-                    <div id="rppgProgressBar" style="width: ${this.rppgProgress}%; height: 100%; background: linear-gradient(90deg, #38BDF8, #10B981); transition: width 0.1s linear;"></div>
+                  <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.12); border-radius: 3px; overflow: hidden; margin-top: 5px;">
+                    <div id="rppgProgressBar" style="width: ${this.rppgProgress}%; height: 100%; background: #FFFFFF; transition: width 0.1s linear;"></div>
                   </div>
                 </div>
               ` : ''}
@@ -582,7 +582,7 @@ class MediKioskApp {
               <div class="oscilloscope-container-3d">
                 <div class="oscilloscope-legend">
                   <span> Live Photoplethysmogram Oscilloscope (Pulse Waveform)</span>
-                  <span style="color: ${this.isRppgScanning ? '#34D399' : (this.patient.rppgVitals ? '#6EE7B7' : 'var(--text-muted)')}; font-weight: 700;">
+                  <span style="color: ${this.isRppgScanning ? '#FFFFFF' : (this.patient.rppgVitals ? '#FFFFFF' : 'var(--text-muted)')}; font-family: var(--font-mono); font-weight: 700;">
                     ${this.isRppgScanning ? '● SAMPLING 30 FPS' : (this.patient.rppgVitals ? ' CAPTURE LOCKED' : '○ STANDBY')}
                   </span>
                 </div>
@@ -600,7 +600,7 @@ class MediKioskApp {
                 <div class="telemetry-card ${vitals.spO2 < 95 && vitals.spO2 !== '--' ? 'highlight' : ''}">
                   <div class="telemetry-value">${vitals.spO2}<span class="telemetry-unit">${i18n.t("telemetry_spo2_unit")}</span></div>
                   <div class="telemetry-label">${i18n.t("telemetry_spo2")}</div>
-                  <div class="telemetry-status" style="color: ${vitals.spO2 < 95 ? '#F87171' : '#34D399'};">
+                  <div class="telemetry-status" style="color: ${vitals.spO2 < 95 ? '#FFFFFF' : 'var(--zinc-400)'};">
                     ${vitals.spO2 !== '--' ? i18n.t("status_optimal") : '--'}
                   </div>
                 </div>
@@ -608,7 +608,7 @@ class MediKioskApp {
                 <div class="telemetry-card ${vitals.stressScore > 70 ? 'highlight' : ''}">
                   <div class="telemetry-value">${vitals.stressScore !== undefined ? vitals.stressScore : '--'}<span class="telemetry-unit">${i18n.t("telemetry_stress_unit")}</span></div>
                   <div class="telemetry-label">${i18n.t("telemetry_stress")}</div>
-                  <div class="telemetry-status" style="color: #C084FC;">
+                  <div class="telemetry-status" style="color: var(--zinc-400);">
                     ${vitals.stressScore !== '--' && vitals.stressScore !== undefined ? i18n.t("status_relaxed") : '--'}
                   </div>
                 </div>
@@ -632,11 +632,11 @@ class MediKioskApp {
 
               <!-- Reassuring Clinical Vitals Verification -->
               ${this.patient.rppgVitals ? `
-                <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 10px; padding: 10px 14px; margin-top: 10px; font-size: 0.8rem; color: #6EE7B7; display: flex; align-items: center; gap: 8px;">
+                <div style="background: #08080A; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 8px; padding: 10px 14px; margin-top: 10px; font-size: 0.8rem; color: #FFFFFF; display: flex; align-items: center; gap: 8px;">
                   <span style="font-size: 1.2rem;"></span>
                   <div>
-                    <strong>${i18n.t("vitals_summary_badge")}</strong>
-                    <p style="font-size: 0.74rem; color: #A7F3D0; margin: 2px 0 0 0;">
+                    <strong style="font-family: var(--font-mono);">${i18n.t("vitals_summary_badge")}</strong>
+                    <p style="font-size: 0.74rem; color: var(--zinc-400); margin: 2px 0 0 0;">
                       Heart rate, oxygen saturation, and respiratory rate are securely calibrated for doctor evaluation.
                     </p>
                   </div>
@@ -684,7 +684,7 @@ class MediKioskApp {
           <div class="card-3d" style="padding: 1.25rem; margin-bottom: 1.25rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
               <div>
-                <h4 style="font-size: 0.88rem; font-weight: 700; color: #5EEAD4;">${i18n.t("herbs_title")}</h4>
+                <h4 style="font-size: 0.88rem; font-weight: 700; color: #FFFFFF;">${i18n.t("herbs_title")}</h4>
                 <p style="font-size: 0.72rem; color: var(--text-muted); margin: 0;">${i18n.t("herbs_sub")}</p>
               </div>
               <button class="btn-3d btn-3d-secondary" style="padding: 4px 10px; font-size: 0.72rem;" onclick="window.app.promptAddHerb()">${i18n.t("herbs_add_btn")}</button>
@@ -703,7 +703,7 @@ class MediKioskApp {
 
           <!-- SOCRATES Symptom Probing -->
           <div class="card-3d" style="padding: 1.25rem;">
-            <h4 style="font-size: 0.9rem; font-weight: 700; color: #93C5FD; margin-bottom: 10px;">${i18n.t("socrates_title")}</h4>
+            <h4 style="font-size: 0.9rem; font-weight: 700; color: #FFFFFF; font-family: var(--font-mono); margin-bottom: 10px;">${i18n.t("socrates_title")}</h4>
             
             <div style="margin-bottom: 12px;">
               <label class="input-label-3d">${SOCRATES_QUESTIONS.character.title}</label>
@@ -717,9 +717,9 @@ class MediKioskApp {
             <div>
               <div style="display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 700; margin-bottom: 6px;">
                 <span>Discomfort Severity:</span>
-                <span style="color: ${this.patient.hpi.severity >= 7 ? 'var(--crimson)' : '#60A5FA'}">${this.patient.hpi.severity || 0} / 10 ${this.patient.hpi.severity >= 7 ? '(PRIORITY ALERT)' : ''}</span>
+                <span style="color: #FFFFFF; font-family: var(--font-mono);">${this.patient.hpi.severity || 0} / 10 ${this.patient.hpi.severity >= 7 ? '(PRIORITY ALERT)' : ''}</span>
               </div>
-              <input type="range" style="width: 100%; accent-color: #0284C7; cursor: pointer;" min="0" max="10" value="${this.patient.hpi.severity || 0}" oninput="window.app.setSeverity(this.value)">
+              <input type="range" style="width: 100%; accent-color: #FFFFFF; cursor: pointer;" min="0" max="10" value="${this.patient.hpi.severity || 0}" oninput="window.app.setSeverity(this.value)">
             </div>
           </div>
         </div>
@@ -762,7 +762,7 @@ class MediKioskApp {
           </svg>
         </div>
 
-        <div style="font-size: 0.85rem; font-weight: 700; color: #38BDF8; margin-bottom: 12px;">
+        <div style="font-size: 0.85rem; font-weight: 700; color: #FFFFFF; font-family: var(--font-mono); margin-bottom: 12px;">
           Selected Site: <span>${this.patient.hpi.site || 'None selected'}</span>
         </div>
 
@@ -782,30 +782,30 @@ class MediKioskApp {
     const prakritiResult = ayushEngine.calculatePrakriti(this.ayushAnswers);
 
     return `
-      <div class="bodymap-hardware-box" style="border-color: var(--teal);">
-        <h4 style="font-size: 0.95rem; font-weight: 800; color: #5EEAD4; text-align: left;">
+      <div class="bodymap-hardware-box" style="border-color: rgba(255,255,255,0.15);">
+        <h4 style="font-size: 0.95rem; font-weight: 800; color: #FFFFFF; text-align: left;">
           AYUSH Dashavidha Pariksha & Prakriti Assessment
         </h4>
         <p style="font-size: 0.78rem; color: var(--text-muted); text-align: left;">
           Standardized Ayurvedic phenotypic constitutional evaluation
         </p>
 
-        <div style="background: rgba(13, 148, 136, 0.15); border: 1px solid var(--teal); border-radius: 12px; padding: 12px; margin: 1rem 0;">
+        <div style="background: #08080A; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 8px; padding: 12px; margin: 1rem 0;">
           <div style="display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 700; margin-bottom: 6px;">
             <span>Dominant Prakriti:</span>
-            <span style="color: #5EEAD4;">${prakritiResult.dominant}</span>
+            <span style="color: #FFFFFF; font-family: var(--font-mono);">${prakritiResult.dominant}</span>
           </div>
-          <div style="display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: #0F172A;">
-            <div style="width: ${prakritiResult.scores.vata}%; background: #60A5FA;" title="Vata: ${prakritiResult.scores.vata}%"></div>
-            <div style="width: ${prakritiResult.scores.pitta}%; background: #F87171;" title="Pitta: ${prakritiResult.scores.pitta}%"></div>
-            <div style="width: ${prakritiResult.scores.kapha}%; background: #34D399;" title="Kapha: ${prakritiResult.scores.kapha}%"></div>
+          <div style="display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: #18181B; border: 1px solid rgba(255, 255, 255, 0.1);">
+            <div style="width: ${prakritiResult.scores.vata}%; background: #FFFFFF;" title="Vata: ${prakritiResult.scores.vata}%"></div>
+            <div style="width: ${prakritiResult.scores.pitta}%; background: #A1A1AA;" title="Pitta: ${prakritiResult.scores.pitta}%"></div>
+            <div style="width: ${prakritiResult.scores.kapha}%; background: #52525B;" title="Kapha: ${prakritiResult.scores.kapha}%"></div>
           </div>
         </div>
 
         <div style="max-height: 260px; overflow-y: auto; text-align: left;">
           ${AYUSH_QUESTIONS.map(q => `
             <div style="margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 8px;">
-              <p style="font-size: 0.82rem; font-weight: 700; color: #CCFBF1;">${q.question}</p>
+              <p style="font-size: 0.82rem; font-weight: 700; color: #FFFFFF;">${q.question}</p>
               <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 6px;">
                 ${q.options.map((opt, oIdx) => `
                   <label style="font-size: 0.78rem; display: flex; align-items: flex-start; gap: 6px; cursor: pointer; color: var(--text-secondary);">
@@ -864,8 +864,8 @@ class MediKioskApp {
           <!-- Left: Real Upload Dropzone & File Preview -->
           <div>
             <div class="scanner-dropzone-3d" id="uploadDropzone" onclick="window.app.triggerFileInput()">
-              <div style="font-size: 1.2rem; font-weight: 700; color: #60A5FA; margin-bottom: 8px;">Upload Document</div>
-              <strong style="color: #60A5FA; font-size: 1rem;">${i18n.t("upload_dropzone_title")}</strong>
+              <div style="font-size: 1.15rem; font-weight: 800; color: #FFFFFF; font-family: var(--font-mono); margin-bottom: 6px;">Upload Document</div>
+              <strong style="color: #FFFFFF; font-size: 0.95rem;">${i18n.t("upload_dropzone_title")}</strong>
               <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">
                 ${i18n.t("upload_dropzone_desc")}
               </p>
@@ -877,37 +877,37 @@ class MediKioskApp {
             </div>
 
             ${this.patient.documents.length > 0 ? `
-              <div style="margin-top: 12px; border-radius: 12px; overflow: hidden; background: #000; max-height: 220px; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center;">
+              <div style="margin-top: 12px; border-radius: 8px; overflow: hidden; background: #000000; max-height: 220px; border: 1px solid rgba(255,255,255,0.12); display: flex; align-items: center; justify-content: center;">
                 <img src="${this.patient.documents[0].previewUrl}" alt="Scanned Document" style="max-height: 220px; width: 100%; object-fit: contain;">
               </div>
             ` : ''}
 
             ${(!this.patient.documents || this.patient.documents.length === 0) && this.lastUploadedDocStatus && !this.lastUploadedDocStatus.verified && this.lastUploadedDocStatus.previewUrl ? `
-              <div style="margin-top: 12px; border-radius: 12px; overflow: hidden; background: #000; max-height: 180px; border: 1px solid rgba(239,68,68,0.4); display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
+              <div style="margin-top: 12px; border-radius: 8px; overflow: hidden; background: #000000; max-height: 180px; border: 1px solid rgba(255,255,255,0.3); display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
                 <img src="${this.lastUploadedDocStatus.previewUrl}" alt="Rejected Document Preview" style="max-height: 180px; width: 100%; object-fit: contain; opacity: 0.5;">
-                <div style="position: absolute; bottom: 8px; background: rgba(239,68,68,0.9); color: #FFF; font-size: 0.72rem; font-weight: 700; padding: 2px 10px; border-radius: 6px; letter-spacing: 0.5px;">
+                <div style="position: absolute; bottom: 8px; background: #000000; border: 1px solid #FFFFFF; color: #FFFFFF; font-size: 0.72rem; font-weight: 700; padding: 2px 10px; border-radius: 4px; font-family: var(--font-mono); letter-spacing: 0.5px;">
                   REJECTED: NON-MEDICAL FILE
                 </div>
               </div>
             ` : ''}
 
             ${this.lastUploadedDocStatus ? `
-              <div style="margin-top: 12px; padding: 14px; border-radius: 12px; background: ${this.lastUploadedDocStatus.verified ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)'}; border: 1px solid ${this.lastUploadedDocStatus.verified ? 'rgba(16, 185, 129, 0.5)' : 'rgba(239, 68, 68, 0.5)'};">
+              <div style="margin-top: 12px; padding: 14px; border-radius: 8px; background: #08080A; border: 1px solid ${this.lastUploadedDocStatus.verified ? '#FFFFFF' : 'rgba(255, 255, 255, 0.25)'};">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
                   <div>
                     <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
-                      <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: ${this.lastUploadedDocStatus.verified ? '#10B981' : '#EF4444'};"></span>
-                      <strong style="font-size: 0.82rem; color: ${this.lastUploadedDocStatus.verified ? '#34D399' : '#F87171'}; text-transform: uppercase; letter-spacing: 0.5px;">
+                      <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: ${this.lastUploadedDocStatus.verified ? '#FFFFFF' : '#71717A'};"></span>
+                      <strong style="font-size: 0.82rem; color: #FFFFFF; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.5px;">
                         ${this.lastUploadedDocStatus.verified ? 'Authenticity Status: Medical Document Verified' : 'Authenticity Status: Non-Medical File Rejected'}
                       </strong>
                     </div>
-                    <p style="font-size: 0.8rem; color: ${this.lastUploadedDocStatus.verified ? '#A7F3D0' : '#FCA5A5'}; margin: 0; line-height: 1.4;">
+                    <p style="font-size: 0.8rem; color: var(--zinc-300); margin: 0; line-height: 1.4;">
                       <strong>${this.lastUploadedDocStatus.fileName}</strong>: ${this.lastUploadedDocStatus.message}
                     </p>
                   </div>
                   <button type="button" class="btn-3d btn-3d-secondary" style="padding: 2px 8px; font-size: 0.68rem; align-self: flex-start;" onclick="window.app.dismissDocStatus(event)">Dismiss</button>
                 </div>
-                <div style="margin-top: 8px; padding-top: 6px; border-top: 1px solid ${this.lastUploadedDocStatus.verified ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'}; display: flex; justify-content: space-between; align-items: center; font-size: 0.72rem; color: #94A3B8;">
+                <div style="margin-top: 8px; padding-top: 6px; border-top: 1px solid rgba(255, 255, 255, 0.1); display: flex; justify-content: space-between; align-items: center; font-size: 0.72rem; color: var(--zinc-400); font-family: var(--font-mono);">
                   <span>Classification: <strong>${this.lastUploadedDocStatus.categoryLabel}</strong></span>
                   <span>Confidence: ${this.lastUploadedDocStatus.confidence || '99.9%'}</span>
                 </div>
@@ -915,7 +915,7 @@ class MediKioskApp {
             ` : ''}
 
             ${this.isOcrProcessing ? `
-              <div style="margin-top: 10px; padding: 10px; border-radius: 10px; background: rgba(56, 189, 248, 0.15); border: 1px solid #38BDF8; font-size: 0.82rem; color: #38BDF8; text-align: center;">
+              <div style="margin-top: 10px; padding: 10px; border-radius: 8px; background: #08080A; border: 1px solid rgba(255, 255, 255, 0.25); font-size: 0.82rem; color: #FFFFFF; font-family: var(--font-mono); text-align: center;">
                 ${i18n.t("ocr_processing_msg")}
               </div>
             ` : ''}
@@ -924,18 +924,18 @@ class MediKioskApp {
           <!-- Right: Real-Time Extracted Clinical Findings -->
           <div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-              <h4 style="font-size: 0.95rem; font-weight: 700; color: #93C5FD;">Digitized Clinical Findings</h4>
+              <h4 style="font-size: 0.95rem; font-weight: 700; color: #FFFFFF; font-family: var(--font-mono); letter-spacing: 0.03em;">Digitized Clinical Findings</h4>
               <span class="pill-3d pill-3d-emerald">${this.patient.documents.length} ${i18n.t("files_processed")}</span>
             </div>
 
             ${latestDoc ? `
-              <div style="background: rgba(30, 41, 59, 0.7); border: 1px solid #3B82F6; border-radius: 10px; padding: 12px; margin-bottom: 12px;">
+              <div style="background: #08080A; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 8px; padding: 12px; margin-bottom: 12px;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                   <span class="pill-3d pill-3d-blue" style="font-weight: 700;">${latestDoc.categoryLabel || latestDoc.type || 'Medical Record'}</span>
                   <span class="pill-3d pill-3d-emerald">${i18n.t("verified_badge")}</span>
                 </div>
                 ${latestDoc.doctorName ? `
-                  <p style="font-size: 0.82rem; font-weight: 700; color: #93C5FD; margin-top: 6px; margin-bottom: 2px;">
+                  <p style="font-size: 0.82rem; font-weight: 700; color: #FFFFFF; margin-top: 6px; margin-bottom: 2px;">
                     Doctor: ${latestDoc.doctorName}
                   </p>
                 ` : ''}
@@ -950,22 +950,22 @@ class MediKioskApp {
             <!-- Identified Diseases & Clinical Diagnoses Section -->
             <div style="margin-bottom: 14px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                <strong style="font-size: 0.8rem; color: #38BDF8; text-transform: uppercase;">${i18n.t("dx_heading")}</strong>
+                <strong style="font-size: 0.8rem; color: #FFFFFF; text-transform: uppercase; font-family: var(--font-mono);">${i18n.t("dx_heading")}</strong>
                 <span class="pill-3d pill-3d-blue" style="font-size: 0.7rem;">${allDiseases.length} Detected</span>
               </div>
               <div style="max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;">
                 ${allDiseases.length > 0 ? allDiseases.map(d => `
-                  <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                  <div style="background: #08080A; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
                     <div>
                       <strong style="color: #FFFFFF; font-size: 0.88rem;">${d.name}</strong>
-                      <p style="font-size: 0.72rem; color: #94A3B8; margin-top: 2px; margin-bottom: 0;">
+                      <p style="font-size: 0.72rem; color: var(--zinc-400); margin-top: 2px; margin-bottom: 0;">
                         Detected from medical document
                       </p>
                     </div>
                     <span class="pill-3d pill-3d-blue" style="font-size: 0.7rem;">${i18n.t("verified_badge")}</span>
                   </div>
                 `).join('') : `
-                  <div style="background: rgba(15, 23, 42, 0.5); border: 1px dashed rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 12px; font-size: 0.78rem; color: var(--text-muted);">
+                  <div style="background: #08080A; border: 1px dashed rgba(255,255,255,0.12); border-radius: 8px; padding: 8px 12px; font-size: 0.78rem; color: var(--text-muted);">
                     ${i18n.t("dx_empty")}
                   </div>
                 `}
@@ -975,14 +975,14 @@ class MediKioskApp {
             <!-- Lab Biomarkers Section -->
             <div style="margin-bottom: 14px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                <strong style="font-size: 0.8rem; color: #F87171; text-transform: uppercase;">${i18n.t("lab_heading")}</strong>
+                <strong style="font-size: 0.8rem; color: #FFFFFF; text-transform: uppercase; font-family: var(--font-mono);">${i18n.t("lab_heading")}</strong>
                 <span class="pill-3d pill-3d-crimson" style="font-size: 0.7rem;">${allFlags.length} Flags</span>
               </div>
               <div style="max-height: 140px; overflow-y: auto;">
                 ${allFlags.length > 0 ? allFlags.map(f => `
                   <div class="lab-flag-item-3d">
                     <div>
-                      <strong style="color: #FCA5A5; font-size: 0.82rem;">${f.test || f.param}: ${f.value}</strong>
+                      <strong style="color: #FFFFFF; font-size: 0.82rem; font-family: var(--font-mono);">${f.test || f.param}: ${f.value}</strong>
                       <p style="font-size: 0.72rem; color: var(--text-muted);">Ref: ${f.ref} [${f.status}]</p>
                     </div>
                     <span class="pill-3d pill-3d-crimson">${(f.status || 'ABNORMAL').split(' ')[0]}</span>
@@ -996,7 +996,7 @@ class MediKioskApp {
             <!-- Prescribed Medications Section -->
             <div style="margin-bottom: 14px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                <strong style="font-size: 0.8rem; color: #34D399; text-transform: uppercase;">${i18n.t("rx_heading")}</strong>
+                <strong style="font-size: 0.8rem; color: #FFFFFF; text-transform: uppercase; font-family: var(--font-mono);">${i18n.t("rx_heading")}</strong>
                 <span class="pill-3d pill-3d-emerald" style="font-size: 0.7rem;">${allExtractedMeds.length} ${i18n.t("active_badge")}</span>
               </div>
               <div style="max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;">
@@ -1012,7 +1012,7 @@ class MediKioskApp {
                       <div>
                         <strong style="color: #FFFFFF; font-size: 0.88rem;">${name}</strong>
                         ${dosage && dosage !== 'Standard Dose' ? `<span class="pill-3d pill-3d-blue" style="margin-left: 6px; font-size: 0.7rem;">${dosage}</span>` : ''}
-                        <p style="font-size: 0.75rem; color: #A7F3D0; margin: 3px 0 0 0;">
+                        <p style="font-size: 0.75rem; color: var(--zinc-300); margin: 3px 0 0 0; font-family: var(--font-mono);">
                           ${freq} • ${timing} ${duration ? `• ${duration}` : ''}
                         </p>
                       </div>
@@ -1020,7 +1020,7 @@ class MediKioskApp {
                     </div>
                   `;
                 }).join('') : `
-                  <div style="background: rgba(15, 23, 42, 0.5); border: 1px dashed rgba(56, 189, 248, 0.2); border-radius: 8px; padding: 10px 14px; font-size: 0.78rem; color: #94A3B8;">
+                  <div style="background: #08080A; border: 1px dashed rgba(255,255,255,0.12); border-radius: 8px; padding: 10px 14px; font-size: 0.78rem; color: var(--zinc-400);">
                     ${latestDoc && ((latestDoc.type || '').includes('pathology') || (latestDoc.categoryLabel || '').toLowerCase().includes('pathology') || (latestDoc.categoryLabel || '').toLowerCase().includes('lab')) ? 
                       '<strong>Pathology Diagnostic Report:</strong> Laboratory test values & diagnostic biomarkers extracted above. (No outpatient prescribed medications in this lab report).' : 
                       i18n.t("rx_empty")}
@@ -1067,7 +1067,7 @@ class MediKioskApp {
         const isBar = (i % 2 === 0);
         const w = pattern[i] === '1' ? wide : narrow;
         if (isBar) {
-          rects.push(`<rect x="${x}" y="0" width="${w}" height="${height}" fill="#94A3B8"/>`);
+          rects.push(`<rect x="${x}" y="0" width="${w}" height="${height}" fill="#FFFFFF"/>`);
         }
         x += w;
       }
@@ -1097,7 +1097,7 @@ class MediKioskApp {
           <h2 style="font-size: 1.45rem; font-weight: 800; color: #FFFFFF; letter-spacing: -0.01em;">
             ${i18n.t("summary_congrats")}
           </h2>
-          <p style="font-size: 0.84rem; color: #94A3B8; margin-top: 4px;">
+          <p style="font-size: 0.84rem; color: var(--zinc-400); margin-top: 4px;">
             ${i18n.t("summary_subtitle")}
           </p>
         </div>
@@ -1107,7 +1107,7 @@ class MediKioskApp {
           <!-- Hospital Header Band -->
           <div class="ticket-header-band">
             <div class="ticket-clinic-info">
-              <div class="ticket-clinic-emblem" style="font-size: 1.1rem; font-weight: 800; color: #38BDF8;">OPD</div>
+              <div class="ticket-clinic-emblem" style="font-size: 1.1rem; font-weight: 800; color: #FFFFFF; font-family: var(--font-mono);">OPD</div>
               <div>
                 <div class="ticket-clinic-title">MediKiosk Outpatient Department</div>
                 <div class="ticket-clinic-subtitle">ABDM First-Mile Triage & Digital Queue Pass</div>
@@ -1133,7 +1133,7 @@ class MediKioskApp {
               <div class="token-cabin-pill">
                 <div class="token-cabin-label">Attending Desk</div>
                 <div class="token-cabin-value">Cabin 04</div>
-                <div style="font-size: 0.72rem; color: #94A3B8; margin-top: 2px;">Dr. Sharma (MD)</div>
+                <div style="font-size: 0.72rem; color: var(--zinc-400); margin-top: 2px;">Dr. Sharma (MD)</div>
               </div>
             </div>
 
@@ -1178,15 +1178,15 @@ class MediKioskApp {
               </div>
               <div class="queue-step-caption">
                 <span>Now Serving at Cabin 04</span>
-                <span style="color: #34D399; font-weight: 700;">Your Position (${token})</span>
+                <span style="color: #FFFFFF; font-weight: 700; font-family: var(--font-mono);">Your Position (${token})</span>
               </div>
             </div>
 
             <!-- Real-Time SMS Notification Confirmation -->
             <div class="ticket-sms-box">
-              <div class="ticket-sms-icon" style="font-size: 0.82rem; font-weight: 700; color: #60A5FA;">SMS</div>
+              <div class="ticket-sms-icon" style="font-size: 0.82rem; font-weight: 700; color: #FFFFFF; font-family: var(--font-mono);">SMS</div>
               <div class="ticket-sms-content">
-                <div class="ticket-sms-title">Automated SMS Notification</div>
+                <div class="ticket-sms-title" style="font-size: 0.78rem; font-weight: 700; color: #FFFFFF; font-family: var(--font-mono); margin-bottom: 2px;">Automated SMS Notification</div>
                 <p class="ticket-sms-desc">
                   An automated SMS alert will be dispatched to <strong>${this.patient.mobile || '+91 98765 43210'}</strong> exactly 30 minutes before your consultation call.
                 </p>
@@ -1287,9 +1287,9 @@ class MediKioskApp {
           <div style="margin-bottom: 10px;">
             <div style="position: relative;">
               <input type="text" id="queueBarcodeSearch" placeholder="Scan Barcode / Token (e.g. A-15)..." 
-                style="width: 100%; padding: 7px 32px 7px 10px; background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 8px; color: #FFFFFF; font-size: 0.76rem; outline: none;" 
+                style="width: 100%; padding: 7px 32px 7px 10px; background: #08080A; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 6px; color: #FFFFFF; font-size: 0.76rem; font-family: var(--font-mono); outline: none;" 
                 onkeydown="if(event.key === 'Enter') { window.app.handleBarcodeScan(this.value); this.value = ''; }" />
-              <span style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 0.72rem; font-weight: 700; color: #38BDF8; cursor: pointer;" title="Scan Barcode" onclick="const val = document.getElementById('queueBarcodeSearch').value; if(val) { window.app.handleBarcodeScan(val); document.getElementById('queueBarcodeSearch').value = ''; }">Scan</span>
+              <span style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 0.72rem; font-weight: 700; color: #FFFFFF; font-family: var(--font-mono); cursor: pointer;" title="Scan Barcode" onclick="const val = document.getElementById('queueBarcodeSearch').value; if(val) { window.app.handleBarcodeScan(val); document.getElementById('queueBarcodeSearch').value = ''; }">Scan</span>
             </div>
           </div>
 
@@ -1307,7 +1307,7 @@ class MediKioskApp {
                   <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                     <div>
                       <strong style="font-size: 0.88rem; color: #FFFFFF;">${item.name || 'Walk-in Patient'}</strong>
-                      <div style="font-size: 0.72rem; color: #38BDF8; font-family: monospace; margin-top: 2px;">ABHA: ${item.abhaId || 'Walk-in'}</div>
+                      <div style="font-size: 0.72rem; color: var(--zinc-400); font-family: var(--font-mono); margin-top: 2px;">ABHA: ${item.abhaId || 'Walk-in'}</div>
                     </div>
                     <span class="pill-3d ${item.isEmergency ? 'pill-3d-crimson' : (isCurrent ? 'pill-3d-emerald' : 'pill-3d-blue')}">
                       ${item.isEmergency ? 'EMERGENCY' : (isCurrent ? 'IN CONSULTATION' : 'TOKEN ' + item.tokenNumber)}
@@ -1323,8 +1323,8 @@ class MediKioskApp {
 
                   <div style="margin-top: 8px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; flex-direction: column; gap: 4px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.72rem;">
-                      <span style="color: #94A3B8;">Position #${idx + 1} • <strong style="color: ${isCurrent ? '#34D399' : '#FCD34D'};">${isCurrent ? 'With Doctor' : patientsAhead + ' patients ahead'}</strong></span>
-                      <span style="color: #38BDF8; font-weight: 700;">${isCurrent ? 'Consulting' : '~' + waitMinutes + 'm (' + estTime + ')'}</span>
+                      <span style="color: var(--zinc-400);">Position #${idx + 1} • <strong style="color: #FFFFFF; font-family: var(--font-mono);">${isCurrent ? 'With Doctor' : patientsAhead + ' patients ahead'}</strong></span>
+                      <span style="color: #FFFFFF; font-weight: 700; font-family: var(--font-mono);">${isCurrent ? 'Consulting' : '~' + waitMinutes + 'm (' + estTime + ')'}</span>
                     </div>
 
                     ${item.smsAlertSent ? `
@@ -1366,7 +1366,7 @@ class MediKioskApp {
                 ${p.smsAlertSent ? `<span class="pill-3d pill-3d-emerald">30-Min SMS Dispatched</span>` : ''}
               </div>
               <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; margin-bottom: 0;">
-                ${p.age || '--'} Years • ${p.gender} • Registered Mobile: <strong style="color: #6EE7B7;">${p.mobile || 'Not provided'}</strong> • Chief Complaint: <span style="color: #E2E8F0;">${p.chiefComplaint || 'None provided'}</span>
+                ${p.age || '--'} Years • ${p.gender} • Registered Mobile: <strong style="color: #FFFFFF; font-family: var(--font-mono);">${p.mobile || 'Not provided'}</strong> • Chief Complaint: <span style="color: var(--zinc-200);">${p.chiefComplaint || 'None provided'}</span>
               </p>
               ${!isViewingCurrent && currentInCabin ? `
                 <div style="margin-top: 6px;">
@@ -1413,10 +1413,10 @@ class MediKioskApp {
           <!-- SECTION 1: SUMMARY OF ALL UPLOADED DOCUMENTS         -->
           <!-- ==================================================== -->
           ${showSummary ? `
-            <div id="sectionSummary" style="margin-bottom: 1.5rem; background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 1.25rem;">
+            <div id="sectionSummary" style="margin-bottom: 1.5rem; background: #08080A; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 1.25rem;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                 <div>
-                  <h3 style="font-size: 1.05rem; font-weight: 800; color: #38BDF8; margin: 0;">Summary of Uploaded Documents</h3>
+                  <h3 style="font-size: 1.05rem; font-weight: 800; color: #FFFFFF; margin: 0; font-family: var(--font-mono); letter-spacing: 0.03em;">Summary of Uploaded Documents</h3>
                   <p style="font-size: 0.74rem; color: var(--text-muted); margin-top: 2px;">Synthesized Diagnostic Intelligence, OCR Multi-Page Aggregation, and Contactless Vitals</p>
                 </div>
                 <span class="pill-3d pill-3d-blue">${allDocs.length} Total Records</span>
@@ -1425,30 +1425,30 @@ class MediKioskApp {
               <!-- KPI Metric Ribbon -->
               <div class="doc-kpi-ribbon">
                 <div class="doc-kpi-card">
-                  <div class="doc-kpi-val" style="color: #38BDF8;">${allDocs.length}</div>
+                  <div class="doc-kpi-val" style="color: #FFFFFF;">${allDocs.length}</div>
                   <div class="doc-kpi-lbl">Total Documents</div>
                 </div>
                 <div class="doc-kpi-card">
-                  <div class="doc-kpi-val" style="color: #60A5FA;">${allDiseases.length}</div>
+                  <div class="doc-kpi-val" style="color: #FFFFFF;">${allDiseases.length}</div>
                   <div class="doc-kpi-lbl">Identified Diseases</div>
                 </div>
                 <div class="doc-kpi-card">
-                  <div class="doc-kpi-val" style="color: #34D399;">${allMeds.length}</div>
+                  <div class="doc-kpi-val" style="color: #FFFFFF;">${allMeds.length}</div>
                   <div class="doc-kpi-lbl">Prescriptions Analyzed</div>
                 </div>
                 <div class="doc-kpi-card">
-                  <div class="doc-kpi-val" style="color: #A78BFA;">${labDocs.length}</div>
+                  <div class="doc-kpi-val" style="color: #FFFFFF;">${labDocs.length}</div>
                   <div class="doc-kpi-lbl">Labs & Imaging Scans</div>
                 </div>
                 <div class="doc-kpi-card">
-                  <div class="doc-kpi-val" style="color: ${abnormalFlags.length > 0 ? '#F87171' : '#34D399'};">${abnormalFlags.length}</div>
+                  <div class="doc-kpi-val" style="color: #FFFFFF;">${abnormalFlags.length}</div>
                   <div class="doc-kpi-lbl">Abnormal Biomarker Flags</div>
                 </div>
               </div>
 
               <!-- Contactless Optical Vitals Ribbon -->
-              <div style="background: rgba(56, 189, 248, 0.06); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 12px; padding: 10px 14px; margin-bottom: 1.25rem;">
-                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #38BDF8; font-weight: 700; margin-bottom: 8px;">
+              <div style="background: #08080A; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 10px; padding: 10px 14px; margin-bottom: 1.25rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #FFFFFF; font-weight: 700; font-family: var(--font-mono); margin-bottom: 8px;">
                   <span>Contactless Optical Vitals (rPPG Camera Telemetry)</span>
                   <span class="pill-3d pill-3d-emerald">${vitals.signalQuality || 'Real-Time Ingestion'}</span>
                 </div>
@@ -1478,16 +1478,16 @@ class MediKioskApp {
 
               <!-- Herb-Drug Interaction (HDI) Contraindication Alert -->
               ${hdiResult.hasConflict ? `
-                <div class="hdi-alert-box-3d" style="margin-bottom: 1.25rem;">
+                <div class="hdi-alert-box-3d" style="background: #08080A; border: 1px solid #FFFFFF; border-radius: 10px; padding: 12px 14px; margin-bottom: 1.25rem;">
                   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                    <strong style="color: #F87171; font-size: 0.92rem;">Herb-Drug Interaction Alert</strong>
+                    <strong style="color: #FFFFFF; font-size: 0.92rem; font-family: var(--font-mono);">Herb-Drug Interaction Alert</strong>
                     <span class="pill-3d pill-3d-crimson">${hdiResult.count} Conflict(s)</span>
                   </div>
                   ${hdiResult.conflicts.map(c => `
-                    <div style="background: rgba(0,0,0,0.4); border-radius: 8px; padding: 8px 12px; margin-top: 6px;">
+                    <div style="background: #000000; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 8px; padding: 8px 12px; margin-top: 6px;">
                       <strong style="color: #FFFFFF; font-size: 0.84rem;">${c.drug} — ${c.herb} (${c.herbBotanical})</strong>
-                      <p style="font-size: 0.76rem; color: #FCA5A5; margin-top: 2px; margin-bottom: 2px;"><strong>Hazard:</strong> ${c.clinicalEffect}</p>
-                      <p style="font-size: 0.74rem; color: #6EE7B7; margin: 0;"><strong>Recommendation:</strong> ${c.recommendation}</p>
+                      <p style="font-size: 0.76rem; color: var(--zinc-300); margin-top: 2px; margin-bottom: 2px;"><strong>Hazard:</strong> ${c.clinicalEffect}</p>
+                      <p style="font-size: 0.74rem; color: var(--zinc-400); margin: 0;"><strong>Recommendation:</strong> ${c.recommendation}</p>
                     </div>
                   `).join('')}
                 </div>
@@ -1496,7 +1496,7 @@ class MediKioskApp {
               <!-- Identified Diseases & Clinical Conditions Breakdown -->
               <div style="margin-bottom: 1.25rem;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                  <strong style="font-size: 0.85rem; color: #38BDF8; text-transform: uppercase;">
+                  <strong style="font-size: 0.85rem; color: #FFFFFF; text-transform: uppercase; font-family: var(--font-mono);">
                     Active Diagnoses & Clinical Findings:
                   </strong>
                   <span class="pill-3d pill-3d-blue">${allDiseases.length} Verified</span>
@@ -1504,12 +1504,12 @@ class MediKioskApp {
                 ${allDiseases.length > 0 ? `
                   <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 8px;">
                     ${allDiseases.map(d => `
-                      <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 8px 12px;">
+                      <div style="background: #08080A; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 8px; padding: 8px 12px;">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                           <strong style="color: #FFFFFF; font-size: 0.84rem;">${d.name}</strong>
                           <span class="pill-3d pill-3d-blue" style="font-size: 0.68rem;">${d.icd10 || 'R69'}</span>
                         </div>
-                        <p style="font-size: 0.72rem; color: #94A3B8; margin-top: 3px; margin-bottom: 0;">
+                        <p style="font-size: 0.72rem; color: var(--zinc-400); margin-top: 3px; margin-bottom: 0;">
                           ${d.source || 'Clinical Record Diagnostic Evaluation'}
                         </p>
                       </div>
@@ -1522,13 +1522,13 @@ class MediKioskApp {
 
               <!-- Document-by-Document Diagnostic Findings Breakdown -->
               <div style="margin-top: 1rem;">
-                <strong style="font-size: 0.85rem; color: #93C5FD; text-transform: uppercase; display: block; margin-bottom: 8px;">
+                <strong style="font-size: 0.85rem; color: #FFFFFF; text-transform: uppercase; display: block; margin-bottom: 8px; font-family: var(--font-mono);">
                   Clinical Records & Findings:
                 </strong>
                 ${allDocs.length > 0 ? `
                   <div style="display: flex; flex-direction: column; gap: 8px;">
                     ${allDocs.map((doc, idx) => `
-                      <div style="background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+                      <div style="background: #08080A; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
                         <div style="flex: 1;">
                           <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                             <span class="pill-3d ${doc.type === 'prescription' ? 'pill-3d-emerald' : (doc.type === 'radiology' ? 'pill-3d-blue' : 'pill-3d-violet')}">
@@ -1538,12 +1538,12 @@ class MediKioskApp {
                             <span style="font-size: 0.72rem; color: var(--text-muted);">${doc.date || 'Recent'} • ${doc.doctor || 'Verified Facility'}</span>
                           </div>
                           <p style="font-size: 0.78rem; color: #E2E8F0; margin-top: 4px; margin-bottom: 4px;">
-                            <strong style="color: #38BDF8;">Diagnostic Finding / Root Cause:</strong> ${doc.rootCause || 'Verified Clinical Ingestion Record'}
+                            <strong style="color: #FFFFFF; font-family: var(--font-mono);">Diagnostic Finding / Root Cause:</strong> ${doc.rootCause || 'Verified Clinical Ingestion Record'}
                           </p>
                           ${(doc.flags && doc.flags.length > 0) ? `
                             <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px;">
                               ${doc.flags.map(f => `
-                                <span style="font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; background: ${f.status === 'NORMAL' ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)'}; color: ${f.status === 'NORMAL' ? '#34D399' : '#F87171'}; border: 1px solid ${f.status === 'NORMAL' ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'};">
+                                <span style="font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; background: #000000; color: #FFFFFF; border: 1px solid rgba(255, 255, 255, 0.2);">
                                   ${f.name}: <strong>${f.value}</strong> [${f.status}]
                                 </span>
                               `).join('')}
@@ -1567,10 +1567,10 @@ class MediKioskApp {
           <!-- SECTION 2: ALL PRESCRIPTIONS EXTRACTED               -->
           <!-- ==================================================== -->
           ${showPrescriptions ? `
-            <div id="sectionPrescriptions" style="margin-bottom: 1.5rem; background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 1.25rem;">
+            <div id="sectionPrescriptions" style="margin-bottom: 1.5rem; background: #08080A; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 1.25rem;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
                 <div>
-                  <h3 style="font-size: 1.05rem; font-weight: 800; color: #34D399; margin: 0;">Prescriptions & Active Medications</h3>
+                  <h3 style="font-size: 1.05rem; font-weight: 800; color: #FFFFFF; margin: 0; font-family: var(--font-mono); letter-spacing: 0.03em;">Prescriptions & Active Medications</h3>
                   <p style="font-size: 0.74rem; color: var(--text-muted); margin-top: 2px;">Doctor Handwritten & Printed Prescriptions Standardized to SNOMED-CT Clinical Nomenclature</p>
                 </div>
                 <span class="pill-3d pill-3d-emerald">${allMeds.length} Active Prescriptions</span>
@@ -1613,11 +1613,11 @@ class MediKioskApp {
                             <strong style="color: #FFFFFF; font-size: 0.85rem;">${name}</strong>
                           </td>
                           <td><span class="pill-3d pill-3d-blue" style="font-size: 0.72rem;">${dosage}</span></td>
-                          <td><strong style="color: #34D399;">${freq}</strong></td>
-                          <td style="color: #CBD5E1;">${timing}</td>
-                          <td style="color: #94A3B8;">${duration}</td>
-                          <td><span style="font-size: 0.74rem; color: #93C5FD;">${route}</span></td>
-                          <td><code style="font-size: 0.72rem; color: #38BDF8; background: rgba(56,189,248,0.1); padding: 2px 6px; border-radius: 4px;">${snomed}</code></td>
+                          <td><strong style="color: #FFFFFF; font-family: var(--font-mono);">${freq}</strong></td>
+                          <td style="color: var(--zinc-300);">${timing}</td>
+                          <td style="color: var(--zinc-400);">${duration}</td>
+                          <td><span style="font-size: 0.74rem; color: var(--zinc-300); font-family: var(--font-mono);">${route}</span></td>
+                          <td><code style="font-size: 0.72rem; color: #FFFFFF; background: #000000; border: 1px solid rgba(255,255,255,0.15); padding: 2px 6px; border-radius: 4px;">${snomed}</code></td>
                           <td><span class="pill-3d ${schedule === 'OTC' ? 'pill-3d-emerald' : 'pill-3d-amber'}" style="font-size: 0.68rem;">${schedule}</span></td>
                           <td style="font-size: 0.72rem; color: var(--text-muted); max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${source}</td>
                           <td><span class="pill-3d pill-3d-emerald" style="font-size: 0.68rem;"> ${status}</span></td>
@@ -1640,10 +1640,10 @@ class MediKioskApp {
           <!-- SECTION 3: ALL UPLOADED DOCUMENT PREVIEWS GALLERY    -->
           <!-- ==================================================== -->
           ${showPreviews ? `
-            <div id="sectionPreviews" style="margin-bottom: 1.5rem; background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 1.25rem;">
+            <div id="sectionPreviews" style="margin-bottom: 1.5rem; background: #08080A; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 1.25rem;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
                 <div>
-                  <h3 style="font-size: 1.05rem; font-weight: 800; color: #A78BFA; margin: 0;">Uploaded Clinical Documents</h3>
+                  <h3 style="font-size: 1.05rem; font-weight: 800; color: #FFFFFF; margin: 0; font-family: var(--font-mono); letter-spacing: 0.03em;">Uploaded Clinical Documents</h3>
                   <p style="font-size: 0.74rem; color: var(--text-muted); margin-top: 2px;">Interactive Visual Scan Gallery with Optical Zoom Inspection (100% - 250%) & Clinical Cross-Verification</p>
                 </div>
                 <span class="pill-3d pill-3d-violet">${allDocs.length} Visual Scans</span>
@@ -1691,7 +1691,7 @@ class MediKioskApp {
 
           <!-- Doctor Examination Notes & E-Prescription Entry -->
           <div class="card-3d" style="padding: 1.25rem; margin-top: 1rem;">
-            <strong style="font-size: 0.85rem; color: #93C5FD; text-transform: uppercase;">Doctor's Consultation Assessment & Notes:</strong>
+            <strong style="font-size: 0.85rem; color: #FFFFFF; text-transform: uppercase; font-family: var(--font-mono);">Doctor's Consultation Assessment & Notes:</strong>
             <textarea class="input-text-3d" rows="3" style="margin-top: 8px;" placeholder="Add clinical examination findings, final diagnosis, and new prescriptions..."></textarea>
             <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px;">
               <button class="btn-3d btn-3d-secondary" onclick="alert('Prescription printed successfully!')">Print Prescription</button>
@@ -1705,10 +1705,10 @@ class MediKioskApp {
       <!-- MODAL: DOCUMENT ZOOM & INSPECTION MODAL              -->
       <!-- ==================================================== -->
       ${this.inspectedDoc ? `
-        <div id="docInspectModal" style="position: fixed; inset: 0; background: rgba(2, 6, 23, 0.88); backdrop-filter: blur(12px); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px;">
-          <div class="card-3d" style="width: 90%; max-width: 900px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; padding: 0; border: 1.5px solid #38BDF8; box-shadow: 0 25px 60px rgba(0,0,0,0.8), 0 0 30px rgba(56,189,248,0.25);">
+        <div id="docInspectModal" style="position: fixed; inset: 0; background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(16px); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px;">
+          <div class="card-3d" style="width: 90%; max-width: 900px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; padding: 0; border: 1px solid #FFFFFF; box-shadow: 0 25px 60px rgba(0,0,0,0.95);">
             <!-- Modal Header -->
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; background: rgba(30, 41, 59, 0.9); border-bottom: 1px solid rgba(255,255,255,0.08);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; background: #08080A; border-bottom: 1px solid rgba(255,255,255,0.1);">
               <div>
                 <div style="display: flex; align-items: center; gap: 8px;">
                   <span class="pill-3d ${this.inspectedDoc.type === 'prescription' ? 'pill-3d-emerald' : 'pill-3d-blue'}">${this.inspectedDoc.categoryLabel || this.inspectedDoc.type}</span>
@@ -1720,23 +1720,23 @@ class MediKioskApp {
               <!-- Zoom Controls Toolbar -->
               <div style="display: flex; align-items: center; gap: 8px;">
                 <button class="btn-3d btn-3d-secondary" style="padding: 4px 10px; font-size: 0.82rem;" onclick="window.app.changeDocZoom(-0.25)" title="Zoom Out">-</button>
-                <span id="inspectZoomLabel" style="font-size: 0.78rem; font-family: monospace; color: #38BDF8; min-width: 44px; text-align: center; font-weight: bold;">${Math.round(this.docZoomLevel * 100)}%</span>
+                <span id="inspectZoomLabel" style="font-size: 0.78rem; font-family: monospace; color: #FFFFFF; min-width: 44px; text-align: center; font-weight: bold;">${Math.round(this.docZoomLevel * 100)}%</span>
                 <button class="btn-3d btn-3d-secondary" style="padding: 4px 10px; font-size: 0.82rem;" onclick="window.app.changeDocZoom(0.25)" title="Zoom In">+</button>
                 <button class="btn-3d btn-3d-secondary" style="padding: 4px 8px; font-size: 0.75rem;" onclick="window.app.changeDocZoom(0)" title="Reset Zoom">100%</button>
-                <button class="btn-3d btn-3d-secondary" style="padding: 4px 12px; font-size: 0.82rem; margin-left: 8px; color: #F87171;" onclick="window.app.closeDocInspectModal()">Close</button>
+                <button class="btn-3d btn-3d-secondary" style="padding: 4px 12px; font-size: 0.82rem; margin-left: 8px;" onclick="window.app.closeDocInspectModal()">Close</button>
               </div>
             </div>
 
             <!-- Modal Body: High Resolution Scan Display -->
-            <div style="flex: 1; overflow: auto; padding: 20px; background: #0B0F19; display: flex; justify-content: center; align-items: flex-start;">
-              <img id="inspectModalImage" src="${this.inspectedDoc.previewUrl || ''}" alt="${this.inspectedDoc.title}" style="max-width: 100%; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); transform: scale(${this.docZoomLevel}); transform-origin: top center; transition: transform 0.15s ease-out;" />
+            <div style="flex: 1; overflow: auto; padding: 20px; background: #000000; display: flex; justify-content: center; align-items: flex-start;">
+              <img id="inspectModalImage" src="${this.inspectedDoc.previewUrl || ''}" alt="${this.inspectedDoc.title}" style="max-width: 100%; border-radius: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); transform: scale(${this.docZoomLevel}); transform-origin: top center; transition: transform 0.15s ease-out;" />
             </div>
 
             <!-- Modal Footer: Extracted Clinical Findings & Text Stream -->
-            <div style="padding: 12px 20px; background: rgba(15, 23, 42, 0.95); border-top: 1px solid rgba(255,255,255,0.08); font-size: 0.78rem;">
+            <div style="padding: 12px 20px; background: #08080A; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.78rem;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                 <div>
-                  <strong style="color: #38BDF8;">Diagnostic Findings:</strong> <span style="color: #E2E8F0;">${this.inspectedDoc.rootCause || 'Verified Record'}</span>
+                  <strong style="color: #FFFFFF; font-family: var(--font-mono);">Diagnostic Findings:</strong> <span style="color: var(--zinc-300);">${this.inspectedDoc.rootCause || 'Verified Record'}</span>
                 </div>
                 ${this.inspectedDoc.extractedText ? `
                   <button class="btn-3d btn-3d-secondary" style="padding: 2px 10px; font-size: 0.72rem;" onclick="const el = document.getElementById('inspectRawTextStream'); if(el) el.style.display = el.style.display === 'none' ? 'block' : 'none';">
@@ -1745,7 +1745,7 @@ class MediKioskApp {
                 ` : ''}
               </div>
               ${this.inspectedDoc.extractedText ? `
-                <div id="inspectRawTextStream" style="display: none; margin-top: 8px; max-height: 140px; overflow-y: auto; background: rgba(0,0,0,0.5); padding: 8px 12px; border-radius: 6px; font-family: monospace; font-size: 0.72rem; color: #CBD5E1; white-space: pre-wrap;">${this.inspectedDoc.extractedText}</div>
+                <div id="inspectRawTextStream" style="display: none; margin-top: 8px; max-height: 140px; overflow-y: auto; background: #000000; padding: 8px 12px; border-radius: 6px; font-family: monospace; font-size: 0.72rem; color: #CBD5E1; border: 1px solid rgba(255,255,255,0.1); white-space: pre-wrap;">${this.inspectedDoc.extractedText}</div>
               ` : ''}
             </div>
           </div>
@@ -1755,20 +1755,20 @@ class MediKioskApp {
       <!-- ==================================================== -->
       <!-- MODAL: 30-MIN ADVANCE SMS NOTIFICATION DISPATCH LOGS -->
       <!-- ==================================================== -->
-      <div id="smsLogModal" style="position: fixed; inset: 0; background: rgba(2, 6, 23, 0.85); backdrop-filter: blur(12px); z-index: 9999; display: ${this.isSmsLogModalOpen ? 'flex' : 'none'}; align-items: center; justify-content: center; padding: 20px;">
-        <div class="card-3d" style="width: 90%; max-width: 960px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; padding: 0; border: 1.5px solid #38BDF8; box-shadow: 0 25px 60px rgba(0,0,0,0.8), 0 0 30px rgba(56,189,248,0.25);">
+      <div id="smsLogModal" style="position: fixed; inset: 0; background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(16px); z-index: 9999; display: ${this.isSmsLogModalOpen ? 'flex' : 'none'}; align-items: center; justify-content: center; padding: 20px;">
+        <div class="card-3d" style="width: 90%; max-width: 960px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; padding: 0; border: 1px solid #FFFFFF; box-shadow: 0 25px 60px rgba(0,0,0,0.95);">
           <!-- Modal Header -->
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 22px; background: rgba(30, 41, 59, 0.9); border-bottom: 1px solid rgba(255,255,255,0.08);">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 22px; background: #08080A; border-bottom: 1px solid rgba(255,255,255,0.1);">
             <div>
               <div style="display: flex; align-items: center; gap: 10px;">
                 
-                <h3 style="font-size: 1.1rem; font-weight: 800; color: #FFFFFF; margin: 0;">30-Minute Advance Patient Appointment SMS Dispatch Logs</h3>
+                <h3 style="font-size: 1.1rem; font-weight: 800; color: #FFFFFF; margin: 0; font-family: var(--font-mono);">30-Minute Advance Patient Appointment SMS Dispatch Logs</h3>
               </div>
               <p style="font-size: 0.74rem; color: var(--text-muted); margin: 3px 0 0 0;">
                 Automated SMS & WhatsApp Cloud Gateway Dispatches Sent 30 Minutes Prior to Doctor Consultation (OPD Cabin 3)
               </p>
             </div>
-            <button class="btn-3d btn-3d-secondary" style="padding: 6px 14px; font-size: 0.8rem; color: #F87171;" onclick="window.app.closeSmsLogModal()">Close</button>
+            <button class="btn-3d btn-3d-secondary" style="padding: 6px 14px; font-size: 0.8rem;" onclick="window.app.closeSmsLogModal()">Close</button>
           </div>
 
           <!-- Modal Body Table -->
@@ -1789,15 +1789,15 @@ class MediKioskApp {
               <tbody>
                 ${this.smsDispatchLogs.length > 0 ? this.smsDispatchLogs.map(log => `
                   <tr>
-                    <td style="font-family: monospace; color: #38BDF8; font-size: 0.74rem; white-space: nowrap;">${log.dispatchTimestamp}</td>
+                    <td style="font-family: monospace; color: #FFFFFF; font-size: 0.74rem; white-space: nowrap;">${log.dispatchTimestamp}</td>
                     <td><strong style="color: #FFFFFF;">${log.patientName}</strong></td>
                     <td><span class="pill-3d pill-3d-blue" style="font-size: 0.72rem;">${log.token}</span></td>
                     <td style="font-family: monospace; font-size: 0.74rem; color: #94A3B8;">${log.mobile}</td>
                     <td><span class="pill-3d pill-3d-amber" style="font-size: 0.7rem;">${log.patientsAhead} Patients Ahead</span></td>
-                    <td><strong style="color: #34D399; font-size: 0.78rem;">${log.scheduledTime}</strong></td>
+                    <td><strong style="color: #FFFFFF; font-size: 0.78rem; font-family: var(--font-mono);">${log.scheduledTime}</strong></td>
                     <td><span class="pill-3d pill-3d-emerald" style="font-size: 0.7rem;">${log.status}</span></td>
                     <td style="font-size: 0.74rem; color: #E2E8F0; line-height: 1.4; max-width: 320px;">
-                      <div style="background: rgba(0,0,0,0.3); border-radius: 6px; padding: 6px 10px; border-left: 3px solid #38BDF8;">
+                      <div style="background: #08080A; border-radius: 6px; padding: 6px 10px; border-left: 2px solid #FFFFFF;">
                         "${log.message}"
                       </div>
                     </td>
@@ -1812,8 +1812,8 @@ class MediKioskApp {
           </div>
 
           <!-- Modal Footer -->
-          <div style="padding: 12px 20px; background: rgba(15, 23, 42, 0.95); border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: center; font-size: 0.74rem; color: var(--text-muted);">
-            <span>Gateway: <strong style="color: #38BDF8;">NIC e-Hospital & ABDM SMS Service</strong> • Delivery Latency: &lt;1.2s</span>
+          <div style="padding: 12px 20px; background: #08080A; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; font-size: 0.74rem; color: var(--text-muted);">
+            <span>Gateway: <strong style="color: #FFFFFF; font-family: var(--font-mono);">NIC e-Hospital & ABDM SMS Service</strong> • Delivery Latency: &lt;1.2s</span>
             <button class="btn-3d btn-3d-secondary" style="padding: 4px 14px; font-size: 0.78rem;" onclick="window.app.closeSmsLogModal()">Close</button>
           </div>
         </div>
@@ -2163,12 +2163,12 @@ class MediKioskApp {
     const w = canvas.width;
     const h = canvas.height;
 
-    // Dark clinical grid backdrop
-    ctx.fillStyle = "#020617";
+    // Pure Obsidian monochrome grid backdrop
+    ctx.fillStyle = "#000000";
     ctx.fillRect(0, 0, w, h);
 
-    // Subtle clinical grid lines
-    ctx.strokeStyle = "rgba(56, 189, 248, 0.08)";
+    // Subtle monochrome grid lines
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.06)";
     ctx.lineWidth = 1;
     for (let x = 0; x < w; x += 24) {
       ctx.beginPath();
@@ -2186,7 +2186,7 @@ class MediKioskApp {
     const samples = this.oscilloscopeSamples || [];
     if (samples.length < 2) {
       // Baseline resting line
-      ctx.strokeStyle = "rgba(52, 211, 153, 0.35)";
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(0, h / 2);
@@ -2204,11 +2204,11 @@ class MediKioskApp {
     const range = Math.max(0.005, max - min);
     const mid = (min + max) / 2;
 
-    // Draw glowing arterial photoplethysmogram wave
-    ctx.shadowBlur = 8;
-    ctx.shadowColor = "#10B981";
-    ctx.strokeStyle = "#34D399";
-    ctx.lineWidth = 2.2;
+    // Draw glowing arterial photoplethysmogram wave in high-contrast stark white
+    ctx.shadowBlur = 6;
+    ctx.shadowColor = "rgba(255, 255, 255, 0.45)";
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 2.0;
     ctx.beginPath();
 
     const dx = w / (samples.length - 1);
@@ -2229,9 +2229,9 @@ class MediKioskApp {
       const lastNorm = (samples[samples.length - 1] - mid) / (range * 0.55);
       const lastY = Math.max(4, Math.min(h - 4, (h / 2) - (lastNorm * (h * 0.38))));
 
-      ctx.fillStyle = "#6EE7B7";
+      ctx.fillStyle = "#FFFFFF";
       ctx.beginPath();
-      ctx.arc(lastX, lastY, 3.5, 0, Math.PI * 2);
+      ctx.arc(lastX, lastY, 3, 0, Math.PI * 2);
       ctx.fill();
     }
   }
@@ -2445,10 +2445,10 @@ class MediKioskApp {
     toast.className = "doctor-toast-3d";
     toast.innerHTML = `
       <div style="display: flex; align-items: flex-start; gap: 10px;">
-        <span style="font-size: 0.8rem; font-weight: 700; color: #38BDF8;">SMS</span>
+        <span style="font-size: 0.8rem; font-weight: 700; color: #FFFFFF; font-family: var(--font-mono);">SMS</span>
         <div style="flex: 1;">
-          <strong style="color: #38BDF8; font-size: 0.85rem; display: block; margin-bottom: 2px;">OPD Notification Dispatched</strong>
-          <p style="font-size: 0.78rem; color: #E2E8F0; line-height: 1.4; margin: 0;">${message}</p>
+          <strong style="color: #FFFFFF; font-size: 0.85rem; font-family: var(--font-mono); display: block; margin-bottom: 2px;">OPD Notification Dispatched</strong>
+          <p style="font-size: 0.78rem; color: var(--zinc-300); line-height: 1.4; margin: 0;">${message}</p>
         </div>
       </div>
     `;
