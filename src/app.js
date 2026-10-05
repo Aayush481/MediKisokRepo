@@ -342,28 +342,28 @@ class MediKioskApp {
         <!-- 3D Kiosk Hardware Stepper -->
         <div class="kiosk-stepper">
           <div class="step-node ${this.currentStep === 1 ? 'active' : ''} ${this.currentStep > 1 ? 'completed' : ''}" onclick="window.app.goToStep(1)">
-            <div class="step-number">${this.currentStep > 1 ? '' : '1'}</div>
+            <div class="step-number">${this.currentStep > 1 ? '✓' : '01'}</div>
             <div>
               <div class="step-label">${i18n.t("step1_title")}</div>
               <div class="step-subtext">${i18n.t("step1_sub")}</div>
             </div>
           </div>
           <div class="step-node ${this.currentStep === 2 ? 'active' : ''} ${this.currentStep > 2 ? 'completed' : ''}" onclick="window.app.goToStep(2)">
-            <div class="step-number">${this.currentStep > 2 ? '' : '2'}</div>
+            <div class="step-number">${this.currentStep > 2 ? '✓' : '02'}</div>
             <div>
               <div class="step-label">${i18n.t("step2_title")}</div>
               <div class="step-subtext">${i18n.t("step2_sub")}</div>
             </div>
           </div>
           <div class="step-node ${this.currentStep === 3 ? 'active' : ''} ${this.currentStep > 3 ? 'completed' : ''}" onclick="window.app.goToStep(3)">
-            <div class="step-number">${this.currentStep > 3 ? '' : '3'}</div>
+            <div class="step-number">${this.currentStep > 3 ? '✓' : '03'}</div>
             <div>
               <div class="step-label">${i18n.t("step3_title")}</div>
               <div class="step-subtext">${i18n.t("step3_sub")}</div>
             </div>
           </div>
           <div class="step-node ${this.currentStep === 4 ? 'active' : ''}" onclick="window.app.goToStep(4)">
-            <div class="step-number">4</div>
+            <div class="step-number">04</div>
             <div>
               <div class="step-label">${i18n.t("step4_title")}</div>
               <div class="step-subtext">${i18n.t("step4_sub")}</div>
@@ -433,18 +433,18 @@ class MediKioskApp {
             <input type="tel" id="patientMobileInput" class="input-text-3d" placeholder="${i18n.t("mobile_ph")}" value="${this.patient.mobile}">
           </div>
 
-          <div style="background: #08080A; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 8px; padding: 12px 14px; display: flex; align-items: flex-start; gap: 10px; margin-top: 6px;">
-            <span style="font-size: 1.2rem;"></span>
+          <div style="background: #060608; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 4px; padding: 12px 14px; display: flex; align-items: flex-start; gap: 12px; margin-top: 6px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-top:1px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             <div>
-              <strong style="font-size: 0.82rem; color: #FFFFFF; font-family: var(--font-mono);">${i18n.t("dpdp_title")}</strong>
-              <p style="font-size: 0.76rem; color: var(--text-muted); margin-top: 2px;">
+              <strong style="font-size: 0.8rem; color: #FFFFFF; font-family: var(--font-mono); letter-spacing: 0.04em; text-transform: uppercase;">${i18n.t("dpdp_title")}</strong>
+              <p style="font-size: 0.74rem; color: var(--text-muted); margin-top: 3px; line-height: 1.4;">
                 ${i18n.t("dpdp_desc")}
               </p>
             </div>
           </div>
 
           <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
-            <button class="btn-3d btn-3d-primary" style="padding: 14px 32px;" onclick="window.app.saveStep1AndNext()">
+            <button class="btn-3d btn-3d-primary" style="padding: 13px 32px;" onclick="window.app.saveStep1AndNext()">
               ${i18n.t("btn_proceed_vitals")}
             </button>
           </div>
@@ -504,7 +504,7 @@ class MediKioskApp {
           <div>
             ${this.patient.rppgVitals ? `
               <div style="height: 200px; border-radius: 12px; background: #000000; border: 1px solid #FFFFFF; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 1rem; box-shadow: 0 0 24px rgba(255, 255, 255, 0.08);">
-                <div style="font-size: 2.5rem; line-height: 1; margin-bottom: 6px;"></div>
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 8px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                 <strong style="color: #FFFFFF; font-size: 0.95rem; font-family: var(--font-mono);">${i18n.t("vitals_calibrated")}</strong>
                 <p style="font-size: 0.74rem; color: var(--zinc-400); margin-top: 2px;">${i18n.t("vitals_calibrated_sub")}</p>
                 <span class="pill-3d pill-3d-emerald" style="margin-top: 8px;">

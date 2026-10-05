@@ -1,20 +1,20 @@
 /**
- * MediKiosk Minimalist Monochrome Terminal Design System
- * Editorial Black & White Aesthetic for Clinical Hardware & Doctor Suites
- * High-Contrast Swiss Typography, Razor-Sharp Borders, and Tactile Minimalism
+ * MediKiosk Architectural Monochrome Design System
+ * Inspired by Teenage Engineering, Braun/Dieter Rams, and High-End Clinical Telemetry
+ * Razor-Sharp 1px Borders, Tactile Hardware Insets, Dot-Matrix Canvas, and Swiss Typography
  */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
 
 :root {
-  /* Surface Depths - Pure Obsidian & Deep Zinc */
+  /* Surface Depths - Pure Obsidian, Deep Charcoal, and Inset Channels */
   --bg-darkest: #000000;
-  --bg-primary: #08080A;
-  --bg-secondary: #0F0F12;
-  --bg-card: #0A0A0D;
-  --bg-card-elevated: #121216;
-  --bg-card-glass: rgba(255, 255, 255, 0.03);
-  --bg-surface-inset: #040405;
+  --bg-primary: #050507;
+  --bg-secondary: #0A0A0D;
+  --bg-card: #08080B;
+  --bg-card-elevated: #111115;
+  --bg-card-glass: rgba(255, 255, 255, 0.02);
+  --bg-surface-inset: #030304;
 
   /* Strict Monochrome Grayscale Spectrum */
   --white: #FFFFFF;
@@ -29,35 +29,35 @@
   --zinc-800: #27272A;
   --zinc-900: #18181B;
 
-  /* Clinical State Tokens in Black & White */
+  /* Clinical State Tokens in High-Contrast Black & White */
   --emerald: #FFFFFF;
-  --emerald-glow: rgba(255, 255, 255, 0.15);
+  --emerald-glow: rgba(255, 255, 255, 0.16);
   --emerald-dark: #18181B;
   --cyan: #FFFFFF;
-  --cyan-glow: rgba(255, 255, 255, 0.15);
+  --cyan-glow: rgba(255, 255, 255, 0.16);
   --blue: #F4F4F5;
-  --blue-glow: rgba(255, 255, 255, 0.15);
+  --blue-glow: rgba(255, 255, 255, 0.16);
   --teal: #E4E4E7;
   --amber: #FFFFFF;
-  --amber-glow: rgba(255, 255, 255, 0.15);
+  --amber-glow: rgba(255, 255, 255, 0.16);
   --crimson: #FFFFFF;
-  --crimson-glow: rgba(255, 255, 255, 0.15);
+  --crimson-glow: rgba(255, 255, 255, 0.16);
   --purple: #E4E4E7;
 
-  /* Typography Colors */
+  /* Typography Hierarchy */
   --text-primary: #FFFFFF;
   --text-secondary: #D4D4D8;
   --text-muted: #A1A1AA;
   --text-dim: #71717A;
 
-  /* Razor-Sharp Monochrome Borders & Subtle Depth */
-  --border-light: rgba(255, 255, 255, 0.1);
-  --border-specular: 1px solid rgba(255, 255, 255, 0.16);
+  /* Architectural Hairlines & Tactile Depth */
+  --border-light: rgba(255, 255, 255, 0.12);
+  --border-specular: 1px solid rgba(255, 255, 255, 0.18);
   --border-active: 1px solid #FFFFFF;
-  --shadow-3d-card: 0 12px 32px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.08);
-  --shadow-3d-elevated: 0 20px 48px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(255, 255, 255, 0.14);
-  --shadow-3d-button: 0 2px 8px rgba(0, 0, 0, 0.6);
-  --shadow-3d-inset: inset 0 2px 6px rgba(0, 0, 0, 0.8), 0 1px 0 rgba(255, 255, 255, 0.04);
+  --shadow-3d-card: 0 16px 40px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  --shadow-3d-elevated: 0 24px 60px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(255, 255, 255, 0.18);
+  --shadow-3d-button: 0 2px 6px rgba(0, 0, 0, 0.7);
+  --shadow-3d-inset: inset 0 2px 5px rgba(0, 0, 0, 0.85), 0 1px 0 rgba(255, 255, 255, 0.04);
 
   /* Fonts */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -71,32 +71,49 @@
   box-sizing: border-box;
 }
 
+/* ========================================================
+   GLOBAL CANVAS & ATMOSPHERE: ARCHITECTURAL BLUEPRINT GRID
+   ======================================================== */
 body {
   font-family: var(--font-sans);
   background-color: var(--bg-darkest);
   background-image: 
-    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.03) 0%, transparent 60%),
-    linear-gradient(180deg, #000000 0%, #08080A 100%);
+    radial-gradient(rgba(255, 255, 255, 0.11) 1px, transparent 1px),
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 24px 24px, 120px 120px, 120px 120px;
+  background-position: 0 0, 0 0, 0 0;
   color: var(--text-primary);
   min-height: 100vh;
   overflow-x: hidden;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  position: relative;
+}
+
+/* Soft ambient perimeter vignette for clinical focus */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at 50% 20%, transparent 65%, rgba(0, 0, 0, 0.75) 100%);
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* ========================================================
-   TOP MINIMALIST HARDWARE HEADER
+   TOP HARDWARE CONSOLE HEADER (TEENAGE ENGINEERING VIBE)
    ======================================================== */
 .navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.85rem 2rem;
-  background: rgba(0, 0, 0, 0.92);
+  padding: 0.75rem 2.5rem;
+  background: rgba(3, 3, 5, 0.94);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -105,54 +122,63 @@ body {
 .brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 .brand-badge {
-  width: 38px;
-  height: 38px;
-  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
   background: #FFFFFF;
   color: #000000;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
+  font-size: 1.15rem;
   font-weight: 900;
-  box-shadow: 0 2px 10px rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 16px rgba(255, 255, 255, 0.3);
   border: 1px solid #FFFFFF;
+  transition: transform 0.15s ease;
+}
+
+.brand-badge:hover {
+  transform: scale(1.05);
 }
 
 .brand-text h1 {
   font-family: var(--font-sans);
-  font-size: 1.25rem;
-  font-weight: 800;
-  letter-spacing: -0.03em;
+  font-size: 1.2rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
   color: #FFFFFF;
   line-height: 1.1;
+  text-transform: uppercase;
 }
 
 .brand-text p {
-  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
   color: var(--zinc-500);
-  font-weight: 600;
-  letter-spacing: 0.05em;
+  font-weight: 700;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
+  margin-top: 1px;
 }
 
 .nav-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
-/* Minimalist Hardware Mode Switcher */
+/* CNC Aluminum Rocker Switch Bar */
 .mode-toggle-group {
   display: flex;
   background: var(--bg-surface-inset);
   padding: 3px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8);
 }
 
 .mode-btn {
@@ -160,11 +186,14 @@ body {
   border: none;
   color: var(--zinc-400);
   padding: 6px 14px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  border-radius: 6px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 3px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -173,29 +202,39 @@ body {
 .mode-btn.active {
   background: #FFFFFF;
   color: #000000;
-  font-weight: 700;
-  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.2);
+  font-weight: 800;
+  box-shadow: 0 1px 6px rgba(255, 255, 255, 0.3);
 }
 
 .mode-btn:hover:not(.active) {
   color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.05);
 }
 
+/* Precision Select Dropdown */
 .lang-select {
   background: var(--bg-surface-inset);
   color: #FFFFFF;
   border: 1px solid rgba(255, 255, 255, 0.15);
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  font-weight: 600;
+  padding: 6px 28px 6px 12px;
+  border-radius: 4px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  letter-spacing: 0.03em;
   cursor: pointer;
   outline: none;
-  transition: border-color 0.15s;
+  transition: all 0.15s ease;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23FFFFFF' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
 }
 
 .lang-select:hover, .lang-select:focus {
   border-color: #FFFFFF;
+  box-shadow: 0 0 0 1px #FFFFFF;
 }
 
 .lang-select option {
@@ -204,26 +243,50 @@ body {
   padding: 8px;
 }
 
-/* Terminal Quick Ingestion Bar */
+/* ========================================================
+   TELEMETRY STATUS RIBBON / QUICK INGESTION BAR
+   ======================================================== */
 .kiosk-quick-bar {
-  background: rgba(8, 8, 10, 0.95);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-  padding: 0.5rem 2rem;
+  background: rgba(6, 6, 8, 0.96);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+  padding: 0.45rem 2.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: relative;
+  z-index: 90;
 }
 
 .quick-bar-left {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.78rem;
+  gap: 10px;
+  font-size: 0.74rem;
+  font-family: var(--font-mono);
   color: var(--zinc-400);
+  letter-spacing: 0.03em;
 }
 
 .quick-bar-left strong {
   color: #FFFFFF;
+  font-weight: 700;
+}
+
+.quick-bar-left::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  box-shadow: 0 0 8px #FFFFFF;
+  display: inline-block;
+  animation: pulse-diode 2s infinite ease-in-out;
+}
+
+@keyframes pulse-diode {
+  0% { opacity: 0.4; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.15); box-shadow: 0 0 12px #FFFFFF; }
+  100% { opacity: 0.4; transform: scale(0.9); }
 }
 
 .quick-bar-actions {
@@ -232,14 +295,16 @@ body {
 }
 
 .quick-chip {
-  background: var(--bg-card);
+  background: #0A0A0D;
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: var(--zinc-300);
   padding: 4px 12px;
-  border-radius: 6px;
-  font-size: 0.74rem;
-  font-weight: 600;
+  border-radius: 3px;
+  font-size: 0.72rem;
+  font-weight: 700;
   font-family: var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -248,35 +313,48 @@ body {
   background: #18181B;
   border-color: #FFFFFF;
   color: #FFFFFF;
+  transform: translateY(-1px);
+}
+
+.quick-chip:active {
+  transform: translateY(1px);
 }
 
 /* ========================================================
-   MAIN CONTAINER & MINIMALIST STEP WIZARD
+   MAIN CONTAINER & ARCHITECTURAL HARDWARE STEPPER
    ======================================================== */
 .main-wrapper {
-  max-width: 1380px;
+  max-width: 1400px;
   margin: 1.5rem auto;
-  padding: 0 1.5rem;
+  padding: 0 2rem;
+  position: relative;
+  z-index: 10;
 }
 
+/* Unbroken Precision Timeline Bus */
 .kiosk-stepper {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  margin-bottom: 1.5rem;
+  gap: 8px;
+  margin-bottom: 1.75rem;
+  background: rgba(8, 8, 11, 0.8);
+  padding: 4px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .step-node {
-  background: var(--bg-card);
+  background: #08080B;
   border: 1px solid rgba(255, 255, 255, 0.08);
   padding: 10px 14px;
-  border-radius: 10px;
+  border-radius: 4px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  transition: all 0.2s ease;
+  gap: 12px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   overflow: hidden;
+  cursor: pointer;
 }
 
 .step-node::before {
@@ -287,20 +365,27 @@ body {
   right: 0;
   height: 2px;
   background: transparent;
+  transition: all 0.2s ease;
+}
+
+.step-node:hover {
+  background: #0E0E13;
+  border-color: rgba(255, 255, 255, 0.25);
 }
 
 .step-node.active {
-  background: #121216;
+  background: #121217;
   border-color: #FFFFFF;
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.06);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.08);
 }
 
 .step-node.active::before {
   background: #FFFFFF;
+  box-shadow: 0 0 12px #FFFFFF;
 }
 
 .step-node.completed {
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.22);
 }
 
 .step-node.completed::before {
@@ -308,24 +393,28 @@ body {
 }
 
 .step-number {
-  width: 26px;
-  height: 26px;
-  border-radius: 6px;
-  background: #141418;
+  width: 28px;
+  height: 28px;
+  border-radius: 3px;
+  background: #020203;
   color: var(--zinc-400);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 0.78rem;
+  font-weight: 800;
+  font-size: 0.74rem;
   font-family: var(--font-mono);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  letter-spacing: -0.02em;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  flex-shrink: 0;
+  transition: all 0.15s ease;
 }
 
 .step-node.active .step-number {
   background: #FFFFFF;
   color: #000000;
   border-color: #FFFFFF;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
 }
 
 .step-node.completed .step-number {
@@ -335,85 +424,261 @@ body {
 }
 
 .step-label {
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: 0.78rem;
+  font-weight: 700;
   color: var(--zinc-400);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.2;
 }
 
 .step-node.active .step-label {
   color: #FFFFFF;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .step-node.completed .step-label {
-  color: var(--zinc-300);
+  color: var(--zinc-200);
 }
 
 .step-subtext {
   font-size: 0.68rem;
   color: var(--zinc-500);
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
+  margin-top: 2px;
 }
 
 /* ========================================================
-   MINIMALIST CARDS & CONTAINERS
+   MINIMALIST ARCHITECTURAL CARDS (CORNER REGISTRATION TICKS)
    ======================================================== */
 .card-3d {
   background: var(--bg-card);
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
   box-shadow: var(--shadow-3d-card);
-  padding: 1.5rem;
+  padding: 2rem 2.25rem;
   position: relative;
+}
+
+/* Precision corner registration crosshairs */
+.card-3d::before {
+  content: "⌜";
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  font-size: 0.7rem;
+  color: var(--zinc-600);
+  font-family: var(--font-mono);
+  pointer-events: none;
+}
+
+.card-3d::after {
+  content: "⌟";
+  position: absolute;
+  bottom: 6px;
+  right: 8px;
+  font-size: 0.7rem;
+  color: var(--zinc-600);
+  font-family: var(--font-mono);
+  pointer-events: none;
 }
 
 .card-header-3d {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 1.25rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.15rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+  position: relative;
 }
 
 .card-title-3d {
   font-family: var(--font-sans);
-  font-size: 1.25rem;
-  font-weight: 800;
+  font-size: 1.35rem;
+  font-weight: 900;
   color: #FFFFFF;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
 }
 
 .card-subtitle-3d {
-  font-size: 0.82rem;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
   color: var(--zinc-400);
-  margin-top: 3px;
+  margin-top: 4px;
+  letter-spacing: 0.02em;
 }
 
 /* ========================================================
-   CAMERA BAY & TELEMETRY VITALS
+   TACTILE RECESSED HARDWARE INPUTS
+   ======================================================== */
+.input-label-3d {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--zinc-400);
+  margin-bottom: 6px;
+  text-align: left;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.input-text-3d {
+  width: 100%;
+  background: var(--bg-surface-inset);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 4px;
+  padding: 11px 14px;
+  color: #FFFFFF;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  outline: none;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.85);
+  transition: all 0.15s ease;
+}
+
+.input-text-3d:hover {
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.input-text-3d:focus {
+  border-color: #FFFFFF;
+  background: #08080C;
+  box-shadow: 0 0 0 1px #FFFFFF, 0 4px 16px rgba(255, 255, 255, 0.12);
+}
+
+.input-text-3d::placeholder {
+  color: var(--zinc-600);
+  font-family: var(--font-mono);
+  font-size: 0.84rem;
+}
+
+select.input-text-3d {
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23FFFFFF' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+}
+
+/* ========================================================
+   TACTILE MECHANICAL BUTTONS (INVERTED HIGH-CONTRAST)
+   ======================================================== */
+.btn-3d {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 22px;
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  text-decoration: none;
+  box-shadow: var(--shadow-3d-button);
+}
+
+.btn-3d:active {
+  transform: translateY(1.5px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+/* Inverted stark white CTA */
+.btn-3d-primary {
+  background: #FFFFFF;
+  color: #000000;
+  border-color: #FFFFFF;
+  box-shadow: 0 2px 14px rgba(255, 255, 255, 0.2);
+}
+
+.btn-3d-primary:hover {
+  background: #F4F4F5;
+  border-color: #FFFFFF;
+  box-shadow: 0 4px 20px rgba(255, 255, 255, 0.35);
+  transform: translateY(-1px);
+}
+
+.btn-3d-secondary {
+  background: #09090C;
+  color: #FFFFFF;
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.btn-3d-secondary:hover {
+  background: #141418;
+  border-color: #FFFFFF;
+  transform: translateY(-1px);
+}
+
+.btn-3d-success {
+  background: #FFFFFF;
+  color: #000000;
+  border-color: #FFFFFF;
+  box-shadow: 0 2px 14px rgba(255, 255, 255, 0.2);
+}
+
+.btn-3d-success:hover {
+  background: #E4E4E7;
+}
+
+.btn-3d-danger {
+  background: #09090C;
+  color: #FFFFFF;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.btn-3d-danger:hover {
+  background: #18181B;
+  border-color: #FFFFFF;
+}
+
+/* ========================================================
+   CAMERA BAY & TELEMETRY VITALS (ICU CONSOLE)
    ======================================================== */
 .vitals-hardware-bay {
-  background: #08080B;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  padding: 1.15rem;
-  margin-bottom: 1.25rem;
+  background: #07070A;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow-3d-card);
+  position: relative;
 }
 
 .bay-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.85rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .camera-hardware-lens {
   position: relative;
-  height: 200px;
-  border-radius: 10px;
+  height: 210px;
+  border-radius: 4px;
   background: #000000;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.95);
+}
+
+.camera-hardware-lens video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
 }
 
 .reticle-hud {
@@ -422,8 +687,8 @@ body {
   left: 50%;
   transform: translate(-50%, -50%);
   width: 140px;
-  height: 170px;
-  border: 1.5px dashed rgba(255, 255, 255, 0.4);
+  height: 175px;
+  border: 1.5px dashed rgba(255, 255, 255, 0.45);
   border-radius: 50% 50% 45% 45%;
   pointer-events: none;
   transition: all 0.25s ease;
@@ -434,7 +699,7 @@ body {
 
 .reticle-hud.locked {
   border: 2px solid #FFFFFF;
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.25), inset 0 0 10px rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 24px rgba(255, 255, 255, 0.35), inset 0 0 12px rgba(255, 255, 255, 0.2);
 }
 
 .reticle-status-badge {
@@ -442,149 +707,176 @@ body {
   top: 8px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 0.7rem;
-  font-weight: 700;
+  font-size: 0.62rem;
+  font-weight: 800;
   font-family: var(--font-mono);
-  padding: 3px 10px;
-  border-radius: 4px;
-  background: #000000;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.9);
   color: #FFFFFF;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  max-width: 220px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
 }
 
 .pulse-waveform-canvas {
   width: 100%;
-  height: 38px;
+  height: 42px;
   background: #000000;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  margin-top: 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  margin-top: 10px;
 }
 
 .oscilloscope-container-3d {
-  background: #050507;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
-  padding: 8px 12px;
-  margin-bottom: 10px;
+  background: #030305;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 4px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
 }
 
 .oscilloscope-canvas-3d {
   width: 100%;
-  height: 50px;
+  height: 52px;
   display: block;
-  border-radius: 4px;
+  border-radius: 2px;
   background: #000000;
 }
 
 .oscilloscope-legend {
   display: flex;
   justify-content: space-between;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-family: var(--font-mono);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   color: var(--zinc-400);
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .checklist-pill-bar {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
   margin-top: 8px;
 }
 
 .pill-check {
-  background: #060608;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 4px;
-  padding: 4px 6px;
-  font-size: 0.68rem;
+  flex: 1 1 calc(33.333% - 4px);
+  background: #050508;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  padding: 4px 4px;
+  font-size: 0.62rem;
   font-family: var(--font-mono);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   color: var(--zinc-400);
   text-align: center;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 3px;
 }
 
 .pill-check.pass {
   background: #FFFFFF;
   border-color: #FFFFFF;
   color: #000000;
-  font-weight: 700;
+  font-weight: 800;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.25);
 }
 
-/* Telemetry Vitals Grid */
+/* High-Density Telemetry Vitals Grid */
 .telemetry-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 10px;
-  margin-top: 1rem;
+  gap: 12px;
+  margin-top: 1.25rem;
 }
 
 .telemetry-card {
-  background: #09090C;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 10px;
-  padding: 12px;
+  background: #070709;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  padding: 14px 12px;
   text-align: center;
   position: relative;
   overflow: hidden;
+  transition: all 0.15s ease;
+}
+
+.telemetry-card:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
 }
 
 .telemetry-card.highlight {
   border-color: #FFFFFF;
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.16);
 }
 
 .telemetry-value {
   font-family: var(--font-mono);
-  font-size: 1.6rem;
-  font-weight: 700;
+  font-size: 1.75rem;
+  font-weight: 800;
   color: #FFFFFF;
   line-height: 1.1;
+  letter-spacing: -0.03em;
 }
 
 .telemetry-unit {
-  font-size: 0.72rem;
-  font-weight: 600;
+  font-size: 0.74rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
   color: var(--zinc-500);
   margin-left: 2px;
 }
 
 .telemetry-label {
   font-size: 0.68rem;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--zinc-400);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   font-family: var(--font-mono);
-  margin-top: 4px;
+  margin-top: 6px;
 }
 
 .telemetry-status {
-  font-size: 0.68rem;
-  font-weight: 600;
+  font-size: 0.66rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   color: var(--zinc-300);
-  margin-top: 2px;
+  margin-top: 3px;
 }
 
 /* ========================================================
-   BODY MAP
+   BODY MAP & ANATOMICAL TARGETING
    ======================================================== */
 .bodymap-hardware-box {
   background: var(--bg-card);
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  padding: 1.25rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 1.5rem;
   text-align: center;
 }
 
 .bodymap-svg-container {
   display: flex;
   justify-content: center;
-  margin: 1rem 0;
+  margin: 1.25rem 0;
 }
 
 .human-silhouette {
@@ -593,9 +885,9 @@ body {
 }
 
 .body-zone-target {
-  fill: #141418;
-  stroke: rgba(255, 255, 255, 0.25);
-  stroke-width: 1;
+  fill: #111116;
+  stroke: rgba(255, 255, 255, 0.28);
+  stroke-width: 1.2;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -608,19 +900,19 @@ body {
 .body-zone-target.selected {
   fill: #FFFFFF;
   stroke: #FFFFFF;
-  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.6));
 }
 
 /* ========================================================
-   VOICE & INPUTS
+   VOICE & TACTILE CHIPS
    ======================================================== */
 .voice-station-3d {
-  background: #09090C;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 12px;
-  padding: 1.25rem;
+  background: #070709;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 1.5rem;
   text-align: center;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.5rem;
 }
 
 .mic-tactile-button {
@@ -630,12 +922,12 @@ body {
   background: #FFFFFF;
   border: 1px solid #FFFFFF;
   color: #000000;
-  font-size: 1.6rem;
+  font-size: 1.5rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 18px rgba(255, 255, 255, 0.2);
   transition: all 0.15s ease;
 }
 
@@ -648,177 +940,95 @@ body {
   background: #000000;
   color: #FFFFFF;
   border: 2px solid #FFFFFF;
-  box-shadow: 0 0 25px rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 25px rgba(255, 255, 255, 0.5);
   animation: pulse-microphone 1.2s infinite;
 }
 
 @keyframes pulse-microphone {
   0% { transform: scale(1); }
-  50% { transform: scale(1.06); }
+  50% { transform: scale(1.08); }
   100% { transform: scale(1); }
-}
-
-.input-label-3d {
-  display: block;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--zinc-400);
-  margin-bottom: 6px;
-  text-align: left;
-}
-
-.input-text-3d {
-  width: 100%;
-  background: var(--bg-surface-inset);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
-  padding: 10px 14px;
-  color: #FFFFFF;
-  font-family: var(--font-sans);
-  font-size: 0.88rem;
-  outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
-}
-
-.input-text-3d:focus {
-  border-color: #FFFFFF;
-  box-shadow: 0 0 0 1px #FFFFFF;
 }
 
 .chip-rack {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 6px;
+  margin-top: 8px;
 }
 
 .tactile-chip {
-  background: #0D0D10;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #0B0B0E;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   color: var(--zinc-300);
   padding: 6px 14px;
-  border-radius: 6px;
-  font-size: 0.78rem;
-  font-weight: 600;
+  border-radius: 3px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   cursor: pointer;
   transition: all 0.15s;
 }
 
 .tactile-chip:hover {
-  border-color: var(--zinc-500);
+  border-color: #FFFFFF;
   color: #FFFFFF;
+  transform: translateY(-1px);
 }
 
 .tactile-chip.selected {
   background: #FFFFFF;
   border-color: #FFFFFF;
   color: #000000;
-  font-weight: 700;
+  font-weight: 800;
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
 }
 
 /* ========================================================
-   BUTTONS
-   ======================================================== */
-.btn-3d {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 10px 20px;
-  font-family: var(--font-sans);
-  font-size: 0.86rem;
-  font-weight: 700;
-  border-radius: 8px;
-  cursor: pointer;
-  border: 1px solid transparent;
-  transition: all 0.15s ease;
-  text-decoration: none;
-}
-
-.btn-3d:active {
-  transform: translateY(1px);
-}
-
-.btn-3d-primary {
-  background: #FFFFFF;
-  color: #000000;
-  border-color: #FFFFFF;
-  box-shadow: 0 2px 10px rgba(255, 255, 255, 0.15);
-}
-
-.btn-3d-primary:hover {
-  background: #E4E4E7;
-  border-color: #E4E4E7;
-}
-
-.btn-3d-secondary {
-  background: #09090B;
-  color: #FFFFFF;
-  border-color: rgba(255, 255, 255, 0.15);
-}
-
-.btn-3d-secondary:hover {
-  background: #18181B;
-  border-color: #FFFFFF;
-}
-
-.btn-3d-success {
-  background: #FFFFFF;
-  color: #000000;
-  border-color: #FFFFFF;
-}
-
-.btn-3d-success:hover {
-  background: #E4E4E7;
-}
-
-.btn-3d-danger {
-  background: #09090B;
-  color: #FFFFFF;
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-.btn-3d-danger:hover {
-  background: #18181B;
-  border-color: #FFFFFF;
-}
-
-/* ========================================================
-   DROPZONE & RECORDS
+   DOCUMENT OCR SCANNER BED & ARCHIVE
    ======================================================== */
 .scanner-dropzone-3d {
-  background: #050507;
-  border: 1px dashed rgba(255, 255, 255, 0.25);
-  border-radius: 12px;
-  padding: 2.25rem 1.5rem;
+  background: #040406;
+  border: 1.5px dashed rgba(255, 255, 255, 0.28);
+  border-radius: 6px;
+  padding: 2.5rem 1.75rem;
   text-align: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
 }
 
 .scanner-dropzone-3d:hover,
 .scanner-dropzone-3d.dragover {
   border-color: #FFFFFF;
-  background: #0D0D11;
-  box-shadow: 0 0 24px rgba(255, 255, 255, 0.05);
+  background: #0B0B10;
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.08);
 }
 
 .medication-card-3d {
-  background: #0A0A0C;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #08080B;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-left: 3px solid #FFFFFF;
-  border-radius: 8px;
+  border-radius: 4px;
   padding: 10px 14px;
   margin-bottom: 8px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  transition: all 0.15s ease;
+}
+
+.medication-card-3d:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateX(2px);
 }
 
 .lab-flag-item-3d {
-  background: #0C0C0F;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 6px;
+  background: #0A0A0D;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 3px;
   padding: 8px 12px;
   margin-bottom: 6px;
   display: flex;
@@ -827,41 +1037,43 @@ body {
 }
 
 /* ========================================================
-   DOCTOR OPD WORKSPACE
+   DOCTOR OPD WORKSPACE (HIGH-DENSITY MISSION CONTROL)
    ======================================================== */
 .doctor-layout-3d {
   display: grid;
-  grid-template-columns: 320px 1fr;
+  grid-template-columns: 330px 1fr;
   gap: 1.5rem;
   align-items: start;
 }
 
 .queue-panel-3d {
   background: var(--bg-card);
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
   padding: 1.25rem;
+  box-shadow: var(--shadow-3d-card);
 }
 
 .queue-patient-card-3d {
-  background: #0E0E12;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 8px;
+  background: #09090C;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 4px;
   padding: 12px;
   margin-bottom: 8px;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.15s ease;
 }
 
 .queue-patient-card-3d:hover {
-  background: #15151A;
-  border-color: rgba(255, 255, 255, 0.2);
+  background: #121217;
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
 }
 
 .queue-patient-card-3d.active {
-  background: #18181E;
+  background: #15151B;
   border: 1.5px solid #FFFFFF;
-  box-shadow: 0 0 16px rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 18px rgba(255, 255, 255, 0.1);
 }
 
 .queue-patient-card-3d.emergency {
@@ -870,9 +1082,9 @@ body {
 }
 
 .hdi-alert-box-3d {
-  background: #0E0E11;
+  background: #0A0A0D;
   border: 1px solid #FFFFFF;
-  border-radius: 10px;
+  border-radius: 4px;
   padding: 1.25rem;
   margin-bottom: 1.25rem;
 }
@@ -880,9 +1092,9 @@ body {
 .doctor-tabs-3d {
   display: flex;
   gap: 6px;
-  background: #070709;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
+  background: #050508;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
   padding: 4px;
   margin-bottom: 1.25rem;
   overflow-x: auto;
@@ -893,12 +1105,15 @@ body {
   align-items: center;
   gap: 8px;
   padding: 7px 14px;
-  border-radius: 6px;
+  border-radius: 3px;
   border: 1px solid transparent;
   background: transparent;
   color: var(--zinc-400);
-  font-size: 0.82rem;
-  font-weight: 600;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   cursor: pointer;
   transition: all 0.15s ease;
   white-space: nowrap;
@@ -906,13 +1121,14 @@ body {
 
 .doctor-tab-btn:hover {
   color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .doctor-tab-btn.active {
   background: #FFFFFF;
   color: #000000;
-  font-weight: 700;
-  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.15);
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.2);
 }
 
 .doc-kpi-ribbon {
@@ -923,33 +1139,36 @@ body {
 }
 
 .doc-kpi-card {
-  background: #09090C;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
-  padding: 10px 14px;
+  background: #070709;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  padding: 12px 14px;
   text-align: center;
 }
 
 .doc-kpi-val {
   font-family: var(--font-mono);
-  font-size: 1.35rem;
+  font-size: 1.45rem;
   font-weight: 800;
   color: #FFFFFF;
+  letter-spacing: -0.02em;
 }
 
 .doc-kpi-lbl {
-  font-size: 0.68rem;
+  font-size: 0.66rem;
   font-family: var(--font-mono);
+  font-weight: 700;
   color: var(--zinc-400);
   text-transform: uppercase;
-  margin-top: 2px;
+  letter-spacing: 0.08em;
+  margin-top: 3px;
 }
 
 .rx-table-container {
   overflow-x: auto;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: #09090C;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #07070A;
   margin-top: 10px;
 }
 
@@ -960,20 +1179,21 @@ body {
 }
 
 .rx-table-3d th {
-  background: #111114;
+  background: #0F0F14;
   color: #FFFFFF;
   text-align: left;
-  padding: 10px 14px;
+  padding: 11px 14px;
   font-family: var(--font-mono);
-  font-weight: 700;
+  font-weight: 800;
   text-transform: uppercase;
-  font-size: 0.72rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  letter-spacing: 0.06em;
+  font-size: 0.7rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .rx-table-3d td {
-  padding: 10px 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 11px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   color: var(--zinc-200);
   vertical-align: middle;
 }
@@ -990,9 +1210,9 @@ body {
 }
 
 .doc-card-preview-3d {
-  background: #09090C;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 10px;
+  background: #08080B;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -1005,7 +1225,7 @@ body {
 }
 
 .doc-card-thumb-container {
-  height: 170px;
+  height: 175px;
   background: #000000;
   position: relative;
   overflow: hidden;
@@ -1024,7 +1244,7 @@ body {
 .doc-card-thumb-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.65);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1037,7 +1257,7 @@ body {
 }
 
 .doc-card-body {
-  padding: 10px 12px;
+  padding: 10px 14px;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -1047,14 +1267,16 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: #141418;
+  background: #0F0F14;
   border: 1px solid rgba(255, 255, 255, 0.3);
   color: #FFFFFF;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-family: var(--font-mono);
-  font-weight: 700;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   padding: 3px 8px;
-  border-radius: 4px;
+  border-radius: 2px;
   margin-top: 6px;
 }
 
@@ -1069,9 +1291,12 @@ body {
   border: 1px solid #FFFFFF;
   color: #000000;
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   padding: 4px 10px;
-  border-radius: 6px;
+  border-radius: 3px;
   cursor: pointer;
   transition: all 0.15s;
   display: inline-flex;
@@ -1087,8 +1312,8 @@ body {
 .modal-backdrop-3d {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.88);
-  backdrop-filter: blur(12px);
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(14px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1097,46 +1322,49 @@ body {
 }
 
 .modal-content-3d {
-  background: #09090C;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 14px;
-  padding: 1.5rem;
+  background: #070709;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 6px;
+  padding: 1.75rem;
   box-shadow: var(--shadow-3d-elevated);
   width: 100%;
   max-width: 850px;
   max-height: 88vh;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
-/* Utility Pills */
+/* Technical Badges & Utility Chips */
 .pill-3d {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 3px 10px;
-  border-radius: 9999px;
-  font-size: 0.7rem;
+  padding: 3px 8px;
+  border-radius: 2px;
+  font-size: 0.68rem;
   font-family: var(--font-mono);
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .pill-3d-emerald {
   background: #FFFFFF;
   border: 1px solid #FFFFFF;
   color: #000000;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .pill-3d-crimson {
   background: #141418;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.35);
   color: #FFFFFF;
 }
 
 .pill-3d-blue {
   background: #141418;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   color: #F4F4F5;
 }
 
@@ -1153,10 +1381,10 @@ body {
 }
 
 .doctor-toast-3d {
-  background: #111114;
+  background: #0E0E12;
   border: 1px solid #FFFFFF;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
-  border-radius: 8px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.85);
+  border-radius: 4px;
   padding: 12px 16px;
   color: #FFFFFF;
   max-width: 420px;
@@ -1170,7 +1398,7 @@ body {
 }
 
 /* ========================================================
-   OPD TOKEN SLIP & TICKET DESIGN (MINIMALIST MONOCHROME)
+   OPD TOKEN SLIP & TICKET DESIGN (SWISS MINIMALIST BRUTALISM)
    ======================================================== */
 .opd-ticket-wrapper {
   max-width: 580px;
@@ -1179,18 +1407,18 @@ body {
 
 .opd-ticket-card {
   background: #000000;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 16px;
-  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.95);
   position: relative;
   overflow: hidden;
   text-align: left;
 }
 
 .ticket-header-band {
-  background: #0D0D10;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 1rem 1.5rem;
+  background: #09090C;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 1.25rem 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1207,7 +1435,7 @@ body {
   height: 36px;
   background: #FFFFFF;
   color: #000000;
-  border-radius: 6px;
+  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1219,12 +1447,13 @@ body {
   font-size: 0.82rem;
   font-weight: 800;
   color: #FFFFFF;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
 .ticket-clinic-subtitle {
-  font-size: 0.68rem;
+  font-size: 0.66rem;
+  font-family: var(--font-mono);
   color: var(--zinc-400);
   letter-spacing: 0.03em;
 }
@@ -1236,10 +1465,12 @@ body {
   background: #FFFFFF;
   color: #000000;
   padding: 3px 8px;
-  border-radius: 4px;
+  border-radius: 2px;
   font-size: 0.68rem;
-  font-weight: 700;
+  font-weight: 800;
   font-family: var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .ticket-status-dot {
@@ -1254,9 +1485,9 @@ body {
 }
 
 .ticket-token-hero {
-  background: #08080A;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
+  background: #060608;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
   padding: 1.25rem 1.5rem;
   display: flex;
   justify-content: space-between;
@@ -1266,20 +1497,20 @@ body {
 
 .token-label-text {
   font-size: 0.68rem;
-  font-weight: 700;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   font-family: var(--font-mono);
   color: var(--zinc-400);
 }
 
 .token-number-hero {
   font-family: var(--font-mono);
-  font-size: 3.2rem;
+  font-size: 3.4rem;
   font-weight: 900;
   color: #FFFFFF;
   line-height: 1;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.04em;
   margin: 4px 0;
 }
 
@@ -1287,21 +1518,22 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: #141418;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: #111116;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   padding: 3px 8px;
-  border-radius: 4px;
-  font-size: 0.72rem;
+  border-radius: 2px;
+  font-size: 0.7rem;
   color: #FFFFFF;
-  font-weight: 600;
+  font-weight: 700;
   font-family: var(--font-mono);
+  letter-spacing: 0.04em;
 }
 
 .token-cabin-pill {
-  background: #111114;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 6px 12px;
-  border-radius: 6px;
+  background: #0E0E12;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 8px 14px;
+  border-radius: 3px;
   text-align: right;
 }
 
@@ -1309,12 +1541,13 @@ body {
   font-size: 0.65rem;
   color: var(--zinc-400);
   text-transform: uppercase;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   font-family: var(--font-mono);
 }
 
 .token-cabin-value {
-  font-size: 1.05rem;
+  font-size: 1.15rem;
   font-weight: 800;
   font-family: var(--font-mono);
   color: #FFFFFF;
@@ -1334,6 +1567,7 @@ body {
   border-radius: 50%;
   position: relative;
   z-index: 2;
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .ticket-notch-left {
@@ -1346,16 +1580,16 @@ body {
 
 .ticket-tear-line {
   flex: 1;
-  border-top: 1px dashed rgba(255, 255, 255, 0.2);
+  border-top: 1.5px dashed rgba(255, 255, 255, 0.25);
 }
 
 .ticket-meta-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
-  background: #08080A;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
+  background: #060608;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
   padding: 12px 14px;
   margin-bottom: 1.25rem;
 }
@@ -1366,25 +1600,25 @@ body {
 }
 
 .ticket-meta-label {
-  font-size: 0.68rem;
+  font-size: 0.66rem;
   color: var(--zinc-400);
   text-transform: uppercase;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   font-family: var(--font-mono);
 }
 
 .ticket-meta-value {
-  font-size: 0.84rem;
+  font-size: 0.86rem;
   color: #FFFFFF;
   font-weight: 700;
   margin-top: 2px;
 }
 
 .ticket-queue-section {
-  background: #08080A;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
+  background: #060608;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
   padding: 12px 14px;
   margin-bottom: 1.25rem;
 }
@@ -1397,22 +1631,24 @@ body {
 }
 
 .ticket-queue-title {
-  font-size: 0.72rem;
-  font-weight: 700;
+  font-size: 0.7rem;
+  font-weight: 800;
   color: var(--zinc-400);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   font-family: var(--font-mono);
 }
 
 .ticket-wait-pill {
-  font-size: 0.72rem;
-  font-weight: 700;
+  font-size: 0.7rem;
+  font-weight: 800;
   font-family: var(--font-mono);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   color: #000000;
   background: #FFFFFF;
   padding: 2px 8px;
-  border-radius: 4px;
+  border-radius: 2px;
 }
 
 .ticket-queue-stepper {
@@ -1420,7 +1656,7 @@ body {
   align-items: center;
   justify-content: space-between;
   position: relative;
-  margin: 10px 0 6px 0;
+  margin: 12px 0 6px 0;
 }
 
 .ticket-queue-stepper::before {
@@ -1430,22 +1666,22 @@ body {
   left: 20px;
   right: 20px;
   height: 1px;
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.18);
   z-index: 1;
 }
 
 .queue-step-node {
   position: relative;
   z-index: 2;
-  background: #141418;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: #0E0E12;
+  border: 1px solid rgba(255, 255, 255, 0.22);
   width: 28px;
   height: 28px;
-  border-radius: 50%;
+  border-radius: 3px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 800;
   font-family: var(--font-mono);
   color: var(--zinc-400);
@@ -1455,39 +1691,48 @@ body {
   background: #FFFFFF;
   border-color: #FFFFFF;
   color: #000000;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.35);
 }
 
 .queue-step-node.patient-target {
   background: #FFFFFF;
   border-color: #FFFFFF;
   color: #000000;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.35);
 }
 
 .queue-step-caption {
   display: flex;
   justify-content: space-between;
-  font-size: 0.68rem;
+  font-size: 0.66rem;
   color: var(--zinc-500);
-  font-weight: 600;
+  font-weight: 700;
   font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   margin-top: 6px;
 }
 
 .ticket-sms-box {
-  background: #08080A;
+  background: #060608;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
-  padding: 10px 12px;
+  border-radius: 4px;
+  padding: 10px 14px;
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: 12px;
   margin-bottom: 1.25rem;
 }
 
 .ticket-sms-icon {
-  font-size: 1.1rem;
-  line-height: 1;
-  color: #FFFFFF;
+  font-size: 0.74rem;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  color: #000000;
+  background: #FFFFFF;
+  padding: 2px 6px;
+  border-radius: 2px;
+  letter-spacing: 0.05em;
   margin-top: 2px;
 }
 
@@ -1497,13 +1742,16 @@ body {
 
 .ticket-sms-title {
   font-size: 0.74rem;
-  font-weight: 700;
+  font-weight: 800;
   color: #FFFFFF;
+  font-family: var(--font-mono);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   margin-bottom: 2px;
 }
 
 .ticket-sms-desc {
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   color: var(--zinc-300);
   line-height: 1.4;
   margin: 0;
@@ -1511,23 +1759,24 @@ body {
 
 .ticket-barcode-wrap {
   text-align: center;
-  padding: 10px 0 2px 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 12px 0 4px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .barcode-code-text {
   font-family: var(--font-mono);
   font-size: 0.7rem;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.2em;
   color: var(--zinc-400);
-  margin-top: 4px;
+  margin-top: 6px;
+  font-weight: 700;
 }
 
 .ticket-actions-row {
   display: grid;
   grid-template-columns: 1.2fr 1fr;
   gap: 10px;
-  margin-top: 1.25rem;
+  margin-top: 1.5rem;
 }
 
 .ticket-footer-sublinks {
@@ -1536,15 +1785,18 @@ body {
   align-items: center;
   margin-top: 14px;
   padding-top: 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .ticket-sublink-btn {
   background: none;
   border: none;
   color: var(--zinc-400);
-  font-size: 0.74rem;
-  font-weight: 600;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   cursor: pointer;
   text-decoration: underline;
   transition: color 0.15s ease;
@@ -1554,7 +1806,9 @@ body {
   color: #FFFFFF;
 }
 
-/* Responsive */
+/* ========================================================
+   RESPONSIVE LAYOUT BREAKPOINTS
+   ======================================================== */
 @media (max-width: 1024px) {
   .kiosk-stepper { grid-template-columns: 1fr 1fr; }
   .telemetry-grid { grid-template-columns: repeat(3, 1fr); }
@@ -1564,13 +1818,20 @@ body {
 @media (max-width: 640px) {
   .telemetry-grid { grid-template-columns: 1fr 1fr; }
   .kiosk-stepper { grid-template-columns: 1fr; }
+  .navbar { padding: 0.75rem 1.25rem; }
+  .kiosk-quick-bar { padding: 0.45rem 1.25rem; flex-direction: column; gap: 8px; align-items: flex-start; }
 }
 
-/* Print */
+/* ========================================================
+   SWISS CLINICAL PRINT STYLES
+   ======================================================== */
 @media print {
   body {
     background: #FFFFFF !important;
     color: #000000 !important;
+  }
+  body::before {
+    display: none !important;
   }
   .navbar, .kiosk-quick-bar, .kiosk-stepper, .ticket-actions-row, .ticket-footer-sublinks, .mode-toggle-group, .lang-select {
     display: none !important;
