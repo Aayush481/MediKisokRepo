@@ -11,15 +11,15 @@ import { diseaseExtractor } from "./diseaseExtractor.js";
 
 const DEFAULT_API_KEY = typeof window !== "undefined" && window.__GEMINI_API_KEY__ ? window.__GEMINI_API_KEY__ : "";
 const CANDIDATE_MODELS = [
-  "gemini-3.1-flash-lite",
   "gemini-flash-lite-latest",
-  "gemini-3.5-flash-lite"
+  "gemini-3.5-flash-lite",
+  "gemini-3.1-flash-lite"
 ];
 
 class GeminiVisionService {
   constructor() {
     this.apiKey = DEFAULT_API_KEY;
-    this.model = "gemini-3.1-flash-lite";
+    this.model = "gemini-flash-lite-latest";
   }
 
   /**
@@ -52,7 +52,7 @@ class GeminiVisionService {
           reportText: rawText,
           reportType: "Auto Detect"
         }),
-        signal: AbortSignal.timeout(20000)
+        signal: AbortSignal.timeout(25000)
       });
 
       if (res.ok) {
@@ -390,6 +390,7 @@ Always finish with: **NOT FOR CLINICAL USE WITHOUT PHYSICIAN REVIEW**`;
         icon: "",
         badgeColor: "pill-danger",
         confidence: parsed.confidence || "99.9%",
+        previewUrl: previewUrl || null,
         rootCause: parsed.rootCause || "No authentic clinical prescriptions, laboratory biomarkers, radiographs, or ECGs detected in uploaded file.",
         errorMessage: parsed.errorMessage || `The file "${fileName}" is not an authentic clinical record.`
       };

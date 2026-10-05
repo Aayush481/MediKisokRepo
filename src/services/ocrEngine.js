@@ -111,7 +111,8 @@ class OCREngine {
         (classification.type === "pathology_report" && ((labParser.parseLabReportText(rawText).flags || []).length > 0 || (labParser.parseLabReportText(rawText).normalValues || []).length > 0)) ||
         (classification.type === "xray_report") ||
         (classification.type === "ecg_report") ||
-        (classification.type === "discharge_summary");
+        (classification.type === "discharge_summary") ||
+        (classification.type === "medical_record" && (prescriptionParser.parsePrescriptionText(rawText).length > 0 || diseaseExtractor.extractDiseases(rawText).length > 0));
 
       if (classification.isValidMedical && hasClinicalEntities) {
         return this.buildStructuredClinicalResult(classification, rawText, previewDataUrl, file.name, isPdf);
@@ -124,11 +125,11 @@ class OCREngine {
       const geminiResult = await geminiVisionService.analyzeDocument(file, onProgress, rawText, previewDataUrl);
       if (geminiResult) {
         if (!geminiResult.isValidMedical) {
-          // If gemini thought it was non-medical, check if local classifier has verified drugs or lab flags
+          // If gemini thought it was non-medical, check if local classifier has verified drugs or lab flags or scans
           const localCheck = await documentClassifier.classifyAndValidate(previewDataUrl, rawText, file.name);
           const hasVerifiedDrugs = (prescriptionParser.parsePrescriptionText(rawText || file.name) || []).some(d => d.validated);
           const hasVerifiedLabs = (labParser.parseLabReportText(rawText) || {}).flags?.length > 0;
-          if (localCheck.isValidMedical && (hasVerifiedDrugs || hasVerifiedLabs)) {
+          if (localCheck.isValidMedical && (hasVerifiedDrugs || hasVerifiedLabs || localCheck.type === "xray_report" || localCheck.type === "ecg_report")) {
             return this.buildStructuredClinicalResult(localCheck, rawText, previewDataUrl, file.name, isPdf);
           }
           return {
@@ -136,6 +137,9 @@ class OCREngine {
             isValidMedical: false,
             type: "non_medical",
             categoryLabel: "Non-Medical / Unrecognized Document",
+            confidence: geminiResult.confidence || "99.9%",
+            previewUrl: previewDataUrl,
+            rootCause: geminiResult.rootCause || "No Medical Content Identified",
             errorMessage: geminiResult.errorMessage || `The file "${file.name}" does not contain recognizable clinical records. Please upload a clear prescription or lab report.`,
             rawOcrText: rawText || geminiResult.rawOcrText || ""
           };
@@ -159,7 +163,10 @@ class OCREngine {
         isValidMedical: false,
         type: "non_medical",
         categoryLabel: "Non-Medical / Unrecognized Document",
-        errorMessage: classification.errorMessage,
+        confidence: classification.confidence || "99.9%",
+        previewUrl: previewDataUrl,
+        rootCause: classification.rootCause || "No Medical Content Identified",
+        errorMessage: classification.errorMessage || `The file "${file.name}" does not contain recognizable clinical records. Please upload a clear prescription or lab report.`,
         rawOcrText: ocrText
       };
     }

@@ -45,10 +45,10 @@ class MedicalDocumentClassifier {
     const hasEcgLeads = /\b(lead\s*(?:i{1,3}|avr|avl|avf|v[1-6])|leads?\s*v[1-6]|sinus\s*(?:rhythm|tachycardia|bradycardia)|st\s*segment|pr\s*interval|qrs\s*(?:duration|complex)|qt[c]?\s*interval)\b/i.test(text);
     const hasEcgSignal = visual.hasEcgGrid || (hasEcgHeader && hasEcgLeads);
 
-    // B. X-Ray Radiographs: True monochrome radiography OR official radiology report with view & skeleton
-    const hasRadiologyHeader = /\b(department\s*of\s*radiology|radiological\s*(?:investigation|report)|digital\s*radiograph[y]?|x-ray|radiograph|cxr\b|computed\s*tomography|ct\s*scan|mri\s*scan|magnetic\s*resonance)\b/i.test(text);
-    const hasRadiologyView = /\b(ap\s*(?:&|and)?\s*lateral|ap\s*views?|pa\s*views?|lateral\s*views?|oblique\s*views?|weight\s*bearing\s*views?|radiological\s*findings|findings:?|impression:?)\b/i.test(text);
-    const hasSkeletalSite = /\b(knee\s*joint|shoulder\s*joint|chest\s*and\s*lungs|thorax|cervical\s*spine|lumbar\s*spine|pelvis|hip\s*joint|femur|tibia|fibula|humerus|clavicle|radius|ulna)\b/i.test(text);
+    // B. X-Ray Radiographs: True monochrome radiography OR official radiology report with view & anatomical site
+    const hasRadiologyHeader = /\b(department\s*of\s*radiology|radiological\s*(?:investigation|report)|digital\s*radiograph[y]?|x-ray|radiograph|radiology|cxr\b|computed\s*tomography|ct\s*scan|mri\s*scan|magnetic\s*resonance|ultrasound|sonography|usg\b)\b/i.test(text);
+    const hasRadiologyView = /\b(ap\s*(?:&|and)?\s*lateral|ap\s*views?|pa\s*views?|lateral\s*views?|oblique\s*views?|weight\s*bearing\s*views?|radiological\s*findings|findings:?|impression:?|view\b)\b/i.test(text);
+    const hasSkeletalSite = /\b(knee|shoulder|chest|lungs?|pulmonary|thorax|thoracic|cervical|lumbar|spine|pelvis|pelvic|hip|femur|tibia|fibula|humerus|clavicle|scapula|radius|ulna|hand|wrist|ankle|foot|skull|brain|abdomen)\b/i.test(text);
     const hasXraySignal = (visual.isMonochromeRadiograph && !visual.isColorfulPhoto) ||
       (hasRadiologyHeader && hasRadiologyView && hasSkeletalSite && !visual.isColorfulPhoto);
 

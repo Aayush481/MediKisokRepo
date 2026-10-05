@@ -6,9 +6,9 @@ import Tesseract from 'tesseract.js';
 
 const GEMINI_API_KEY = process.env.GOOGLE_API_KEY || "";
 const CANDIDATE_MODELS = [
-  "gemini-3.1-flash-lite",
   "gemini-flash-lite-latest",
-  "gemini-3.5-flash-lite"
+  "gemini-3.5-flash-lite",
+  "gemini-3.1-flash-lite"
 ];
 
 export class ClinicalDocController {
@@ -142,7 +142,7 @@ Always finish with: **NOT FOR CLINICAL USE WITHOUT PHYSICIAN REVIEW**`;
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ contents: [{ role: 'user', parts: parts }] }),
-              signal: AbortSignal.timeout(20000)
+              signal: AbortSignal.timeout(12000)
             });
 
             if (geminiRes.ok) {
@@ -479,7 +479,7 @@ Objectives:
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ contents: [{ role: 'user', parts }] }),
-              signal: AbortSignal.timeout(20000)
+              signal: AbortSignal.timeout(12000)
             });
 
             if (geminiRes.ok) {
