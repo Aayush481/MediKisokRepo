@@ -25,17 +25,17 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 // API Routes
 app.use('/api', apiRoutes);
 
-// Static Asset Serving (Frontend & Root Assets)
-app.use(express.static(path.join(rootDir, 'frontend')));
-app.use(express.static(rootDir));
+// Static Asset Serving (Frontend & Models)
+const frontendDir = path.join(rootDir, 'frontend');
+app.use(express.static(frontendDir));
 app.use('/models', express.static(path.join(rootDir, 'models')));
 app.use('/public/models', express.static(path.join(rootDir, 'models')));
-app.use('/assets', express.static(path.join(rootDir, 'assets')));
-app.use('/src', express.static(path.join(rootDir, 'src')));
+app.use('/assets', express.static(path.join(frontendDir, 'assets')));
+app.use('/src', express.static(path.join(frontendDir, 'src')));
 
 // Catch-all SPA Handler
 app.use((req, res) => {
-  res.sendFile(path.join(rootDir, 'frontend', 'index.html'));
+  res.sendFile(path.join(frontendDir, 'index.html'));
 });
 
 // Start Server (only when running as standalone process, not inside serverless environments)

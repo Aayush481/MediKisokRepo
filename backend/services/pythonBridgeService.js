@@ -23,7 +23,7 @@ export class PythonBridgeService {
         });
       }
 
-      const scriptPath = path.join(rootDir, 'python', 'face_detector.py');
+      const scriptPath = path.join(rootDir, 'backend', 'python', 'face_detector.py');
       const pyProcess = spawn('python', [scriptPath, '--stdin'], {
         cwd: rootDir,
         stdio: ['pipe', 'pipe', 'pipe']

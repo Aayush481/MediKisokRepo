@@ -5,9 +5,9 @@
  * 2. Authentic Pathology reports, Prescriptions, X-Rays, and ECGs are ACCURATELY CLASSIFIED (isValidMedical: true).
  */
 
-import { documentClassifier } from "./src/services/medicalDocumentClassifier.js";
-import { labParser } from "./src/services/labParser.js";
-import { prescriptionParser } from "./src/services/prescriptionParser.js";
+import { documentClassifier } from "./frontend/src/services/medicalDocumentClassifier.js";
+import { labParser } from "./frontend/src/services/labParser.js";
+import { prescriptionParser } from "./frontend/src/services/prescriptionParser.js";
 
 console.log("===============================================================================");
 console.log("🧪 TESTING NON-MEDICAL DOCUMENT REJECTION & MEDICAL AUTHENTICITY DETECTION");

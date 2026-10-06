@@ -1,5 +1,5 @@
 // Test Overlap-Add POS and CHROM algorithm vs simple global POS
-import { rppgService } from "./src/services/rppgVitalsService.js";
+import { rppgService } from "./frontend/src/services/rppgVitalsService.js";
 
 function calculateWindowedPOS(red, green, blue, Fs = 30, windowDurationSec = 1.6, stepDurationSec = 0.2) {
   const N = red.length;

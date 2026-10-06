@@ -1,4 +1,4 @@
-import { rppgService } from './src/services/rppgVitalsService.js';
+import { rppgService } from './frontend/src/services/rppgVitalsService.js';
 
 console.log("=== Testing True Optical Respiration Rate & HRV Precision ===");
 

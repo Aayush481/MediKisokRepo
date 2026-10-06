@@ -1,5 +1,5 @@
 // Test prescription parsing improvements
-import { prescriptionParser } from "./src/services/prescriptionParser.js";
+import { prescriptionParser } from "./frontend/src/services/prescriptionParser.js";
 
 const testCases = [
   {

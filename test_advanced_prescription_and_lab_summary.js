@@ -4,8 +4,8 @@
  * Dynamic Tabular Analyte Extraction, and Zero-Hallucination Clinical Summarization.
  */
 
-import { prescriptionParser } from './src/services/prescriptionParser.js';
-import { labParser } from './src/services/labParser.js';
+import { prescriptionParser } from './frontend/src/services/prescriptionParser.js';
+import { labParser } from './frontend/src/services/labParser.js';
 
 console.log("===============================================================================");
 console.log("🧪 RUNNING COMPREHENSIVE PRESCRIPTION & PATHOLOGY SUMMARIZATION TEST SUITE");

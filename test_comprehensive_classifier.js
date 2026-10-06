@@ -1,7 +1,7 @@
-import { documentClassifier } from "./src/services/medicalDocumentClassifier.js";
-import { prescriptionParser } from "./src/services/prescriptionParser.js";
-import { labParser } from "./src/services/labParser.js";
-import { xrayAnalyzer } from "./src/services/xrayAnalyzer.js";
+import { documentClassifier } from "./frontend/src/services/medicalDocumentClassifier.js";
+import { prescriptionParser } from "./frontend/src/services/prescriptionParser.js";
+import { labParser } from "./frontend/src/services/labParser.js";
+import { xrayAnalyzer } from "./frontend/src/services/xrayAnalyzer.js";
 
 console.log("=== COMPREHENSIVE MEDICAL DOCUMENT CLASSIFIER & ROOT CAUSE TEST ===");
 

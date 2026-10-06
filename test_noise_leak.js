@@ -1,6 +1,6 @@
 // Comprehensive evaluation across various heart rates with strong ambient noise & 1Hz monitor flicker
 
-import { rppgService } from "./src/services/rppgVitalsService.js";
+import { rppgService } from "./frontend/src/services/rppgVitalsService.js";
 
 const rates = [68, 74, 82, 88, 94, 102];
 console.log("=== MULTI-RATE TEST (Testing Real-World Noise) ===");

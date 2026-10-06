@@ -3,7 +3,7 @@
  * Analyte Disambiguation (Platelet vs MPV), and Organ-System Syndromic Summarization.
  */
 
-import { labParser, ORGAN_SYSTEMS } from './src/services/labParser.js';
+import { labParser, ORGAN_SYSTEMS } from './frontend/src/services/labParser.js';
 
 console.log("===============================================================================");
 console.log("🧪 TESTING UNIT NORMALIZATION, BIOLOGICAL PLAUSIBILITY & SYNDROMIC GROUPING");

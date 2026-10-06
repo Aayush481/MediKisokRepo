@@ -6,10 +6,10 @@
  * 3. Clinical Summary Parser aggregates all multi-document diagnostic findings, impressions, and organ systems.
  */
 
-import { prescriptionParser } from "./src/services/prescriptionParser.js";
-import { labParser } from "./src/services/labParser.js";
-import { clinicalParser } from "./src/services/clinicalParser.js";
-import { documentClassifier } from "./src/services/medicalDocumentClassifier.js";
+import { prescriptionParser } from "./frontend/src/services/prescriptionParser.js";
+import { labParser } from "./frontend/src/services/labParser.js";
+import { clinicalParser } from "./frontend/src/services/clinicalParser.js";
+import { documentClassifier } from "./frontend/src/services/medicalDocumentClassifier.js";
 
 console.log("===============================================================================");
 console.log("🧪 RUNNING MEDICATION ISOLATION & DOCTOR SUMMARY TEST SUITE");

@@ -1,4 +1,4 @@
-import { prescriptionParser } from "./src/services/prescriptionParser.js";
+import { prescriptionParser } from "./frontend/src/services/prescriptionParser.js";
 
 // Test samples:
 const sample1 = `

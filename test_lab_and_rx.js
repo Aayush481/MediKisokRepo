@@ -1,7 +1,7 @@
-import { prescriptionParser } from './src/services/prescriptionParser.js';
-import { documentClassifier } from './src/services/medicalDocumentClassifier.js';
-import { geminiVisionService } from './src/services/geminiVisionService.js';
-import { ocrEngine } from './src/services/ocrEngine.js';
+import { prescriptionParser } from './frontend/src/services/prescriptionParser.js';
+import { documentClassifier } from './frontend/src/services/medicalDocumentClassifier.js';
+import { geminiVisionService } from './frontend/src/services/geminiVisionService.js';
+import { ocrEngine } from './frontend/src/services/ocrEngine.js';
 
 async function runTests() {
   console.log("=================================================================");

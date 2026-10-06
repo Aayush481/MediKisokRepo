@@ -1,6 +1,6 @@
-import { prescriptionParser } from './src/services/prescriptionParser.js';
-import { documentClassifier } from './src/services/medicalDocumentClassifier.js';
-import { geminiVisionService } from './src/services/geminiVisionService.js';
+import { prescriptionParser } from './frontend/src/services/prescriptionParser.js';
+import { documentClassifier } from './frontend/src/services/medicalDocumentClassifier.js';
+import { geminiVisionService } from './frontend/src/services/geminiVisionService.js';
 
 async function testPrescriptions() {
   console.log("=== RUNNING END-TO-END PRESCRIPTION EXTRACTION & IDENTIFICATION TESTS ===\n");

@@ -12,7 +12,10 @@ import cv2
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 
-from python.face_detector import PythonFaceDetector
+try:
+    from backend.python.face_detector import PythonFaceDetector
+except ImportError:
+    from python.face_detector import PythonFaceDetector
 
 print("=== RUNNING PYTHON FACE DETECTION & ROI VALIDATION TEST SUITE ===\n")
 

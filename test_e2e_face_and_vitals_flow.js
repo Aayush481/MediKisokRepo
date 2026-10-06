@@ -1,6 +1,6 @@
 import http from "http";
-import FaceROITracker from "./src/services/FaceROITracker.js";
-import { rppgService } from "./src/services/rppgVitalsService.js";
+import FaceROITracker from "./frontend/src/services/FaceROITracker.js";
+import { rppgService } from "./frontend/src/services/rppgVitalsService.js";
 
 console.log("===============================================================================");
 console.log("🏥 COMPREHENSIVE END-TO-END FACE DETECTION & VITALS PIPELINE VERIFICATION");

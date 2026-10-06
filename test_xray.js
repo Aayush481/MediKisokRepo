@@ -1,4 +1,4 @@
-import { xrayAnalyzer } from "./src/services/xrayAnalyzer.js";
+import { xrayAnalyzer } from "./frontend/src/services/xrayAnalyzer.js";
 
 console.log("=== TESTING X-RAY RADIOLOGY VISION ANALYZER ===");
 

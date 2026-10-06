@@ -1,7 +1,7 @@
-import { rppgService } from "./src/services/rppgVitalsService.js";
-import { fhirService } from "./src/services/fhirService.js";
-import { prescriptionParser } from "./src/services/prescriptionParser.js";
-import { labParser } from "./src/services/labParser.js";
+import { rppgService } from "./frontend/src/services/rppgVitalsService.js";
+import { fhirService } from "./frontend/src/services/fhirService.js";
+import { prescriptionParser } from "./frontend/src/services/prescriptionParser.js";
+import { labParser } from "./frontend/src/services/labParser.js";
 
 console.log("===============================================================================");
 console.log("🧪 1. TESTING FACIAL SKIN CAPILLARY COLOR EXTRACTION & CHROMATIC ISOLATION");

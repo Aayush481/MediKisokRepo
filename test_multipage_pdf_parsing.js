@@ -1,6 +1,6 @@
-import { labParser } from "./src/services/labParser.js";
-import { prescriptionParser } from "./src/services/prescriptionParser.js";
-import { documentClassifier } from "./src/services/medicalDocumentClassifier.js";
+import { labParser } from "./frontend/src/services/labParser.js";
+import { prescriptionParser } from "./frontend/src/services/prescriptionParser.js";
+import { documentClassifier } from "./frontend/src/services/medicalDocumentClassifier.js";
 
 console.log("=== COMPREHENSIVE MULTI-PAGE PDF & CLINICAL PARSER TEST ===\n");
 

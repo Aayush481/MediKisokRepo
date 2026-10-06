@@ -1,4 +1,4 @@
-import { fhirService } from '../../src/services/fhirService.js';
+import { fhirService } from '../../frontend/src/services/fhirService.js';
 
 export class FHIRController {
   static generateBundle(req, res) {

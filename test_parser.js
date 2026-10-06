@@ -1,5 +1,5 @@
-import { prescriptionParser } from "./src/services/prescriptionParser.js";
-import { labParser } from "./src/services/labParser.js";
+import { prescriptionParser } from "./frontend/src/services/prescriptionParser.js";
+import { labParser } from "./frontend/src/services/labParser.js";
 
 console.log("=== 1. TESTING HANDWRITTEN DOCTOR PRESCRIPTION OCR PARSER ===");
 const sampleHandwrittenRxOcr = `

@@ -1,4 +1,4 @@
-import FaceROITracker from "./src/services/FaceROITracker.js";
+import FaceROITracker from "./frontend/src/services/FaceROITracker.js";
 
 console.log("=== RUNNING STRICT ANTHROPOMETRIC FACE VALIDATION TEST SUITE ===\n");
 

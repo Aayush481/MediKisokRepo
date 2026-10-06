@@ -1,6 +1,6 @@
-import { documentClassifier } from "./src/services/medicalDocumentClassifier.js";
-import { labParser } from "./src/services/labParser.js";
-import { PDFHelper } from "./src/services/pdfHelper.js";
+import { documentClassifier } from "./frontend/src/services/medicalDocumentClassifier.js";
+import { labParser } from "./frontend/src/services/labParser.js";
+import { PDFHelper } from "./frontend/src/services/pdfHelper.js";
 import fs from "fs";
 
 console.log("===============================================================================");

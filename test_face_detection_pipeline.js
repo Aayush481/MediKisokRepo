@@ -1,5 +1,5 @@
 import http from "http";
-import FaceROITracker from "./src/services/FaceROITracker.js";
+import FaceROITracker from "./frontend/src/services/FaceROITracker.js";
 
 console.log("=== RUNNING JAVASCRIPT FACE DETECTION & PRE-VITALS LOCK TEST SUITE ===\n");
 

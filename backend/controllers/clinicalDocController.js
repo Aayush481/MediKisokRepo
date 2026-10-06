@@ -1,7 +1,7 @@
-import { documentClassifier } from '../../src/services/medicalDocumentClassifier.js';
-import { prescriptionParser } from '../../src/services/prescriptionParser.js';
-import { labParser } from '../../src/services/labParser.js';
-import { diseaseExtractor } from '../../src/services/diseaseExtractor.js';
+import { documentClassifier } from '../../frontend/src/services/medicalDocumentClassifier.js';
+import { prescriptionParser } from '../../frontend/src/services/prescriptionParser.js';
+import { labParser } from '../../frontend/src/services/labParser.js';
+import { diseaseExtractor } from '../../frontend/src/services/diseaseExtractor.js';
 import Tesseract from 'tesseract.js';
 
 const GEMINI_API_KEY = process.env.GOOGLE_API_KEY || "";
