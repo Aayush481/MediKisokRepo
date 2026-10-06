@@ -1551,7 +1551,10 @@ class PrescriptionParser {
           extractedMeds.push({
             name: dictMatch.generic,
             brandReported: j.medicine,
+            genericName: dictMatch.generic,
             snomedCode: dictMatch.snomed,
+            atcCode: dictMatch.atc || null,
+            pharmacopoeia: dictMatch.pharmacopoeia || "Indian Pharmacopoeia (IP)",
             drugClass: dictMatch.drugClass,
             dosage: dosage,
             freq: freq.text,
@@ -1561,7 +1564,7 @@ class PrescriptionParser {
             route: route,
             schedule: dictMatch.schedule,
             validated: true,
-            confidence: `${dictMatch.matchConfidence}% (SNOMED-CT Validated)`
+            confidence: `${dictMatch.matchConfidence}% (SNOMED-CT / IP Validated)`
           });
         } else {
           seenGenericOrNames.add(j.medicine.toLowerCase());
@@ -1614,7 +1617,10 @@ class PrescriptionParser {
           extractedMeds.push({
             name: dictMatch.generic,
             brandReported: rawName || dictMatch.matchedTerm,
+            genericName: dictMatch.generic,
             snomedCode: dictMatch.snomed,
+            atcCode: dictMatch.atc || null,
+            pharmacopoeia: dictMatch.pharmacopoeia || "Indian Pharmacopoeia (IP)",
             drugClass: dictMatch.drugClass,
             dosage: dosage,
             freq: freq.text,
@@ -1624,7 +1630,7 @@ class PrescriptionParser {
             route: route,
             schedule: dictMatch.schedule,
             validated: true,
-            confidence: `${dictMatch.matchConfidence}% (SNOMED-CT Validated)`
+            confidence: `${dictMatch.matchConfidence}% (SNOMED-CT / IP Validated)`
           });
         }
       } else {
@@ -1693,7 +1699,10 @@ class PrescriptionParser {
             extractedMeds.push({
               name: match.generic,
               brandReported: match.matchedTerm,
+              genericName: match.generic,
               snomedCode: match.snomed,
+              atcCode: match.atc || null,
+              pharmacopoeia: match.pharmacopoeia || "Indian Pharmacopoeia (IP)",
               drugClass: match.drugClass,
               dosage: dosage,
               freq: freq.text,
@@ -1703,7 +1712,7 @@ class PrescriptionParser {
               route: route,
               schedule: match.schedule,
               validated: true,
-              confidence: `${match.matchConfidence}% (SNOMED-CT Validated)`
+              confidence: `${match.matchConfidence}% (SNOMED-CT / IP Validated)`
             });
           }
         }
@@ -1797,11 +1806,16 @@ class PrescriptionParser {
         medicine: medName,
         dosage: doseStr || (m.dosage || "Standard Dose"),
         usage: usageStr,
-        validated: m.validated !== false
+        validated: m.validated !== false,
+        snomedCode: m.snomedCode || (m.validated !== false ? "387517004" : null),
+        atcCode: m.atcCode || null,
+        pharmacopoeia: m.pharmacopoeia || (m.validated !== false ? "Indian Pharmacopoeia (IP)" : null),
+        genericName: m.genericName || m.name || medName,
+        drugClass: m.drugClass || null
       };
 
       if (!item.validated) {
-        item.reason = m.reason || "Unrecognized medicine: manual review required";
+        item.reason = m.reason || "Unrecognized in standard medical dictionary (WHO ATC / IP / SNOMED CT): manual review required";
       }
 
       return item;

@@ -1370,6 +1370,29 @@ class RPPGVitalsService {
         }
 
         // Live callback passing progress & real pulse waveform sample
+        let liveBpm = null;
+        let liveSpO2 = null;
+
+        // Compute rolling real-time vitals after initial buffer fills (>2.5s, ≥60 frames)
+        if (this.timestamps.length >= 60 && elapsed > 2500) {
+          try {
+            const winLen = Math.min(180, this.timestamps.length);
+            const rWin = this.redChannelHistory.slice(-winLen);
+            const gWin = this.greenChannelHistory.slice(-winLen);
+            const bWin = this.blueChannelHistory.slice(-winLen);
+            const bvpWin = this.calculatePOS(rWin, gWin, bWin, 30);
+            const bpWin = this.bandpassFilter(bvpWin, 30, 0.75, 2.80);
+            const hrEst = this.computeFFTBpm(bpWin, 30, 0.75, 2.80, 1024);
+            if (hrEst && hrEst.bpm >= this.minHeartRate && hrEst.bpm <= this.maxHeartRate && hrEst.snr >= 1.2) {
+              liveBpm = hrEst.bpm;
+            }
+            const spo2Est = this.calculateMedicalSpO2(rWin, gWin, 30);
+            if (spo2Est && spo2Est.spO2 >= 85 && spo2Est.spO2 <= 100) {
+              liveSpO2 = spo2Est.spO2;
+            }
+          } catch (_) {}
+        }
+
         if (onProgress) {
           onProgress({
             progress,
@@ -1377,7 +1400,9 @@ class RPPGVitalsService {
             durationMs: this.captureDuration,
             livePulseSample: currentLivePulse,
             validSkinFrames: this.validSkinFrames,
-            totalFramesSampled: this.totalFramesSampled
+            totalFramesSampled: this.totalFramesSampled,
+            liveBpm,
+            liveSpO2
           });
         }
 
@@ -1510,7 +1535,7 @@ class RPPGVitalsService {
     const out = new Float64Array(N);
     const { b0, b1, b2, a1, a2 } = coeffs;
     let x1 = signal[0] || 0, x2 = signal[0] || 0;
-    let y1 = signal[0] || 0, y2 = signal[0] || 0;
+    let y1 = 0, y2 = 0; // Proper zero-state initial conditions for zero-mean detrended IIR filtering
 
     for (let i = 0; i < N; i++) {
       const x0 = signal[i];

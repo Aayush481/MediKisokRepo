@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MediKiosk • Architecture Blueprint</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --canvas: #ffffff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --font-hand: 'Caveat', cursive, sans-serif;
+      --font-sans: 'Plus Jakarta Sans', -apple-system, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-hand);
+      background: #f1f5f9;
+      color: var(--text);
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+    }
+
+    /* Clean Minimal Header */
+    header {
+      background: #ffffff;
+      border-bottom: 1.5px solid #cbd5e1;
+      padding: 12px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 100;
+      flex-shrink: 0;
+      font-family: var(--font-sans);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-badge {
+      background: #e0f2fe;
+      color: #0369a1;
+      border: 1px solid #bae6fd;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .brand h1 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .brand p {
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn {
+      background: #ffffff;
+      color: #0f172a;
+      border: 1.5px solid #cbd5e1;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 7px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      font-family: var(--font-sans);
+    }
+    .btn:hover {
+      background: #f8fafc;
+      border-color: #94a3b8;
+    }
+    .btn.primary {
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #1d4ed8;
+    }
+    .btn.primary:hover {
+      background: #1d4ed8;
+    }
+
+    /* Infinite Canvas Viewport */
+    .viewport {
+      position: relative;
+      flex: 1;
+      width: 100%;
+      overflow: hidden;
+      cursor: grab;
+      background-color: #ffffff;
+      background-image: radial-gradient(#cbd5e1 1.2px, transparent 1.2px);
+      background-size: 24px 24px;
+    }
+    .viewport:active {
+      cursor: grabbing;
+    }
+
+    .canvas-content {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1700px;
+      height: 750px;
+      transform-origin: 0 0;
+    }
+
+    /* Containers & Pill Badges */
+    .arch-container {
+      position: absolute;
+      border-radius: 18px;
+      border: 2.5px solid;
+      background: #ffffff;
+    }
+    .container-pill {
+      position: absolute;
+      top: -15px;
+      left: 28px;
+      height: 30px;
+      padding: 0 16px;
+      border-radius: 15px;
+      border: 2px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    /* Component Nodes */
+    .arch-node {
+      position: absolute;
+      border-radius: 12px;
+      border: 2px solid;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 8px 12px;
+      box-shadow: 2px 3px 0 rgba(0,0,0,0.04);
+      transition: transform 0.15s ease;
+    }
+    .arch-node:hover {
+      transform: translateY(-2px);
+    }
+    .node-title {
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+    .node-sub {
+      font-size: 14px;
+      line-height: 1.25;
+      margin-top: 4px;
+      opacity: 0.85;
+    }
+
+    /* Circle Nodes (Load Balancer / Gateway) */
+    .arch-circle {
+      position: absolute;
+      border-radius: 50%;
+      border: 2.5px solid;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1.15;
+      box-shadow: 2px 4px 0 rgba(0,0,0,0.05);
+    }
+
+    /* HUD Zoom Controls */
+    .hud {
+      position: absolute;
+      bottom: 24px;
+      right: 24px;
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      font-family: var(--font-sans);
+    }
+    .hud-btn {
+      background: transparent;
+      border: none;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 700;
+      color: #334155;
+    }
+    .hud-btn:hover {
+      background: #f1f5f9;
+    }
+    .hud-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+      padding: 0 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top App Bar -->
+  <header>
+    <div class="brand">
+      <div class="brand-badge">SIH 2026</div>
+      <div>
+        <h1>MediKiosk • Simple & Professional Architecture</h1>
+        <p>Clean High-Level Blueprint: Client Hardware -> SPA -> Express Ingress -> Gemini AI & Database</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn" onclick="downloadExcalidraw()">
+        <span>📥</span> Download .excalidraw
+      </button>
+      <button class="btn primary" onclick="openExcalidrawWeb()">
+        <span>🚀</span> Open on Excalidraw.com
+      </button>
+    </div>
+  </header>
+
+  <!-- Interactive Canvas Viewport -->
+  <div class="viewport" id="viewport">
+    <div class="canvas-content" id="canvasContent">
+
+      <!-- SVG Connecting Arrows -->
+      <svg style="position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:10;">
+        <defs>
+          <marker id="arrow-black" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1 L 9 5 L 0 9 z" fill="#1e1e1e" />
+          </marker>
+          <marker id="arrow-green" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1 L 9 5 L 0 9 z" fill="#2f9e44" />
+          </marker>
+          <marker id="arrow-blue" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1 L 9 5 L 0 9 z" fill="#1971c2" />
+          </marker>
+          <marker id="arrow-red" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1 L 9 5 L 0 9 z" fill="#e03131" />
+          </marker>
+          <marker id="arrow-purple" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1 L 9 5 L 0 9 z" fill="#ae3ec9" />
+          </marker>
+        </defs>
+
+        <!-- WebCam -> rPPG -->
+        <path d="M 200 190 L 300 190" fill="none" stroke="#2f9e44" stroke-width="2.5" marker-end="url(#arrow-green)" />
+        <text x="250" y="180" fill="#2b8a3e" font-family="'Caveat', cursive" font-size="16" font-weight="700" text-anchor="middle">video feed</text>
+
+        <!-- Patient -> Kiosk Wizard -->
+        <path d="M 200 310 L 300 310" fill="none" stroke="#1e1e1e" stroke-width="2.5" marker-end="url(#arrow-black)" />
+        <text x="250" y="300" fill="#212529" font-family="'Caveat', cursive" font-size="16" font-weight="700" text-anchor="middle">interacts</text>
+
+        <!-- Medical Doc -> Kiosk Wizard -->
+        <path d="M 200 440 L 300 345" fill="none" stroke="#ae3ec9" stroke-width="2.5" marker-end="url(#arrow-purple)" />
+        <text x="250" y="405" fill="#862e9c" font-family="'Caveat', cursive" font-size="16" font-weight="700" text-anchor="middle">upload</text>
+
+        <!-- rPPG -> Kiosk Wizard -->
+        <path d="M 387 245 L 387 275" fill="none" stroke="#2f9e44" stroke-width="2.5" marker-end="url(#arrow-green)" />
+        <text x="415" y="265" fill="#2b8a3e" font-family="'Caveat', cursive" font-size="15" font-weight="700">vitals</text>
+
+        <!-- Kiosk Wizard -> Gateway Circle -->
+        <path d="M 475 320 L 805 320" fill="none" stroke="#e03131" stroke-width="2.5" marker-end="url(#arrow-red)" />
+        <text x="640" y="310" fill="#c92a2a" font-family="'Caveat', cursive" font-size="18" font-weight="700" text-anchor="middle">REST API</text>
+
+        <!-- Doctor Desk -> Gateway Circle -->
+        <path d="M 475 440 L 830 360" fill="none" stroke="#1971c2" stroke-width="2.5" marker-end="url(#arrow-blue)" />
+        <text x="650" y="420" fill="#1864ab" font-family="'Caveat', cursive" font-size="17" font-weight="700" text-anchor="middle">OPD review</text>
+
+        <!-- Gateway Circle -> Router -->
+        <path d="M 910 320 L 945 320" fill="none" stroke="#1971c2" stroke-width="2.5" marker-end="url(#arrow-blue)" />
+        <text x="927" y="310" fill="#1864ab" font-family="'Caveat', cursive" font-size="15" font-weight="700" text-anchor="middle">dispatch</text>
+
+        <!-- Router -> Core Services (path-1) -->
+        <path d="M 1060 300 L 1085 230" fill="none" stroke="#1971c2" stroke-width="2.5" marker-end="url(#arrow-blue)" />
+        <text x="1070" y="255" fill="#e03131" font-family="'Caveat', cursive" font-size="16" font-weight="700">path-1</text>
+
+        <!-- Router -> Standards (path-2) -->
+        <path d="M 1060 340 L 1085 440" fill="none" stroke="#1971c2" stroke-width="2.5" marker-end="url(#arrow-blue)" />
+        <text x="1070" y="400" fill="#e03131" font-family="'Caveat', cursive" font-size="16" font-weight="700">path-2</text>
+
+        <!-- Router -> Gemini Vision -->
+        <path d="M 1060 285 L 1285 200" fill="none" stroke="#ae3ec9" stroke-width="2.5" marker-end="url(#arrow-purple)" />
+        <text x="1170" y="235" fill="#862e9c" font-family="'Caveat', cursive" font-size="16" font-weight="700" text-anchor="middle">doc OCR</text>
+
+        <!-- Gemini Vision -> AYUSH Engine (parsed meds) -->
+        <path d="M 1285 235 C 1000 235, 800 230, 675 310" fill="none" stroke="#ae3ec9" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#arrow-purple)" />
+        <text x="960" y="245" fill="#862e9c" font-family="'Caveat', cursive" font-size="15" font-weight="700" text-anchor="middle">parsed medicines for interaction check</text>
+
+        <!-- Core Services -> MongoDB -->
+        <path d="M 1178 220 L 1285 445" fill="none" stroke="#2f9e44" stroke-width="2.5" marker-end="url(#arrow-green)" />
+        <text x="1235" y="325" fill="#2b8a3e" font-family="'Caveat', cursive" font-size="16" font-weight="700" text-anchor="middle">save data</text>
+      </svg>
+
+      <!-- ========================================== -->
+      <!-- 1. INPUTS (LEFT)                           -->
+      <!-- ========================================== -->
+      <div class="arch-node" style="left:60px; top:160px; width:140px; height:60px; border-color:#2f9e44; background:#ebfbee; color:#2b8a3e;">
+        <span class="node-title">HD WebCam</span>
+        <span class="node-sub">60 FPS Stream</span>
+      </div>
+
+      <div class="arch-node" style="left:60px; top:280px; width:140px; height:65px; border-color:#1e1e1e; background:#f8f9fa; color:#212529;">
+        <span class="node-title">Patient / User</span>
+        <span class="node-sub">Touchscreen Kiosk</span>
+      </div>
+
+      <div class="arch-node" style="left:60px; top:410px; width:140px; height:65px; border-color:#ae3ec9; background:#f8f0fc; color:#862e9c;">
+        <span class="node-title">Medical Doc</span>
+        <span class="node-sub">Prescription / Labs</span>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- 2. FRONTEND CONTAINER (SPA)                -->
+      <!-- ========================================== -->
+      <div class="arch-container" style="left:270px; top:120px; width:430px; height:480px; border-color:#1971c2; background:#f1f8ff;">
+        <div class="container-pill" style="border-color:#1971c2; background:#d0ebff; color:#1864ab;">
+          Frontend Client (SPA)
+        </div>
+      </div>
+
+      <!-- Inside Frontend: Edge rPPG -->
+      <div class="arch-node" style="left:300px; top:160px; width:175px; height:85px; border-color:#2f9e44; color:#2b8a3e;">
+        <span class="node-title">Edge rPPG Engine</span>
+        <span class="node-sub">MediaPipe FaceMesh<br>POS & Butterworth DSP<br><b>HR, SpO2, RR, HRV</b></span>
+      </div>
+
+      <!-- Inside Frontend: Kiosk Intake Wizard -->
+      <div class="arch-node" style="left:300px; top:275px; width:175px; height:95px; border-color:#1971c2; color:#1864ab;">
+        <span class="node-title">Kiosk Intake Wizard</span>
+        <span class="node-sub">Step 1: 14-Digit ABHA<br>Step 2: Live Vitals UI<br>Step 3: Document Upload<br>Step 4: Clinical Summary</span>
+      </div>
+
+      <!-- Inside Frontend: Doctor Desk -->
+      <div class="arch-node" style="left:300px; top:400px; width:175px; height:80px; border-color:#1971c2; color:#1864ab;">
+        <span class="node-title">Doctor Desk</span>
+        <span class="node-sub">DoctorDashboard.js<br>OPD Queue & Review<br>FHIR Export Button</span>
+      </div>
+
+      <!-- Inside Frontend: AYUSH & Herb-Drug -->
+      <div class="arch-node" style="left:505px; top:275px; width:170px; height:95px; border-color:#ae3ec9; color:#862e9c;">
+        <span class="node-title">AYUSH & Herb-Drug</span>
+        <span class="node-sub">Dashavidha Pariksha<br>Prakriti Constitution<br>Herb-Drug Interaction<br>Contraindication Alert</span>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- 3. BACKEND CONTAINER (NODE & EXPRESS)      -->
+      <!-- ========================================== -->
+      <div class="arch-container" style="left:770px; top:120px; width:430px; height:480px; border-color:#f76707; background:#fff9db;">
+        <div class="container-pill" style="border-color:#f76707; background:#ffe066; color:#d9480f;">
+          Backend (Node.js / Express)
+        </div>
+      </div>
+
+      <!-- Gateway Circle -->
+      <div class="arch-circle" style="left:805px; top:270px; width:105px; height:105px; border-color:#1971c2; background:#d0ebff; color:#1864ab;">
+        Express<br>Gateway<br><span style="font-size:14px; font-weight:600; opacity:0.8;">(Port 3000)</span>
+      </div>
+
+      <!-- Router Node -->
+      <div class="arch-node" style="left:945px; top:280px; width:115px; height:85px; border-color:#1971c2; color:#1864ab;">
+        <span class="node-title">API Router</span>
+        <span class="node-sub">/api/vitals<br>/api/parse-rx<br>/api/patients<br>/api/fhir</span>
+      </div>
+
+      <!-- Sub-container 1: Core Services -->
+      <div class="arch-container" style="left:1085px; top:160px; width:100px; height:175px; border-color:#1971c2; background:#e7f5ff;">
+        <div class="container-pill" style="left:10px; top:-12px; height:24px; padding:0 8px; font-size:13px; border-color:#1971c2; background:#d0ebff; color:#1864ab;">
+          Core Svc
+        </div>
+      </div>
+      <div class="arch-node" style="left:1092px; top:190px; width:86px; height:55px; border-color:#f76707; color:#d9480f;">
+        <span class="node-title" style="font-size:16px;">Patient<br>Ctrl</span>
+      </div>
+      <div class="arch-node" style="left:1092px; top:260px; width:86px; height:60px; border-color:#f76707; color:#d9480f;">
+        <span class="node-title" style="font-size:16px;">Python<br>Bridge</span>
+        <span class="node-sub" style="font-size:11px;">OpenCV cv2</span>
+      </div>
+
+      <!-- Sub-container 2: Standards -->
+      <div class="arch-container" style="left:1085px; top:360px; width:100px; height:175px; border-color:#1971c2; background:#e7f5ff;">
+        <div class="container-pill" style="left:8px; top:-12px; height:24px; padding:0 8px; font-size:13px; border-color:#1971c2; background:#d0ebff; color:#1864ab;">
+          Standards
+        </div>
+      </div>
+      <div class="arch-node" style="left:1092px; top:395px; width:86px; height:55px; border-color:#e64980; color:#c2255c;">
+        <span class="node-title" style="font-size:15px;">FHIR R4<br>Bundler</span>
+      </div>
+      <div class="arch-node" style="left:1092px; top:465px; width:86px; height:55px; border-color:#e64980; color:#c2255c;">
+        <span class="node-title" style="font-size:15px;">ABDM<br>Validator</span>
+        <span class="node-sub" style="font-size:11px;">14-Digit ID</span>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- 4. CLOUD AI CONTAINER                      -->
+      <!-- ========================================== -->
+      <div class="arch-container" style="left:1260px; top:120px; width:240px; height:220px; border-color:#ae3ec9; background:#f8f0fc;">
+        <div class="container-pill" style="border-color:#ae3ec9; background:#eebefa; color:#862e9c;">
+          Clinical AI (Cloud)
+        </div>
+      </div>
+      <div class="arch-node" style="left:1285px; top:165px; width:190px; height:70px; border-color:#ae3ec9; color:#862e9c;">
+        <span class="node-title">Google Gemini Vision</span>
+        <span class="node-sub">gemini-flash-lite-latest<br>Indian Cursive Rx OCR</span>
+      </div>
+      <div class="arch-node" style="left:1285px; top:250px; width:190px; height:65px; border-color:#ae3ec9; color:#862e9c;">
+        <span class="node-title">Medical Gatekeeper</span>
+        <span class="node-sub">Rejects Non-Medical Files<br>Extracts Latin Sigs & Labs</span>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- 5. DATABASE CONTAINER                      -->
+      <!-- ========================================== -->
+      <div class="arch-container" style="left:1260px; top:380px; width:240px; height:220px; border-color:#2f9e44; background:#ebfbee;">
+        <div class="container-pill" style="border-color:#2f9e44; background:#b2f2bb; color:#2b8a3e;">
+          Data Persistence
+        </div>
+      </div>
+      <div class="arch-node" style="left:1285px; top:425px; width:190px; height:70px; border-color:#2f9e44; color:#2b8a3e;">
+        <span class="node-title">MongoDB Database</span>
+        <span class="node-sub">patients, intakes, vitals<br>mongodb@7.7.0 driver</span>
+      </div>
+      <div class="arch-node" style="left:1285px; top:510px; width:190px; height:65px; border-color:#2f9e44; color:#2b8a3e;">
+        <span class="node-title">In-Memory Fallback</span>
+        <span class="node-sub">PatientDB (Zero-Config)<br>Guarantees Offline Uptime</span>
+      </div>
+
+    </div>
+
+    <!-- HUD Controls -->
+    <div class="hud">
+      <button class="hud-btn" onclick="zoomIn()" title="Zoom In">+</button>
+      <button class="hud-btn" onclick="zoomOut()" title="Zoom Out">-</button>
+      <span class="hud-label" id="zoomLevel">90%</span>
+      <button class="hud-btn" onclick="resetZoom()" title="Reset View">⤢</button>
+    </div>
+  </div>
+
+  <script>
+    // Pan & Zoom
+    let scale = 0.90;
+    let panX = 40;
+    let panY = 20;
+    let isPanning = false;
+    let startX = 0;
+    let startY = 0;
+
+    const viewport = document.getElementById('viewport');
+    const canvasContent = document.getElementById('canvasContent');
+    const zoomLevel = document.getElementById('zoomLevel');
+
+    function updateTransform() {
+      canvasContent.style.transform = 'translate(' + panX + 'px, ' + panY + 'px) scale(' + scale + ')';
+      zoomLevel.textContent = Math.round(scale * 100) + '%';
+    }
+
+    viewport.addEventListener('mousedown', (e) => {
+      if (e.target.closest('.hud')) return;
+      isPanning = true;
+      startX = e.clientX - panX;
+      startY = e.clientY - panY;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isPanning) return;
+      panX = e.clientX - startX;
+      panY = e.clientY - startY;
+      updateTransform();
+    });
+
+    window.addEventListener('mouseup', () => { isPanning = false; });
+
+    viewport.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const zoomFactor = e.deltaY < 0 ? 1.08 : 0.92;
+      const newScale = Math.min(Math.max(scale * zoomFactor, 0.4), 1.8);
+      
+      const mouseX = e.clientX - viewport.getBoundingClientRect().left;
+      const mouseY = e.clientY - viewport.getBoundingClientRect().top;
+      
+      panX = mouseX - (mouseX - panX) * (newScale / scale);
+      panY = mouseY - (mouseY - panY) * (newScale / scale);
+      scale = newScale;
+      updateTransform();
+    }, { passive: false });
+
+    function zoomIn() {
+      scale = Math.min(scale * 1.15, 1.8);
+      updateTransform();
+    }
+    function zoomOut() {
+      scale = Math.max(scale * 0.85, 0.4);
+      updateTransform();
+    }
+    function resetZoom() {
+      scale = 0.90;
+      panX = 40;
+      panY = 20;
+      updateTransform();
+    }
+    updateTransform();
+
+    function downloadExcalidraw() {
+      window.location.href = './medical_platform_architecture.excalidraw';
+    }
+
+    function openExcalidrawWeb() {
+      window.open('https://excalidraw.com', '_blank');
+    }
+  </script>
+</body>
+</html>

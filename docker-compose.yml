@@ -1,0 +1,41 @@
+services:
+  medikiosk:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: medikiosk-service
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - MONGODB_URI=mongodb://mongodb:27017/medikiosk
+      - MONGODB_DB_NAME=medikiosk
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+    depends_on:
+      - mongodb
+    volumes:
+      - ./frontend:/app/frontend
+      - ./backend:/app/backend
+    networks:
+      - medikiosk-network
+
+  mongodb:
+    image: mongo:6.0
+    container_name: medikiosk-mongodb
+    restart: unless-stopped
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo-clinical-data:/data/db
+    networks:
+      - medikiosk-network
+
+networks:
+  medikiosk-network:
+    driver: bridge
+
+volumes:
+  mongo-clinical-data:
+    driver: local

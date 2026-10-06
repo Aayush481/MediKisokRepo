@@ -1831,6 +1831,8 @@ select.input-text-3d {
   .kiosk-stepper { grid-template-columns: 1fr; }
   .navbar { padding: 0.75rem 1.25rem; }
   .kiosk-quick-bar { padding: 0.45rem 1.25rem; flex-direction: column; gap: 8px; align-items: flex-start; }
+}
+
 /* Multi-column clinical layout grids for widescreen balance */
 .registration-layout-grid {
   display: grid;
@@ -2007,7 +2009,7 @@ select.input-text-3d {
 .abha-details-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .abha-field-row {
@@ -2016,16 +2018,17 @@ select.input-text-3d {
 }
 
 .abha-field-lbl {
-  font-size: 0.58rem;
+  font-size: 0.62rem;
   font-family: var(--font-mono);
   font-weight: 700;
   color: var(--grey-500);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  margin-bottom: 2px;
 }
 
 .abha-field-val {
-  font-size: 0.88rem;
+  font-size: 0.95rem;
   font-weight: 800;
   color: var(--text-primary);
   line-height: 1.2;
@@ -2033,19 +2036,282 @@ select.input-text-3d {
 
 .abha-field-val-mono {
   font-family: var(--font-mono);
-  font-size: 0.82rem;
+  font-size: 0.9rem;
   color: var(--green-darkest);
   font-weight: 800;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
+}
+
+.abha-field-val-address {
+  font-size: 0.76rem;
+  font-family: var(--font-mono);
+  color: var(--grey-600);
+  font-weight: 600;
+}
+
+.abha-field-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.abha-field-val-sub {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
 }
 
 .abha-card-footer {
-  padding: 8px 14px;
+  padding: 10px 14px;
   background: #F9FAFB;
   border-top: 1px solid var(--grey-300);
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.abha-footer-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.abha-qr-thumb {
+  width: 32px;
+  height: 32px;
+  background: #FFFFFF;
+  border: 1px solid var(--grey-300);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--grey-800);
+}
+
+.abha-footer-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.abha-footer-main {
+  font-size: 0.68rem;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--grey-800);
+}
+
+.abha-footer-sec {
+  font-size: 0.58rem;
+  font-family: var(--font-mono);
+  color: var(--grey-500);
+}
+
+.btn-unlink-abha {
+  background: #FFFFFF;
+  border: 1px solid var(--grey-300);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--grey-700);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-unlink-abha:hover {
+  background: #FEE2E2;
+  border-color: #F87171;
+  color: #B91C1C;
+}
+
+/* ABDM Sync Hub Card (Unverified Standby State) */
+.abdm-sync-hub-card {
+  background: #FFFFFF;
+  border: 1px solid var(--grey-300);
+  border-radius: 8px;
+  padding: 1.35rem;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+  position: relative;
+  overflow: hidden;
+}
+
+.sync-hub-header {
+  margin-bottom: 1.15rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--grey-200);
+}
+
+.sync-hub-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.sync-hub-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 8px var(--primary);
+  animation: pulse-dot 1.8s infinite;
+}
+
+@keyframes pulse-dot {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1.05); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.sync-hub-status-text {
+  font-size: 0.68rem;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--grey-600);
+}
+
+.sync-hub-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.sync-hub-subtitle {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.sync-action-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 1.25rem;
+}
+
+.sync-action-tile {
+  background: #F9FAFB;
+  border: 1px solid var(--grey-300);
+  border-radius: 6px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sync-action-tile:hover {
+  background: var(--green-subtle);
+  border-color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
+}
+
+.sync-action-test {
+  border-left: 3px solid var(--amber);
+}
+
+.sync-action-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  background: #FFFFFF;
+  border: 1px solid var(--grey-300);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sync-action-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.sync-action-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.sync-action-desc {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+  line-height: 1.35;
+}
+
+.sync-action-arrow {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--grey-400);
+  transition: transform 0.15s ease;
+}
+
+.sync-action-tile:hover .sync-action-arrow {
+  color: var(--primary);
+  transform: translateX(2px);
+}
+
+.sync-action-badge {
+  font-size: 0.62rem;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  background: #FEF3C7;
+  color: #92400E;
+  border: 1px solid #FCD34D;
+  border-radius: 3px;
+  padding: 2px 6px;
+  text-transform: uppercase;
+}
+
+.sync-security-footer {
+  display: flex;
+  gap: 16px;
+  padding-top: 10px;
+  border-top: 1px solid var(--grey-200);
+  flex-wrap: wrap;
+}
+
+.sync-security-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.68rem;
+  font-family: var(--font-mono);
+  color: var(--grey-600);
+  font-weight: 600;
+}
+
+/* Input with action group */
+.input-with-action-group {
+  display: flex;
+  gap: 6px;
+}
+
+.input-with-action-group .input-text-3d {
+  flex: 1;
+}
+
+.input-hint-3d {
+  font-size: 0.68rem;
+  color: var(--grey-500);
+  font-family: var(--font-mono);
+  margin-top: 4px;
+  display: block;
+}
+
+.verified-glow-animation {
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.18), 0 4px 14px rgba(0, 0, 0, 0.05);
+  border-color: var(--green-border);
 }
 
 /* Station telemetry tiles */

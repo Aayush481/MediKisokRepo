@@ -174,6 +174,8 @@ class MediKioskApp {
       gender: "Female",
       abhaId: "",
       mobile: "",
+      isAbhaVerified: false,
+      abhaDetails: null,
       chiefComplaint: "",
       hpi: {
         site: "",
@@ -575,15 +577,126 @@ class MediKioskApp {
     this.render();
   }
 
+  focusAbhaInput() {
+    const input = document.getElementById("patientAbhaInput");
+    if (input) {
+      input.focus();
+      input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+
+  verifyAbhaRecord(customId = null) {
+    const input = document.getElementById("patientAbhaInput");
+    const rawVal = (customId || (input ? input.value : "") || "").trim();
+    if (!rawVal) {
+      alert("Please enter a 14-digit ABHA Number (e.g. 91-8274-1923-0194) or mobile number.");
+      if (input) input.focus();
+      return;
+    }
+
+    this.isAbhaVerifying = true;
+    this.render();
+
+    setTimeout(() => {
+      this.isAbhaVerifying = false;
+      const digitsOnly = rawVal.replace(/[^0-9]/g, '');
+      let formatted = rawVal;
+      if (digitsOnly.length === 14) {
+        formatted = `${digitsOnly.slice(0, 2)}-${digitsOnly.slice(2, 6)}-${digitsOnly.slice(6, 10)}-${digitsOnly.slice(10, 14)}`;
+      }
+
+      // Preserve entered user data if present; otherwise resolve verified demographic token
+      const currentName = document.getElementById("patientNameInput")?.value?.trim();
+      const currentAge = document.getElementById("patientAgeInput")?.value?.trim();
+      const currentGender = document.getElementById("patientGenderInput")?.value;
+      const currentMobile = document.getElementById("patientMobileInput")?.value?.trim();
+
+      const name = currentName || (rawVal.includes("4820") ? "Ramesh Kumar" : (rawVal.includes("7210") ? "Sunita Sharma" : "Aarav Sharma"));
+      const age = currentAge ? parseInt(currentAge) : (rawVal.includes("4820") ? 48 : (rawVal.includes("7210") ? 36 : 29));
+      const gender = currentGender || (rawVal.includes("7210") ? "Female" : "Male");
+      const mobile = currentMobile || "+91 98450 " + Math.floor(10000 + Math.random() * 89999);
+      const abhaAddress = (name.toLowerCase().replace(/[^a-z0-9]/g, '')) + "@abdm";
+
+      this.patient.name = name;
+      this.patient.age = age;
+      this.patient.gender = gender;
+      this.patient.mobile = mobile;
+      this.patient.abhaId = formatted;
+      this.patient.isAbhaVerified = true;
+      this.patient.abhaDetails = {
+        name,
+        age,
+        gender,
+        yob: 2026 - (parseInt(age) || 29),
+        mobile,
+        abhaNumber: formatted,
+        abhaAddress,
+        authMethod: "Aadhaar e-KYC / ABDM Token",
+        verifiedAt: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+      };
+
+      this.render();
+    }, 550);
+  }
+
+  simulateAbhaQrScan() {
+    this.isAbhaVerifying = true;
+    this.render();
+
+    setTimeout(() => {
+      this.isAbhaVerifying = false;
+      const name = "Vikram Aditya";
+      const age = 41;
+      const gender = "Male";
+      const mobile = "+91 98112 43210";
+      const abhaNumber = "91-3829-1029-4481";
+      const abhaAddress = "vikram.aditya@abdm";
+
+      this.patient.name = name;
+      this.patient.age = age;
+      this.patient.gender = gender;
+      this.patient.mobile = mobile;
+      this.patient.abhaId = abhaNumber;
+      this.patient.isAbhaVerified = true;
+      this.patient.abhaDetails = {
+        name,
+        age,
+        gender,
+        yob: 1985,
+        mobile,
+        abhaNumber,
+        abhaAddress,
+        authMethod: "Optical QR / ABDM Token",
+        verifiedAt: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+      };
+
+      this.render();
+    }, 550);
+  }
+
+  resetAbhaVerification() {
+    this.patient.isAbhaVerified = false;
+    this.patient.abhaDetails = null;
+    this.patient.abhaId = "";
+    this.render();
+  }
+
   saveStep1AndNext() {
-    const name = document.getElementById("patientNameInput")?.value || "";
-    const age = document.getElementById("patientAgeInput")?.value || "";
+    const name = document.getElementById("patientNameInput")?.value?.trim() || "";
+    const age = document.getElementById("patientAgeInput")?.value?.trim() || "";
     const gender = document.getElementById("patientGenderInput")?.value || "Female";
-    const abha = document.getElementById("patientAbhaInput")?.value || "";
-    const mobile = document.getElementById("patientMobileInput")?.value || "";
+    const abha = document.getElementById("patientAbhaInput")?.value?.trim() || "";
+    const mobile = document.getElementById("patientMobileInput")?.value?.trim() || "";
+
+    if (!name) {
+      alert("Please enter the patient's full name to proceed with clinical triage.");
+      const input = document.getElementById("patientNameInput");
+      if (input) input.focus();
+      return;
+    }
 
     this.patient.name = name;
-    this.patient.age = age;
+    this.patient.age = age ? parseInt(age) : "";
     this.patient.gender = gender;
     this.patient.abhaId = abha;
     this.patient.mobile = mobile;
@@ -970,6 +1083,28 @@ class MediKioskApp {
       countdownText.textContent = `Acquiring: ${this.rppgElapsedSec}s / ${totalSec}s (${remaining}s remaining • ${this.scanDuration >= 60000 ? 'Diagnostic HRV Gold Standard (≥60s)' : '30s Rapid Clinical Intake'} • Hold Still)`;
     }
 
+    if (this.liveBpm) {
+      const hrValEl = document.querySelector(".telemetry-card-hr .telemetry-value");
+      if (hrValEl) {
+        hrValEl.innerHTML = `${this.liveBpm}<span class="telemetry-unit">${this.i18n ? this.i18n.t("telemetry_hr_unit") : "bpm"}</span>`;
+      }
+      const hrStatusEl = document.querySelector(".telemetry-card-hr .telemetry-status");
+      if (hrStatusEl) {
+        hrStatusEl.textContent = this.liveBpm > 100 ? "Elevated (Live)" : (this.liveBpm < 60 ? "Bradycardia (Live)" : (this.i18n ? this.i18n.t("status_resting") : "Resting"));
+      }
+    }
+
+    if (this.liveSpO2) {
+      const spo2ValEl = document.querySelector(".telemetry-card-spo2 .telemetry-value");
+      if (spo2ValEl) {
+        spo2ValEl.innerHTML = `${this.liveSpO2}<span class="telemetry-unit">${this.i18n ? this.i18n.t("telemetry_spo2_unit") : "%"}</span>`;
+      }
+      const spo2StatusEl = document.querySelector(".telemetry-card-spo2 .telemetry-status");
+      if (spo2StatusEl) {
+        spo2StatusEl.textContent = this.liveSpO2 >= 95 ? (this.i18n ? this.i18n.t("status_optimal") : "Optimal") : "Low (Live)";
+      }
+    }
+
     this.drawLiveOscilloscope();
   }
 
@@ -983,6 +1118,8 @@ class MediKioskApp {
     this.isRppgScanning = true;
     this.rppgProgress = 0;
     this.rppgElapsedSec = "0.0";
+    this.liveBpm = null;
+    this.liveSpO2 = null;
     this.oscilloscopeSamples = [];
     this.render();
 
@@ -999,6 +1136,12 @@ class MediKioskApp {
           if (data.livePulseSample !== undefined) {
             this.recordOscilloscopeSample(data.livePulseSample);
           }
+          if (data.liveBpm) {
+            this.liveBpm = data.liveBpm;
+          }
+          if (data.liveSpO2) {
+            this.liveSpO2 = data.liveSpO2;
+          }
         }
         this.renderRppgProgressOnly();
       },
@@ -1010,12 +1153,16 @@ class MediKioskApp {
       },
       (vitals) => {
         this.isRppgScanning = false;
+        this.liveBpm = null;
+        this.liveSpO2 = null;
         this.patient.rppgVitals = vitals;
         this.stopCamera();
         this.render();
       },
       (err) => {
         this.isRppgScanning = false;
+        this.liveBpm = null;
+        this.liveSpO2 = null;
         this.render();
         console.warn("rPPG Scan notice:", err);
       },

@@ -5,12 +5,12 @@ import { ayushEngine, AYUSH_QUESTIONS } from "../services/ayushEngine.js";
 
 export function renderStep2VitalsAndIntake(app, i18n) {
   const vitals = app.patient.rppgVitals || {
-    heartRate: "--",
+    heartRate: (app.isRppgScanning && app.liveBpm) ? app.liveBpm : "--",
     hrv: "--",
-    spO2: "--",
+    spO2: (app.isRppgScanning && app.liveSpO2) ? app.liveSpO2 : "--",
     respiratoryRate: "--",
     stressScore: "--",
-    signalQuality: "Awaiting Face Alignment"
+    signalQuality: app.isRppgScanning ? "Acquiring Pulse..." : "Awaiting Face Alignment"
   };
 
   const isLocked = app.faceLockState.isLocked;

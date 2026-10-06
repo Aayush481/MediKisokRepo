@@ -88,11 +88,16 @@ class MedicalDocumentClassifier {
       if (!hasVerifiedOverride) {
         return {
           isValidMedical: false,
+          isAmbiguous: false,
+          needsManualReview: false,
           type: "non_medical",
           categoryLabel: "Non-Medical / Unrecognized Document",
           icon: "",
           badgeColor: "pill-danger",
+          confidenceScore: 0.999,
           confidence: "99.9%",
+          qualityWarning: null,
+          ambiguityReason: null,
           rootCause: "No authentic clinical prescriptions, laboratory biomarkers, radiographs, or ECGs detected in uploaded file.",
           errorMessage: `The file "${filename || 'uploaded file'}" does not contain a recognizable medical document. Please upload a clear prescription, pathology report, X-Ray, or ECG.`
         };
@@ -107,11 +112,16 @@ class MedicalDocumentClassifier {
       const ecgCause = this.deduceEcgRootCause(text);
       classification = {
         isValidMedical: true,
+        isAmbiguous: false,
+        needsManualReview: false,
         type: "ecg_report",
         categoryLabel: "12-Lead ECG",
         icon: "",
         badgeColor: ecgCause.includes("STEMI") ? "pill-danger" : (ecgCause.includes("Tachycardia") || ecgCause.includes("Ischemia") ? "pill-warning" : "pill-success"),
+        confidenceScore: visual.hasEcgGrid ? 0.995 : 0.970,
         confidence: visual.hasEcgGrid ? "99.5%" : "97.0%",
+        qualityWarning: null,
+        ambiguityReason: null,
         rootCause: ecgCause,
         anatomicalSite: "Cardiovascular System (12-Lead Myocardial Electrogram)"
       };
@@ -122,11 +132,16 @@ class MedicalDocumentClassifier {
       const xraySite = this.deduceXraySite(text, visual);
       classification = {
         isValidMedical: true,
+        isAmbiguous: false,
+        needsManualReview: false,
         type: "xray_report",
         categoryLabel: `X-Ray Radiograph (${xraySite.site})`,
         icon: "",
         badgeColor: xraySite.isAcute ? "pill-danger" : "pill-warning",
+        confidenceScore: 0.988,
         confidence: "98.8%",
+        qualityWarning: null,
+        ambiguityReason: null,
         rootCause: xraySite.cause,
         anatomicalSite: xraySite.site
       };
@@ -136,11 +151,16 @@ class MedicalDocumentClassifier {
     if (!classification && hasLabSignal) {
       classification = {
         isValidMedical: true,
+        isAmbiguous: false,
+        needsManualReview: false,
         type: "pathology_report",
         categoryLabel: "Pathology & Biochemistry Report",
         icon: "",
         badgeColor: "pill-danger",
+        confidenceScore: hasExtractedLabData ? 0.994 : 0.965,
         confidence: hasExtractedLabData ? "99.4%" : "96.5%",
+        qualityWarning: null,
+        ambiguityReason: null,
         rootCause: this.deducePathologyRootCause(text, parsedLab),
         anatomicalSite: "Clinical Pathology / Blood Biomarkers"
       };
@@ -150,11 +170,16 @@ class MedicalDocumentClassifier {
     if (!classification && hasRxSignal) {
       classification = {
         isValidMedical: true,
+        isAmbiguous: false,
+        needsManualReview: false,
         type: "prescription",
         categoryLabel: "Doctor Prescription (Rx)",
         icon: "",
         badgeColor: "pill-success",
+        confidenceScore: hasExtractedPrescriptions ? 0.989 : 0.955,
         confidence: hasExtractedPrescriptions ? "98.9%" : "95.5%",
+        qualityWarning: null,
+        ambiguityReason: null,
         rootCause: this.deducePrescriptionRootCause(text, validDrugs),
         anatomicalSite: "Outpatient Pharmacotherapy"
       };
@@ -164,11 +189,16 @@ class MedicalDocumentClassifier {
     if (!classification && hasDischargeSignal) {
       classification = {
         isValidMedical: true,
+        isAmbiguous: false,
+        needsManualReview: false,
         type: "discharge_summary",
         categoryLabel: "Hospital Discharge Summary",
         icon: "",
         badgeColor: "pill-primary",
+        confidenceScore: 0.965,
         confidence: "96.5%",
+        qualityWarning: null,
+        ambiguityReason: null,
         rootCause: "Inpatient Clinical Encounter & Procedural Summary",
         anatomicalSite: "Inpatient Medical Record"
       };
@@ -188,25 +218,58 @@ class MedicalDocumentClassifier {
     if (!classification && hasLegitimateClinicalCare) {
       classification = {
         isValidMedical: true,
+        isAmbiguous: false,
+        needsManualReview: false,
         type: "medical_record",
         categoryLabel: "Clinical Diagnostic Report",
         icon: "",
         badgeColor: "pill-primary",
+        confidenceScore: 0.950,
         confidence: "95.0%",
+        qualityWarning: null,
+        ambiguityReason: null,
         rootCause: "Clinical Care Record & Diagnostic Evaluation Ingestion",
         anatomicalSite: "General Clinical Medicine & Diagnostics"
       };
     }
 
-    // G. STRICT NON-MEDICAL / REJECTED IMAGE (Presumption of Non-Medical)
+    // G. Ambiguous Upload Evaluation Gate (Faint text, partial tokens, or low OCR resolution)
+    const hasWeakClinicalHint = /\b(dr\b|doctor|rx\b|tab\b|cap\b|patient|hospital|clinic|report|test|scan|medical|dept|opd|investigation)\b/i.test(text);
+    const hasPartialFragment = (rawOcrText || "").trim().length > 0 && (rawOcrText || "").trim().length < 80;
+
+    if (!classification && hasWeakClinicalHint && !isExplicitNonMedical) {
+      return {
+        isValidMedical: false,
+        isAmbiguous: true,
+        needsManualReview: true,
+        type: "ambiguous_medical",
+        categoryLabel: "Ambiguous Medical Document (Needs Review)",
+        icon: "",
+        badgeColor: "pill-warning",
+        confidenceScore: 0.58,
+        confidence: "58.0% (Inconclusive Quality)",
+        qualityWarning: "Low OCR text clarity / faint scan detected. Please provide a higher-resolution image.",
+        ambiguityReason: "Document contains isolated clinical keywords but lacks definitive prescription orders or lab intervals.",
+        rootCause: "Inconclusive Medical Authentication",
+        anatomicalSite: "Undetermined",
+        errorMessage: `The file "${filename || 'uploaded file'}" contains ambiguous clinical text with low confidence (58%). Please upload a clear photo or verify with physician.`
+      };
+    }
+
+    // H. STRICT NON-MEDICAL / REJECTED IMAGE (Presumption of Non-Medical)
     if (!classification) {
       return {
         isValidMedical: false,
+        isAmbiguous: false,
+        needsManualReview: false,
         type: "non_medical",
         categoryLabel: "Non-Medical / Unrecognized Document",
         icon: "",
         badgeColor: "pill-danger",
+        confidenceScore: 0.999,
         confidence: "99.9%",
+        qualityWarning: null,
+        ambiguityReason: null,
         rootCause: "No authentic clinical prescriptions, laboratory biomarkers, radiographs, or ECGs detected in uploaded file.",
         errorMessage: `The file "${filename || 'uploaded file'}" does not contain a recognizable medical document. Please upload a clear prescription, pathology report, X-Ray, or ECG.`
       };
