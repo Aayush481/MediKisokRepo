@@ -141,6 +141,7 @@ export function renderStep2VitalsAndIntake(app, i18n) {
                 <div class="telemetry-value telemetry-hr">${vitals.heartRate}<span class="telemetry-unit">${i18n.t("telemetry_hr_unit")}</span></div>
                 <div class="telemetry-label">${i18n.t("telemetry_hr")}</div>
                 <div class="telemetry-status">${vitals.heartRate > 100 ? 'Elevated' : (vitals.heartRate !== '--' ? i18n.t("status_resting") : '--')}</div>
+                <span class="telemetry-ref-tag">Ref: 60 - 100 bpm</span>
               </div>
 
               <div class="telemetry-card telemetry-card-spo2 ${vitals.spO2 < 95 && vitals.spO2 !== '--' ? 'highlight-alert' : ''}">
@@ -149,6 +150,7 @@ export function renderStep2VitalsAndIntake(app, i18n) {
                 <div class="telemetry-status">
                   ${vitals.spO2 !== '--' ? i18n.t("status_optimal") : '--'}
                 </div>
+                <span class="telemetry-ref-tag">Ref: 95 - 100%</span>
               </div>
 
               <div class="telemetry-card telemetry-card-stress ${vitals.stressScore > 70 ? 'highlight-alert' : ''}">
@@ -157,6 +159,7 @@ export function renderStep2VitalsAndIntake(app, i18n) {
                 <div class="telemetry-status">
                   ${vitals.stressScore !== '--' && vitals.stressScore !== undefined ? i18n.t("status_relaxed") : '--'}
                 </div>
+                <span class="telemetry-ref-tag">Ref: &lt; 35 Index</span>
               </div>
 
               <div class="telemetry-card telemetry-card-hrv">
@@ -165,6 +168,7 @@ export function renderStep2VitalsAndIntake(app, i18n) {
                 <div class="telemetry-status">
                   ${vitals.hrv !== '--' ? 'Nominal' : '--'}
                 </div>
+                <span class="telemetry-ref-tag">Ref: 30 - 70 ms</span>
               </div>
 
               <div class="telemetry-card telemetry-card-resp">
@@ -173,6 +177,7 @@ export function renderStep2VitalsAndIntake(app, i18n) {
                 <div class="telemetry-status">
                   ${vitals.respiratoryRate !== '--' ? i18n.t("status_normal") : '--'}
                 </div>
+                <span class="telemetry-ref-tag">Ref: 12 - 20 rpm</span>
               </div>
             </div>
 

@@ -29,6 +29,15 @@
       </div>
     </div>
 
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div style="display: flex; align-items: center; gap: 8px; background: #F9FAFB; border: 1px solid var(--grey-300); padding: 5px 12px; border-radius: 6px; font-family: var(--font-mono); font-size: 0.72rem;">
+        <span style="width: 7px; height: 7px; border-radius: 50%; background: var(--primary); box-shadow: 0 0 6px var(--primary);"></span>
+        <span style="color: var(--grey-800); font-weight: 700;">STATION-04</span>
+        <span style="color: var(--grey-400);">•</span>
+        <span style="color: var(--grey-600);" id="liveClockDisplay">Live Sync</span>
+      </div>
+    </div>
+
     <div class="nav-actions">
       <!-- Mode Switcher -->
       <div class="mode-toggle-group">
@@ -55,17 +64,17 @@
   <!-- Quick Action Bar -->
   <aside class="kiosk-quick-bar">
     <div class="quick-bar-left">
-      <span><strong>Clinical Intake Station</strong> (OPD Live)</span>
+      <span><strong>Clinical Intake Station</strong> (OPD Live Triage)</span>
     </div>
     <div class="quick-bar-actions">
       <button class="quick-chip" onclick="window.app.resetSession()">
-        New Patient
+        ➕ New Patient
       </button>
       <button class="quick-chip" onclick="window.app.goToStep(2)">
-        Vitals Scan
+        🩺 Vitals Scan
       </button>
       <button class="quick-chip" onclick="window.app.goToStep(3); window.app.triggerFileInput();">
-        Upload Document
+        📄 Upload Document
       </button>
     </div>
   </aside>
@@ -74,6 +83,21 @@
   <main class="main-wrapper" id="appContainer">
     <!-- Rendered dynamically by src/app.js -->
   </main>
+
+  <!-- Grounding Clinical Terminal Footer -->
+  <footer class="kiosk-footer">
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span class="kiosk-footer-dot"></span>
+      <span><strong>MediKiosk Enterprise v2.4</strong> • Ayushman Bharat Digital Mission (ABDM) Milestone 1-3 Certified</span>
+    </div>
+    <div class="kiosk-footer-links">
+      <span>DPDP Act 2023 Encrypted</span>
+      <span>•</span>
+      <span>HL7 FHIR R4 Ingestion</span>
+      <span>•</span>
+      <span style="color: var(--green-darkest); font-weight: 700;">Emergency Triage: Line 102</span>
+    </div>
+  </footer>
 
   <!-- HL7 FHIR Inspection Modal -->
   <div id="fhirModal" class="modal-backdrop-3d" style="display: none;">

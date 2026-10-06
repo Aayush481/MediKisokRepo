@@ -364,9 +364,10 @@ body::before {
 }
 
 /* Main container */
+.main-wrapper,
 .app-container {
   max-width: 1240px;
-  margin: 1.75rem auto;
+  margin: 1.5rem auto;
   padding: 0 1.5rem 3rem 1.5rem;
   position: relative;
   z-index: 10;
@@ -1830,9 +1831,448 @@ select.input-text-3d {
   .kiosk-stepper { grid-template-columns: 1fr; }
   .navbar { padding: 0.75rem 1.25rem; }
   .kiosk-quick-bar { padding: 0.45rem 1.25rem; flex-direction: column; gap: 8px; align-items: flex-start; }
+/* Multi-column clinical layout grids for widescreen balance */
+.registration-layout-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 1.5rem;
+  align-items: start;
 }
 
-/* Print styles */
+.summary-dispatch-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+/* Fast-track demo profile selector */
+.demo-profile-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--grey-50);
+  border: 1px solid var(--grey-300);
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.demo-profile-label {
+  font-size: 0.68rem;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--grey-600);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.demo-pill {
+  background: #FFFFFF;
+  border: 1px solid var(--grey-300);
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  color: var(--grey-700);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.demo-pill:hover {
+  background: var(--green-subtle);
+  border-color: var(--primary);
+  color: var(--green-darkest);
+  transform: translateY(-1px);
+}
+
+/* Government of India Official ABHA Card Preview */
+.abha-card-preview {
+  background: #FFFFFF;
+  border: 1px solid var(--grey-300);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.abha-card-preview:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.07);
+}
+
+.abha-tricolor-bar {
+  height: 4px;
+  width: 100%;
+  background: linear-gradient(90deg, #FF9933 0%, #FF9933 33.3%, #FFFFFF 33.3%, #FFFFFF 66.6%, #138808 66.6%, #138808 100%);
+}
+
+.abha-card-header {
+  padding: 9px 14px;
+  background: #F9FAFB;
+  border-bottom: 1px solid var(--grey-300);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.abha-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.abha-emblem {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--green-darkest);
+  color: #FFFFFF;
+  font-size: 0.7rem;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+}
+
+.abha-header-title {
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--grey-800);
+  letter-spacing: 0.04em;
+  font-family: var(--font-mono);
+  line-height: 1.2;
+}
+
+.abha-header-sub {
+  font-size: 0.58rem;
+  color: var(--grey-500);
+  font-family: var(--font-mono);
+}
+
+.abha-card-body {
+  padding: 14px;
+  display: grid;
+  grid-template-columns: 84px 1fr;
+  gap: 14px;
+  align-items: center;
+}
+
+.abha-avatar-box {
+  width: 84px;
+  height: 100px;
+  background: #F3F4F6;
+  border: 1px solid var(--grey-300);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--grey-500);
+  text-align: center;
+  padding: 4px;
+  position: relative;
+  overflow: hidden;
+}
+
+.abha-avatar-icon {
+  width: 38px;
+  height: 38px;
+  color: var(--grey-400);
+  margin-bottom: 4px;
+}
+
+.abha-avatar-caption {
+  font-size: 0.58rem;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--green-darkest);
+  background: var(--green-subtle);
+  border-radius: 2px;
+  padding: 1px 4px;
+  letter-spacing: 0.03em;
+}
+
+.abha-details-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.abha-field-row {
+  display: flex;
+  flex-direction: column;
+}
+
+.abha-field-lbl {
+  font-size: 0.58rem;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--grey-500);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.abha-field-val {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.abha-field-val-mono {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  color: var(--green-darkest);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.abha-card-footer {
+  padding: 8px 14px;
+  background: #F9FAFB;
+  border-top: 1px solid var(--grey-300);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Station telemetry tiles */
+.station-telemetry-box {
+  background: #FFFFFF;
+  border: 1px solid var(--grey-300);
+  border-radius: 8px;
+  padding: 1.15rem;
+  box-shadow: var(--shadow-3d-card);
+  margin-top: 1rem;
+}
+
+.station-telemetry-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--grey-200);
+}
+
+.station-telemetry-title {
+  font-size: 0.72rem;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--grey-700);
+}
+
+.station-telemetry-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.station-telemetry-tile {
+  background: #F9FAFB;
+  border: 1px solid var(--grey-300);
+  border-radius: 6px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.15s ease;
+}
+
+.station-telemetry-tile:hover {
+  background: var(--green-subtle);
+  border-color: var(--green-border);
+}
+
+.station-telemetry-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 6px var(--primary);
+  flex-shrink: 0;
+}
+
+.station-telemetry-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.station-telemetry-label {
+  font-size: 0.66rem;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--grey-700);
+  text-transform: uppercase;
+  line-height: 1.1;
+}
+
+.station-telemetry-status {
+  font-size: 0.6rem;
+  font-family: var(--font-mono);
+  color: var(--green-dark);
+  font-weight: 600;
+}
+
+/* Today's clinic OPD snapshot tile */
+.clinic-overview-tile {
+  background: #FFFFFF;
+  border: 1px solid var(--grey-300);
+  border-radius: 8px;
+  padding: 1.15rem;
+  box-shadow: var(--shadow-3d-card);
+  margin-top: 1rem;
+}
+
+.clinic-overview-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+  text-align: center;
+}
+
+.clinic-stat-item {
+  background: #F9FAFB;
+  border: 1px solid var(--grey-300);
+  border-radius: 6px;
+  padding: 8px 6px;
+}
+
+.clinic-stat-val {
+  font-family: var(--font-mono);
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.clinic-stat-lbl {
+  font-size: 0.58rem;
+  font-family: var(--font-mono);
+  color: var(--grey-500);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 2px;
+}
+
+/* Sample documents bar for Step 3 */
+.sample-doc-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--grey-50);
+  border: 1px solid var(--grey-300);
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.sample-doc-btn {
+  background: #FFFFFF;
+  border: 1px solid var(--grey-300);
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  color: var(--grey-700);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sample-doc-btn:hover {
+  background: var(--green-subtle);
+  border-color: var(--primary);
+  color: var(--green-darkest);
+  transform: translateY(-1px);
+}
+
+/* Clinical guidance banner */
+.clinical-guidance-banner {
+  background: var(--green-subtle);
+  border: 1px solid var(--green-border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 0.74rem;
+  color: var(--green-darkest);
+  font-family: var(--font-mono);
+}
+
+/* Telemetry reference tag */
+.telemetry-ref-tag {
+  font-size: 0.62rem;
+  font-family: var(--font-mono);
+  color: var(--grey-500);
+  margin-top: 3px;
+  display: block;
+}
+
+/* Terminal footer */
+.kiosk-footer {
+  margin-top: 2.5rem;
+  padding: 1.25rem 2.5rem;
+  background: #FFFFFF;
+  border-top: 1px solid var(--grey-300);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.72rem;
+  color: var(--grey-600);
+  font-family: var(--font-mono);
+  position: relative;
+  z-index: 50;
+  box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.kiosk-footer-links {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.kiosk-footer-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--primary);
+  display: inline-block;
+  margin-right: 4px;
+}
+
+@media (max-width: 1024px) {
+  .registration-layout-grid,
+  .summary-dispatch-grid {
+    grid-template-columns: 1fr;
+  }
+  .kiosk-footer {
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+    padding: 1rem 1.5rem;
+  }
+}
 @media print {
   body {
     background: #FFFFFF !important;

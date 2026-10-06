@@ -415,6 +415,45 @@ class MediKioskApp {
       });
     }
 
+    // Real-time reactive ABHA health card sync
+    const nameInput = document.getElementById("patientNameInput");
+    const ageInput = document.getElementById("patientAgeInput");
+    const genderInput = document.getElementById("patientGenderInput");
+    const abhaInput = document.getElementById("patientAbhaInput");
+    const mobileInput = document.getElementById("patientMobileInput");
+
+    const syncAbhaCard = () => {
+      const name = nameInput?.value?.trim() || "Priya Patel";
+      const age = parseInt(ageInput?.value?.trim()) || 24;
+      const gender = genderInput?.value || "Female";
+      const abha = abhaInput?.value?.trim() || "91-8274-1923-0194";
+      const mobile = mobileInput?.value?.trim() || "+91 98765 43210";
+      const yob = 2026 - age;
+      const abhaAddress = name.toLowerCase().replace(/[^a-z0-9]/g, '') + "@abdm";
+
+      const elName = document.getElementById("abhaCardPreviewName");
+      const elAbha = document.getElementById("abhaCardPreviewAbha");
+      const elAddress = document.getElementById("abhaCardPreviewAddress");
+      const elMeta = document.getElementById("abhaCardPreviewMeta");
+      const elMobile = document.getElementById("abhaCardPreviewMobile");
+
+      if (elName) elName.textContent = name;
+      if (elAbha) elAbha.textContent = abha;
+      if (elAddress) elAddress.textContent = abhaAddress;
+      if (elMeta) elMeta.textContent = `${gender} • YOB: ${yob}`;
+      if (elMobile) elMobile.textContent = mobile;
+
+      this.patient.name = nameInput?.value || '';
+      this.patient.age = ageInput?.value || '';
+      this.patient.gender = genderInput?.value || 'Female';
+      this.patient.abhaId = abhaInput?.value || '';
+      this.patient.mobile = mobileInput?.value || '';
+    };
+
+    [nameInput, ageInput, genderInput, abhaInput, mobileInput].forEach(el => {
+      if (el) el.addEventListener("input", syncAbhaCard);
+    });
+
     const dropzone = document.getElementById("uploadDropzone");
     if (dropzone) {
       dropzone.addEventListener("dragover", (e) => {
@@ -435,6 +474,106 @@ class MediKioskApp {
   }
 
   bindDoctorEvents() {}
+
+  quickFillDemo(type) {
+    const profiles = {
+      ramesh: {
+        name: "Ramesh Kumar",
+        age: 48,
+        gender: "Male",
+        abhaId: "91-4820-1940-5821",
+        mobile: "+91 98450 12345"
+      },
+      sunita: {
+        name: "Sunita Sharma",
+        age: 36,
+        gender: "Female",
+        abhaId: "91-7210-4491-0392",
+        mobile: "+91 99801 84729"
+      },
+      priya: {
+        name: "Priya Patel",
+        age: 24,
+        gender: "Female",
+        abhaId: "91-8274-1923-0194",
+        mobile: "+91 98765 43210"
+      }
+    };
+    const p = profiles[type] || profiles.priya;
+    this.patient.name = p.name;
+    this.patient.age = p.age;
+    this.patient.gender = p.gender;
+    this.patient.abhaId = p.abhaId;
+    this.patient.mobile = p.mobile;
+    this.render();
+  }
+
+  loadSampleDoc(type) {
+    if (type === "rx") {
+      this.patient.documents = [{
+        id: "doc-sample-rx",
+        name: "Doctor Prescription (Rx) - Outpatient.pdf",
+        type: "prescription",
+        categoryLabel: "Doctor Prescription (Rx)",
+        doctorName: "Dr. Ananya Sharma, MD",
+        facility: "Bangalore General Hospital - OPD Wing",
+        date: "Today",
+        previewUrl: generateMedicalDocSvg("prescription", "Outpatient Prescription Record", "Bangalore General Hospital", [
+          { name: "Amoxicillin + Clavulanic Acid (Augmentin 625)", dosage: "625 mg", freq: "TDS", timing: "After Food", duration: "5 days", route: "Oral", snomedCode: "387517004", schedule: "Schedule H" },
+          { name: "Pantoprazole (Pan-D)", dosage: "40 mg", freq: "OD", timing: "Before Breakfast", duration: "10 days", route: "Oral", snomedCode: "387063000", schedule: "Schedule H" },
+          { name: "Levocetirizine + Montelukast (Montair-LC)", dosage: "10 mg / 5 mg", freq: "HS", timing: "Night Bedtime", duration: "7 days", route: "Oral", snomedCode: "420379008", schedule: "Schedule H" }
+        ], "Upper Respiratory Infection with Acute Rhinitis", this.patient.name || "Ramesh Kumar", this.patient.tokenNumber || "A-15"),
+        medications: [
+          { name: "Amoxicillin + Clavulanic Acid (Augmentin 625)", dosage: "625 mg", frequency: "TDS", timing: "After Food", duration: "5 days", route: "Oral" },
+          { name: "Pantoprazole (Pan-D)", dosage: "40 mg", frequency: "OD", timing: "Before Breakfast", duration: "10 days", route: "Oral" },
+          { name: "Levocetirizine + Montelukast (Montair-LC)", dosage: "10 mg / 5 mg", frequency: "HS", timing: "Night Bedtime", duration: "7 days", route: "Oral" }
+        ],
+        diseases: [{ name: "Acute Upper Respiratory Tract Infection", snomed: "195662009" }],
+        flags: []
+      }];
+    } else if (type === "lab") {
+      this.patient.documents = [{
+        id: "doc-sample-lab",
+        name: "Comprehensive Pathology & Biochemistry Report.pdf",
+        type: "lab_report",
+        categoryLabel: "Pathology & Biochemistry Report",
+        doctorName: "Dr. R. K. Singhal, MD (Path)",
+        facility: "Apex Central Diagnostic Pathology Lab",
+        date: "Today",
+        previewUrl: generateMedicalDocSvg("lab_report", "Comprehensive Metabolic & Lipid Panel", "Apex Central Diagnostic Pathology Lab", [
+          { name: "Fasting Blood Glucose", value: "198.50 mg/dL", status: "HIGH" },
+          { name: "HbA1c (Glycated Hemoglobin)", value: "9.40 %", status: "HIGH" },
+          { name: "Serum Triglycerides", value: "342.00 mg/dL", status: "HIGH" },
+          { name: "Total Cholesterol", value: "248.00 mg/dL", status: "HIGH" },
+          { name: "Serum Creatinine", value: "1.85 mg/dL", status: "HIGH" }
+        ], "Uncontrolled Hyperglycemia & Atherogenic Dyslipidemia", this.patient.name || "Ramesh Kumar", this.patient.tokenNumber || "A-15"),
+        medications: [],
+        diseases: [{ name: "Type 2 Diabetes Mellitus with Hyperglycemia", snomed: "44054006" }],
+        flags: [
+          { test: "Fasting Blood Glucose", param: "Glucose", value: "198.50 mg/dL", ref: "70.00 - 100.00 mg/dL", status: "HIGH (Elevated)" },
+          { test: "HbA1c", param: "HbA1c", value: "9.40 %", ref: "< 5.70 %", status: "HIGH (Critical Poor Glycemic Control)" },
+          { test: "Serum Triglycerides", param: "Triglycerides", value: "342.00 mg/dL", ref: "< 150.00 mg/dL", status: "HIGH (Hypertriglyceridemia)" },
+          { test: "Total Cholesterol", param: "Cholesterol", value: "248.00 mg/dL", ref: "< 200.00 mg/dL", status: "HIGH (Hypercholesterolemia)" },
+          { test: "Serum Creatinine", param: "Creatinine", value: "1.85 mg/dL", ref: "0.70 - 1.30 mg/dL", status: "HIGH (Renal Impairment)" }
+        ]
+      }];
+    } else if (type === "xray") {
+      this.patient.documents = [{
+        id: "doc-sample-xray",
+        name: "Digital Radiogram - Bilateral Knee PA Erect.png",
+        type: "xray_report",
+        categoryLabel: "X-Ray Radiograph (Bilateral Knee Joint)",
+        doctorName: "Dr. Vikram Sethi, MD (Radio)",
+        facility: "Advanced Imaging & Orthopedic Diagnostic Center",
+        date: "Today",
+        previewUrl: generateMedicalDocSvg("radiology", "Digital Skeletal Radiography", "Advanced Imaging Center", [], "Medial compartment joint space narrowing with subchondral sclerosis", this.patient.name || "Ramesh Kumar", this.patient.tokenNumber || "A-15"),
+        medications: [],
+        diseases: [{ name: "Osteoarthritis of Bilateral Knee Joints", snomed: "239873007" }],
+        flags: [{ test: "Joint Space Width", param: "Knee Joint", value: "Narrowed (Grade III)", ref: "Normal Space", status: "ABNORMAL" }]
+      }];
+    }
+    this.render();
+  }
 
   saveStep1AndNext() {
     const name = document.getElementById("patientNameInput")?.value || "";
@@ -1539,9 +1678,22 @@ class MediKioskApp {
 }
 
 // Initialize Application
+function startLiveClock() {
+  const update = () => {
+    const clock = document.getElementById("liveClockDisplay");
+    if (clock) {
+      const now = new Date();
+      clock.textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+    }
+  };
+  update();
+  setInterval(update, 1000);
+}
+
 function bootstrapApp() {
   if (!window.app) {
     window.app = new MediKioskApp();
+    startLiveClock();
   }
 }
 
