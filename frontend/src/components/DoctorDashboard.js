@@ -50,7 +50,7 @@ export function renderDoctorDashboard(app, i18n) {
       <div class="queue-panel-3d">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-light); padding-bottom: 8px;">
           <div>
-            <h3 style="font-size: 0.95rem; font-weight: 800; color: #FFFFFF; margin: 0;">Live Outpatient Queue</h3>
+            <h3 style="font-size: 0.95rem; font-weight: 800; color: var(--text-primary); margin: 0;">Live Outpatient Queue</h3>
             <p style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">OPD Cabin 3 • Dr. Sharma</p>
           </div>
           <span class="pill-3d pill-3d-emerald">${app.doctorQueue.length} Active</span>
@@ -60,7 +60,7 @@ export function renderDoctorDashboard(app, i18n) {
         <div style="margin-bottom: 10px;">
           <div style="position: relative;">
             <input type="text" id="queueBarcodeSearch" placeholder="Scan Barcode / Token (e.g. A-15)..." 
-              style="width: 100%; padding: 7px 32px 7px 10px; background: var(--bg-surface-inset); border: 1px solid var(--border-medium); border-radius: 4px; color: #FFFFFF; font-size: 0.76rem; font-family: var(--font-mono); outline: none;" 
+              style="width: 100%; padding: 7px 32px 7px 10px; background: var(--bg-surface-inset); border: 1px solid var(--border-medium); border-radius: 4px; color: var(--text-primary); font-size: 0.76rem; font-family: var(--font-mono); outline: none;" 
               onkeydown="if(event.key === 'Enter') { window.app.handleBarcodeScan(this.value); this.value = ''; }" />
             <span style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 0.72rem; font-weight: 700; color: var(--primary); font-family: var(--font-mono); cursor: pointer;" title="Scan Barcode" onclick="const val = document.getElementById('queueBarcodeSearch').value; if(val) { window.app.handleBarcodeScan(val); document.getElementById('queueBarcodeSearch').value = ''; }">Scan</span>
           </div>
@@ -80,7 +80,7 @@ export function renderDoctorDashboard(app, i18n) {
               <div class="queue-patient-card-3d ${isSelected ? 'active' : ''} ${item.isEmergency ? 'emergency' : ''}" onclick="window.app.selectQueuePatient('${item.id}')" style="cursor: pointer; position: relative;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                   <div>
-                    <strong style="font-size: 0.88rem; color: #FFFFFF;">${item.name || 'Walk-in Patient'}</strong>
+                    <strong style="font-size: 0.88rem; color: var(--text-primary);">${item.name || 'Walk-in Patient'}</strong>
                     <div style="font-size: 0.72rem; color: var(--slate-400); font-family: var(--font-mono); margin-top: 2px;">ABHA: ${item.abhaId || 'Walk-in'}</div>
                   </div>
                   <span class="pill-3d ${item.isEmergency ? 'pill-3d-crimson' : (isCurrent ? 'pill-3d-emerald' : 'pill-3d-blue')}">
@@ -97,7 +97,7 @@ export function renderDoctorDashboard(app, i18n) {
 
                 <div style="margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--border-light); display: flex; flex-direction: column; gap: 4px;">
                   <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.72rem;">
-                    <span style="color: var(--slate-400);">Position #${idx + 1} • <strong style="color: #FFFFFF; font-family: var(--font-mono);">${isCurrent ? 'With Doctor' : patientsAhead + ' patients ahead'}</strong></span>
+                    <span style="color: var(--slate-400);">Position #${idx + 1} • <strong style="color: var(--text-primary); font-family: var(--font-mono);">${isCurrent ? 'With Doctor' : patientsAhead + ' patients ahead'}</strong></span>
                     <span style="color: var(--primary); font-weight: 700; font-family: var(--font-mono);">${isCurrent ? 'Consulting' : '~' + waitMinutes + 'm (' + estTime + ')'}</span>
                   </div>
 
@@ -129,7 +129,7 @@ export function renderDoctorDashboard(app, i18n) {
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; border-bottom: 1px solid var(--border-light); padding-bottom: 0.85rem; flex-wrap: wrap; gap: 10px;">
           <div>
             <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-              <h2 style="font-size: 1.35rem; font-weight: 800; color: #FFFFFF; margin: 0;">${p.name || 'Walk-in Patient'}</h2>
+              <h2 style="font-size: 1.35rem; font-weight: 800; color: var(--text-primary); margin: 0;">${p.name || 'Walk-in Patient'}</h2>
               <span class="pill-3d ${isViewingCurrent ? 'pill-3d-emerald' : 'pill-3d-blue'}" style="font-weight: 800;">
                 ${isViewingCurrent ? 'IN CONSULTATION (CURRENT PATIENT)' : `REVIEWING QUEUE PATIENT (#${selectedQueueIdx + 1})`}
               </span>
@@ -138,7 +138,7 @@ export function renderDoctorDashboard(app, i18n) {
               ${p.smsAlertSent ? `<span class="pill-3d pill-3d-emerald">30-Min SMS Dispatched</span>` : ''}
             </div>
             <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; margin-bottom: 0;">
-              ${p.age || '--'} Years • ${p.gender} • Registered Mobile: <strong style="color: #FFFFFF; font-family: var(--font-mono);">${p.mobile || 'Not provided'}</strong> • Chief Complaint: <span style="color: var(--slate-200);">${p.chiefComplaint || 'None provided'}</span>
+              ${p.age || '--'} Years • ${p.gender} • Registered Mobile: <strong style="color: var(--text-primary); font-family: var(--font-mono);">${p.mobile || 'Not provided'}</strong> • Chief Complaint: <span style="color: var(--slate-200);">${p.chiefComplaint || 'None provided'}</span>
             </p>
             ${!isViewingCurrent && currentInCabin ? `
               <div style="margin-top: 6px;">
@@ -186,7 +186,7 @@ export function renderDoctorDashboard(app, i18n) {
           <div id="sectionSummary" style="margin-bottom: 1.5rem; background: var(--bg-surface-inset); border: 1px solid var(--border-light); border-radius: 6px; padding: 1.25rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
               <div>
-                <h3 style="font-size: 1.05rem; font-weight: 800; color: #FFFFFF; margin: 0; font-family: var(--font-mono); letter-spacing: 0.03em;">Summary of Uploaded Documents</h3>
+                <h3 style="font-size: 1.05rem; font-weight: 800; color: var(--text-primary); margin: 0; font-family: var(--font-mono); letter-spacing: 0.03em;">Summary of Uploaded Documents</h3>
                 <p style="font-size: 0.74rem; color: var(--text-muted); margin-top: 2px;">Synthesized Diagnostic Intelligence, OCR Multi-Page Aggregation, and Contactless Vitals</p>
               </div>
               <span class="pill-3d pill-3d-blue">${allDocs.length} Total Records</span>
@@ -218,7 +218,7 @@ export function renderDoctorDashboard(app, i18n) {
 
             <!-- Optical vitals ribbon -->
             <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 6px; padding: 10px 14px; margin-bottom: 1.25rem;">
-              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #FFFFFF; font-weight: 700; font-family: var(--font-mono); margin-bottom: 8px;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-primary); font-weight: 700; font-family: var(--font-mono); margin-bottom: 8px;">
                 <span>Contactless Optical Vitals (rPPG Camera Telemetry)</span>
                 <span class="pill-3d pill-3d-emerald">${vitals.signalQuality || 'Real-Time Ingestion'}</span>
               </div>
@@ -255,7 +255,7 @@ export function renderDoctorDashboard(app, i18n) {
                 </div>
                 ${hdiResult.conflicts.map(c => `
                   <div style="background: var(--bg-surface-inset); border: 1px solid var(--border-light); border-radius: 4px; padding: 8px 12px; margin-top: 6px;">
-                    <strong style="color: #FFFFFF; font-size: 0.84rem;">${c.drug} — ${c.herb} (${c.herbBotanical})</strong>
+                    <strong style="color: var(--text-primary); font-size: 0.84rem;">${c.drug} — ${c.herb} (${c.herbBotanical})</strong>
                     <p style="font-size: 0.76rem; color: var(--slate-300); margin-top: 2px; margin-bottom: 2px;"><strong>Hazard:</strong> ${c.clinicalEffect}</p>
                     <p style="font-size: 0.74rem; color: var(--slate-400); margin: 0;"><strong>Recommendation:</strong> ${c.recommendation}</p>
                   </div>
@@ -266,7 +266,7 @@ export function renderDoctorDashboard(app, i18n) {
             <!-- Identified conditions breakdown -->
             <div style="margin-bottom: 1.25rem;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <strong style="font-size: 0.85rem; color: #FFFFFF; text-transform: uppercase; font-family: var(--font-mono);">
+                <strong style="font-size: 0.85rem; color: var(--text-primary); text-transform: uppercase; font-family: var(--font-mono);">
                   Active Diagnoses & Clinical Findings:
                 </strong>
                 <span class="pill-3d pill-3d-blue">${allDiseases.length} Verified</span>
@@ -276,7 +276,7 @@ export function renderDoctorDashboard(app, i18n) {
                   ${allDiseases.map(d => `
                     <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 6px; padding: 8px 12px;">
                       <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <strong style="color: #FFFFFF; font-size: 0.84rem;">${d.name}</strong>
+                        <strong style="color: var(--text-primary); font-size: 0.84rem;">${d.name}</strong>
                         <span class="pill-3d pill-3d-blue" style="font-size: 0.68rem;">${d.icd10 || 'R69'}</span>
                       </div>
                       <p style="font-size: 0.72rem; color: var(--slate-400); margin-top: 3px; margin-bottom: 0;">
@@ -292,7 +292,7 @@ export function renderDoctorDashboard(app, i18n) {
 
             <!-- Individual records breakdown -->
             <div style="margin-top: 1rem;">
-              <strong style="font-size: 0.85rem; color: #FFFFFF; text-transform: uppercase; display: block; margin-bottom: 8px; font-family: var(--font-mono);">
+              <strong style="font-size: 0.85rem; color: var(--text-primary); text-transform: uppercase; display: block; margin-bottom: 8px; font-family: var(--font-mono);">
                 Clinical Records & Findings:
               </strong>
               ${allDocs.length > 0 ? `
@@ -304,16 +304,16 @@ export function renderDoctorDashboard(app, i18n) {
                           <span class="pill-3d ${doc.type === 'prescription' ? 'pill-3d-emerald' : (doc.type === 'radiology' ? 'pill-3d-blue' : 'pill-3d-violet')}">
                             ${doc.categoryLabel || doc.type}
                           </span>
-                          <strong style="font-size: 0.86rem; color: #FFFFFF;">${doc.title}</strong>
+                          <strong style="font-size: 0.86rem; color: var(--text-primary);">${doc.title}</strong>
                           <span style="font-size: 0.72rem; color: var(--text-muted);">${doc.date || 'Recent'} • ${doc.doctor || 'Verified Facility'}</span>
                         </div>
                         <p style="font-size: 0.78rem; color: var(--slate-300); margin-top: 4px; margin-bottom: 4px;">
-                          <strong style="color: #FFFFFF; font-family: var(--font-mono);">Diagnostic Finding:</strong> ${doc.rootCause || 'Verified Clinical Ingestion Record'}
+                          <strong style="color: var(--text-primary); font-family: var(--font-mono);">Diagnostic Finding:</strong> ${doc.rootCause || 'Verified Clinical Ingestion Record'}
                         </p>
                         ${(doc.flags && doc.flags.length > 0) ? `
                           <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px;">
                             ${doc.flags.map(f => `
-                              <span style="font-size: 0.7rem; padding: 2px 6px; border-radius: 3px; background: rgba(0,0,0,0.4); color: #FFFFFF; border: 1px solid var(--border-light);">
+                              <span style="font-size: 0.7rem; padding: 2px 6px; border-radius: 3px; background: rgba(0,0,0,0.4); color: var(--text-primary); border: 1px solid var(--border-light);">
                                 ${f.name}: <strong>${f.value}</strong> [${f.status}]
                               </span>
                             `).join('')}
@@ -338,7 +338,7 @@ export function renderDoctorDashboard(app, i18n) {
           <div id="sectionPrescriptions" style="margin-bottom: 1.5rem; background: var(--bg-surface-inset); border: 1px solid var(--border-light); border-radius: 6px; padding: 1.25rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
               <div>
-                <h3 style="font-size: 1.05rem; font-weight: 800; color: #FFFFFF; margin: 0; font-family: var(--font-mono); letter-spacing: 0.03em;">Prescriptions & Active Medications</h3>
+                <h3 style="font-size: 1.05rem; font-weight: 800; color: var(--text-primary); margin: 0; font-family: var(--font-mono); letter-spacing: 0.03em;">Prescriptions & Active Medications</h3>
                 <p style="font-size: 0.74rem; color: var(--text-muted); margin-top: 2px;">Standardized to SNOMED-CT Clinical Nomenclature</p>
               </div>
               <span class="pill-3d pill-3d-emerald">${allMeds.length} Active Prescriptions</span>
@@ -378,7 +378,7 @@ export function renderDoctorDashboard(app, i18n) {
                       <tr>
                         <td style="color: var(--slate-500); font-weight: bold;">${idx + 1}</td>
                         <td>
-                          <strong style="color: #FFFFFF; font-size: 0.85rem;">${name}</strong>
+                          <strong style="color: var(--text-primary); font-size: 0.85rem;">${name}</strong>
                         </td>
                         <td><span class="pill-3d pill-3d-blue" style="font-size: 0.72rem;">${dosage}</span></td>
                         <td><strong style="color: var(--primary); font-family: var(--font-mono);">${freq}</strong></td>
@@ -409,7 +409,7 @@ export function renderDoctorDashboard(app, i18n) {
           <div id="sectionPreviews" style="margin-bottom: 1.5rem; background: var(--bg-surface-inset); border: 1px solid var(--border-light); border-radius: 6px; padding: 1.25rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
               <div>
-                <h3 style="font-size: 1.05rem; font-weight: 800; color: #FFFFFF; margin: 0; font-family: var(--font-mono); letter-spacing: 0.03em;">Uploaded Clinical Documents</h3>
+                <h3 style="font-size: 1.05rem; font-weight: 800; color: var(--text-primary); margin: 0; font-family: var(--font-mono); letter-spacing: 0.03em;">Uploaded Clinical Documents</h3>
                 <p style="font-size: 0.74rem; color: var(--text-muted); margin-top: 2px;">Interactive Visual Scan Gallery with Optical Zoom Inspection</p>
               </div>
               <span class="pill-3d pill-3d-violet">${allDocs.length} Visual Scans</span>
@@ -433,7 +433,7 @@ export function renderDoctorDashboard(app, i18n) {
                       </span>
                       <span style="font-size: 0.68rem; color: var(--text-muted);">${doc.date || 'Recent'}</span>
                     </div>
-                    <strong style="font-size: 0.84rem; color: #FFFFFF; line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; margin-bottom: 6px;">
+                    <strong style="font-size: 0.84rem; color: var(--text-primary); line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; margin-bottom: 6px;">
                       ${doc.title}
                     </strong>
                     <p style="font-size: 0.72rem; color: var(--text-secondary); line-height: 1.3; margin: 0; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
@@ -457,7 +457,7 @@ export function renderDoctorDashboard(app, i18n) {
 
         <!-- Consultation notes & prescriptions -->
         <div class="card-3d" style="padding: 1.25rem; margin-top: 1rem;">
-          <strong style="font-size: 0.85rem; color: #FFFFFF; text-transform: uppercase; font-family: var(--font-mono);">Doctor's Consultation Assessment & Notes:</strong>
+          <strong style="font-size: 0.85rem; color: var(--text-primary); text-transform: uppercase; font-family: var(--font-mono);">Doctor's Consultation Assessment & Notes:</strong>
           <textarea class="input-text-3d" rows="3" style="margin-top: 8px;" placeholder="Add clinical examination findings, final diagnosis, and new prescriptions..."></textarea>
           <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px;">
             <button class="btn-3d btn-3d-secondary" onclick="alert('Prescription printed successfully!')">Print Prescription</button>
@@ -475,7 +475,7 @@ export function renderDoctorDashboard(app, i18n) {
             <div>
               <div style="display: flex; align-items: center; gap: 8px;">
                 <span class="pill-3d ${app.inspectedDoc.type === 'prescription' ? 'pill-3d-emerald' : 'pill-3d-blue'}">${app.inspectedDoc.categoryLabel || app.inspectedDoc.type}</span>
-                <h3 style="font-size: 1.05rem; font-weight: 800; color: #FFFFFF; margin: 0;">${app.inspectedDoc.title}</h3>
+                <h3 style="font-size: 1.05rem; font-weight: 800; color: var(--text-primary); margin: 0;">${app.inspectedDoc.title}</h3>
               </div>
               <p style="font-size: 0.72rem; color: var(--text-muted); margin: 2px 0 0 0;">${app.inspectedDoc.date || 'Recent'} • ${app.inspectedDoc.doctor || 'Verified Clinical Facility'}</p>
             </div>
@@ -489,14 +489,14 @@ export function renderDoctorDashboard(app, i18n) {
             </div>
           </div>
 
-          <div style="flex: 1; overflow: auto; padding: 20px; background: #000000; display: flex; justify-content: center; align-items: flex-start;">
+          <div style="flex: 1; overflow: auto; padding: 20px; background: #0F172A; display: flex; justify-content: center; align-items: flex-start;">
             <img id="inspectModalImage" src="${app.inspectedDoc.previewUrl || ''}" alt="${app.inspectedDoc.title}" style="max-width: 100%; border-radius: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); transform: scale(${app.docZoomLevel}); transform-origin: top center; transition: transform 0.15s ease-out;" />
           </div>
 
           <div style="padding: 12px 20px; background: var(--bg-surface-inset); border-top: 1px solid var(--border-light); font-size: 0.78rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
               <div>
-                <strong style="color: #FFFFFF; font-family: var(--font-mono);">Diagnostic Findings:</strong> <span style="color: var(--slate-300);">${app.inspectedDoc.rootCause || 'Verified Record'}</span>
+                <strong style="color: var(--text-primary); font-family: var(--font-mono);">Diagnostic Findings:</strong> <span style="color: var(--slate-300);">${app.inspectedDoc.rootCause || 'Verified Record'}</span>
               </div>
               ${app.inspectedDoc.extractedText ? `
                 <button class="btn-3d btn-3d-secondary" style="padding: 2px 10px; font-size: 0.72rem;" onclick="const el = document.getElementById('inspectRawTextStream'); if(el) el.style.display = el.style.display === 'none' ? 'block' : 'none';">
@@ -518,7 +518,7 @@ export function renderDoctorDashboard(app, i18n) {
         <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 22px; background: var(--bg-surface-inset); border-bottom: 1px solid var(--border-light);">
           <div>
             <div style="display: flex; align-items: center; gap: 10px;">
-              <h3 style="font-size: 1.1rem; font-weight: 800; color: #FFFFFF; margin: 0; font-family: var(--font-mono);">30-Minute Advance Patient Appointment SMS Dispatch Logs</h3>
+              <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--text-primary); margin: 0; font-family: var(--font-mono);">30-Minute Advance Patient Appointment SMS Dispatch Logs</h3>
             </div>
             <p style="font-size: 0.74rem; color: var(--text-muted); margin: 3px 0 0 0;">
               Automated notifications sent 30 minutes prior to doctor consultation (OPD Cabin 3)
@@ -544,8 +544,8 @@ export function renderDoctorDashboard(app, i18n) {
             <tbody>
               ${app.smsDispatchLogs.length > 0 ? app.smsDispatchLogs.map(log => `
                 <tr>
-                  <td style="font-family: monospace; color: #FFFFFF; font-size: 0.74rem; white-space: nowrap;">${log.dispatchTimestamp}</td>
-                  <td><strong style="color: #FFFFFF;">${log.patientName}</strong></td>
+                  <td style="font-family: monospace; color: var(--text-primary); font-size: 0.74rem; white-space: nowrap;">${log.dispatchTimestamp}</td>
+                  <td><strong style="color: var(--text-primary);">${log.patientName}</strong></td>
                   <td><span class="pill-3d pill-3d-blue" style="font-size: 0.72rem;">${log.token}</span></td>
                   <td style="font-family: monospace; font-size: 0.74rem; color: var(--slate-400);">${log.mobile}</td>
                   <td><span class="pill-3d pill-3d-amber" style="font-size: 0.7rem;">${log.patientsAhead} Patients Ahead</span></td>

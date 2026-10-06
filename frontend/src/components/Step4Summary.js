@@ -53,10 +53,10 @@ export function renderStep4Summary(app, i18n) {
     <div class="opd-ticket-wrapper">
       <!-- Summary congratulations -->
       <div style="text-align: center; margin-bottom: 1.25rem;">
-        <h2 style="font-size: 1.45rem; font-weight: 800; color: #FFFFFF; letter-spacing: -0.01em;">
+        <h2 style="font-size: 1.45rem; font-weight: 800; color: var(--text-primary); letter-spacing: -0.01em;">
           ${i18n.t("summary_congrats")}
         </h2>
-        <p style="font-size: 0.84rem; color: var(--slate-300); margin-top: 4px;">
+        <p style="font-size: 0.84rem; color: var(--text-muted); margin-top: 4px;">
           ${i18n.t("summary_subtitle")}
         </p>
       </div>
@@ -142,9 +142,9 @@ export function renderStep4Summary(app, i18n) {
 
           <!-- Automated SMS notice -->
           <div class="ticket-sms-box">
-            <div class="ticket-sms-icon" style="background: rgba(14, 165, 233, 0.15); color: var(--primary); font-family: var(--font-mono);">SMS</div>
+            <div class="ticket-sms-icon" style="background: var(--green-subtle); color: var(--green-dark); font-family: var(--font-mono);">SMS</div>
             <div class="ticket-sms-content">
-              <div class="ticket-sms-title" style="color: #FFFFFF; font-family: var(--font-mono); margin-bottom: 2px;">Automated SMS Notification</div>
+              <div class="ticket-sms-title" style="color: var(--text-primary); font-family: var(--font-mono); margin-bottom: 2px;">Automated SMS Notification</div>
               <p class="ticket-sms-desc">
                 An automated SMS alert will be dispatched to <strong>${patient.mobile || '+91 98765 43210'}</strong> exactly 30 minutes before your consultation call.
               </p>

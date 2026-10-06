@@ -744,11 +744,11 @@ class MediKioskApp {
     const h = canvas.height;
 
     // Clinical telemetry grid backdrop
-    ctx.fillStyle = "#070B14";
+    ctx.fillStyle = "#0F172A";
     ctx.fillRect(0, 0, w, h);
 
     // Subtle monochrome grid lines
-    ctx.strokeStyle = "rgba(14, 165, 233, 0.08)";
+    ctx.strokeStyle = "rgba(16, 185, 129, 0.12)";
     ctx.lineWidth = 1;
     for (let x = 0; x < w; x += 24) {
       ctx.beginPath();
@@ -766,7 +766,7 @@ class MediKioskApp {
     const samples = this.oscilloscopeSamples || [];
     if (samples.length < 2) {
       // Baseline resting line
-      ctx.strokeStyle = "rgba(14, 165, 233, 0.3)";
+      ctx.strokeStyle = "rgba(16, 185, 129, 0.35)";
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(0, h / 2);
@@ -786,8 +786,8 @@ class MediKioskApp {
 
     // Draw glowing arterial photoplethysmogram wave in clinical electric cyan
     ctx.shadowBlur = 8;
-    ctx.shadowColor = "rgba(14, 165, 233, 0.6)";
-    ctx.strokeStyle = "#38BDF8";
+    ctx.shadowColor = "rgba(16, 185, 129, 0.6)";
+    ctx.strokeStyle = "#10B981";
     ctx.lineWidth = 2.0;
     ctx.beginPath();
 
@@ -809,9 +809,9 @@ class MediKioskApp {
       const lastNorm = (samples[samples.length - 1] - mid) / (range * 0.55);
       const lastY = Math.max(4, Math.min(h - 4, (h / 2) - (lastNorm * (h * 0.38))));
 
-      ctx.fillStyle = "#38BDF8";
+      ctx.fillStyle = "#34D399";
       ctx.shadowBlur = 6;
-      ctx.shadowColor = "rgba(56, 189, 248, 0.8)";
+      ctx.shadowColor = "rgba(52, 211, 153, 0.8)";
       ctx.beginPath();
       ctx.arc(lastX, lastY, 3.5, 0, Math.PI * 2);
       ctx.fill();

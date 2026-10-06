@@ -42,7 +42,7 @@ export function renderStep3Records(app, i18n) {
         <div>
           <div class="scanner-dropzone-3d" id="uploadDropzone" onclick="window.app.triggerFileInput()">
             <div style="font-size: 1.15rem; font-weight: 800; color: var(--primary); font-family: var(--font-mono); margin-bottom: 6px;">Upload Document</div>
-            <strong style="color: #FFFFFF; font-size: 0.95rem;">${i18n.t("upload_dropzone_title")}</strong>
+            <strong style="color: var(--text-primary); font-size: 0.95rem;">${i18n.t("upload_dropzone_title")}</strong>
             <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">
               ${i18n.t("upload_dropzone_desc")}
             </p>
@@ -54,15 +54,15 @@ export function renderStep3Records(app, i18n) {
           </div>
 
           ${patient.documents.length > 0 ? `
-            <div style="margin-top: 12px; border-radius: 6px; overflow: hidden; background: #000000; max-height: 220px; border: 1px solid var(--border-medium); display: flex; align-items: center; justify-content: center;">
+            <div style="margin-top: 12px; border-radius: 6px; overflow: hidden; background: #0F172A; max-height: 220px; border: 1px solid var(--border-medium); display: flex; align-items: center; justify-content: center;">
               <img src="${patient.documents[0].previewUrl}" alt="Scanned Document" style="max-height: 220px; width: 100%; object-fit: contain;">
             </div>
           ` : ''}
 
           ${(!patient.documents || patient.documents.length === 0) && app.lastUploadedDocStatus && !app.lastUploadedDocStatus.verified && app.lastUploadedDocStatus.previewUrl ? `
-            <div style="margin-top: 12px; border-radius: 6px; overflow: hidden; background: #000000; max-height: 180px; border: 1px solid var(--crimson); display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
+            <div style="margin-top: 12px; border-radius: 6px; overflow: hidden; background: #0F172A; max-height: 180px; border: 1px solid var(--crimson); display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
               <img src="${app.lastUploadedDocStatus.previewUrl}" alt="Rejected Document Preview" style="max-height: 180px; width: 100%; object-fit: contain; opacity: 0.5;">
-              <div style="position: absolute; bottom: 8px; background: rgba(0,0,0,0.85); border: 1px solid var(--crimson); color: var(--crimson-light); font-size: 0.72rem; font-weight: 700; padding: 2px 10px; border-radius: 4px; font-family: var(--font-mono); letter-spacing: 0.5px;">
+              <div style="position: absolute; bottom: 8px; background: rgba(15, 23, 42, 0.9); border: 1px solid var(--crimson); color: var(--crimson-light); font-size: 0.72rem; font-weight: 700; padding: 2px 10px; border-radius: 4px; font-family: var(--font-mono); letter-spacing: 0.5px;">
                 REJECTED: NON-MEDICAL FILE
               </div>
             </div>
@@ -101,7 +101,7 @@ export function renderStep3Records(app, i18n) {
         <!-- Right: Digitized clinical findings -->
         <div>
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-            <h4 style="font-size: 0.95rem; font-weight: 700; color: #FFFFFF; font-family: var(--font-mono); letter-spacing: 0.03em;">Digitized Clinical Findings</h4>
+            <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono); letter-spacing: 0.03em;">Digitized Clinical Findings</h4>
             <span class="pill-3d pill-3d-emerald">${patient.documents.length} ${i18n.t("files_processed")}</span>
           </div>
 
@@ -112,7 +112,7 @@ export function renderStep3Records(app, i18n) {
                 <span class="pill-3d pill-3d-emerald">${i18n.t("verified_badge")}</span>
               </div>
               ${latestDoc.doctorName ? `
-                <p style="font-size: 0.82rem; font-weight: 700; color: #FFFFFF; margin-top: 6px; margin-bottom: 2px;">
+                <p style="font-size: 0.82rem; font-weight: 700; color: var(--text-primary); margin-top: 6px; margin-bottom: 2px;">
                   Doctor: ${latestDoc.doctorName}
                 </p>
               ` : ''}
@@ -127,14 +127,14 @@ export function renderStep3Records(app, i18n) {
           <!-- Identified conditions -->
           <div style="margin-bottom: 14px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <strong style="font-size: 0.8rem; color: #FFFFFF; text-transform: uppercase; font-family: var(--font-mono);">${i18n.t("dx_heading")}</strong>
+              <strong style="font-size: 0.8rem; color: var(--text-primary); text-transform: uppercase; font-family: var(--font-mono);">${i18n.t("dx_heading")}</strong>
               <span class="pill-3d pill-3d-blue" style="font-size: 0.7rem;">${allDiseases.length} Detected</span>
             </div>
             <div style="max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;">
               ${allDiseases.length > 0 ? allDiseases.map(d => `
                 <div style="background: var(--bg-surface-inset); border: 1px solid var(--border-light); border-radius: 6px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
                   <div>
-                    <strong style="color: #FFFFFF; font-size: 0.88rem;">${d.name}</strong>
+                    <strong style="color: var(--text-primary); font-size: 0.88rem;">${d.name}</strong>
                     <p style="font-size: 0.72rem; color: var(--slate-400); margin-top: 2px; margin-bottom: 0;">
                       Detected from medical document
                     </p>
@@ -152,14 +152,14 @@ export function renderStep3Records(app, i18n) {
           <!-- Lab biomarker flags -->
           <div style="margin-bottom: 14px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <strong style="font-size: 0.8rem; color: #FFFFFF; text-transform: uppercase; font-family: var(--font-mono);">${i18n.t("lab_heading")}</strong>
+              <strong style="font-size: 0.8rem; color: var(--text-primary); text-transform: uppercase; font-family: var(--font-mono);">${i18n.t("lab_heading")}</strong>
               <span class="pill-3d pill-3d-crimson" style="font-size: 0.7rem;">${allFlags.length} Flags</span>
             </div>
             <div style="max-height: 140px; overflow-y: auto;">
               ${allFlags.length > 0 ? allFlags.map(f => `
                 <div class="lab-flag-item-3d">
                   <div>
-                    <strong style="color: #FFFFFF; font-size: 0.82rem; font-family: var(--font-mono);">${f.test || f.param}: ${f.value}</strong>
+                    <strong style="color: var(--text-primary); font-size: 0.82rem; font-family: var(--font-mono);">${f.test || f.param}: ${f.value}</strong>
                     <p style="font-size: 0.72rem; color: var(--text-muted);">Ref: ${f.ref} [${f.status}]</p>
                   </div>
                   <span class="pill-3d pill-3d-crimson">${(f.status || 'ABNORMAL').split(' ')[0]}</span>
@@ -173,7 +173,7 @@ export function renderStep3Records(app, i18n) {
           <!-- Prescribed medications -->
           <div style="margin-bottom: 14px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <strong style="font-size: 0.8rem; color: #FFFFFF; text-transform: uppercase; font-family: var(--font-mono);">${i18n.t("rx_heading")}</strong>
+              <strong style="font-size: 0.8rem; color: var(--text-primary); text-transform: uppercase; font-family: var(--font-mono);">${i18n.t("rx_heading")}</strong>
               <span class="pill-3d pill-3d-emerald" style="font-size: 0.7rem;">${allExtractedMeds.length} ${i18n.t("active_badge")}</span>
             </div>
             <div style="max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;">
@@ -187,7 +187,7 @@ export function renderStep3Records(app, i18n) {
                 return `
                   <div class="medication-card-3d">
                     <div>
-                      <strong style="color: #FFFFFF; font-size: 0.88rem;">${name}</strong>
+                      <strong style="color: var(--text-primary); font-size: 0.88rem;">${name}</strong>
                       ${dosage && dosage !== 'Standard Dose' ? `<span class="pill-3d pill-3d-blue" style="margin-left: 6px; font-size: 0.7rem;">${dosage}</span>` : ''}
                       <p style="font-size: 0.75rem; color: var(--slate-300); margin: 3px 0 0 0; font-family: var(--font-mono);">
                         ${freq} • ${timing} ${duration ? `• ${duration}` : ''}

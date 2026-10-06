@@ -78,9 +78,9 @@
   <!-- HL7 FHIR Inspection Modal -->
   <div id="fhirModal" class="modal-backdrop-3d" style="display: none;">
     <div class="modal-content-3d">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--grey-300);">
         <div>
-          <h3 style="font-size: 1.1rem; font-weight: 700; color: #FFFFFF; margin: 0;">ABDM HL7 FHIR R4 Bundle</h3>
+          <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin: 0;">ABDM HL7 FHIR R4 Bundle</h3>
           <p style="font-size: 0.76rem; color: var(--text-muted); margin: 2px 0 0 0;">
             Standardized Health Information Exchange (HIE) clinical bundle.
           </p>
@@ -88,8 +88,8 @@
         <button class="btn-3d btn-3d-secondary" style="padding: 4px 10px; font-size: 0.8rem;" onclick="window.app.closeFhirModal()">✕</button>
       </div>
 
-      <div style="background: #08080A; border-radius: 8px; padding: 1rem; overflow: auto; flex: 1; border: 1px solid rgba(255,255,255,0.1);">
-        <pre id="fhirCodeBlock" style="font-family: var(--font-mono); font-size: 0.76rem; color: #FAFAFA;"></pre>
+      <div style="background: var(--bg-surface-inset); border-radius: 8px; padding: 1rem; overflow: auto; flex: 1; border: 1px solid var(--grey-300);">
+        <pre id="fhirCodeBlock" style="font-family: var(--font-mono); font-size: 0.76rem; color: var(--text-primary);"></pre>
       </div>
 
       <div style="margin-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
@@ -102,24 +102,24 @@
   <!-- Medical Document Viewer Modal -->
   <div id="docViewerModal" class="modal-backdrop-3d" style="display: none;">
     <div class="modal-content-3d" style="max-width: 900px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--grey-300); padding-bottom: 8px;">
         <div>
-          <h3 id="docViewerTitle" style="font-size: 1.05rem; color: #FFFFFF; font-weight: 700; margin: 0;">Original Clinical Document</h3>
-          <span id="docViewerCategory" class="pill-3d pill-3d-blue" style="margin-top: 4px; display: inline-block;">Document</span>
+          <h3 id="docViewerTitle" style="font-size: 1.05rem; color: var(--text-primary); font-weight: 700; margin: 0;">Original Clinical Document</h3>
+          <span id="docViewerCategory" class="pill-3d pill-3d-emerald" style="margin-top: 4px; display: inline-block;">Document</span>
         </div>
         <button class="btn-3d btn-3d-secondary" style="padding: 4px 10px; font-size: 0.8rem;" onclick="window.app.closeDocViewer()">✕</button>
       </div>
 
       <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 1rem; flex: 1; overflow: hidden;">
         <!-- Left: Image Preview -->
-        <div style="background: #000000; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1);">
+        <div style="background: #0F172A; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; border: 1px solid var(--grey-300);">
           <img id="docViewerImage" src="" alt="Document Scan" style="max-width: 100%; max-height: 50vh; object-fit: contain;">
         </div>
 
         <!-- Right: Extracted Clinical Findings -->
-        <div style="background: #08080A; border-radius: 8px; padding: 1rem; overflow-y: auto; border: 1px solid rgba(255,255,255,0.1);">
-          <h4 style="color: #FFFFFF; font-size: 0.82rem; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; font-family: var(--font-mono); letter-spacing: 0.05em;">Extracted Clinical Content</h4>
-          <pre id="docViewerText" style="font-family: var(--font-mono); font-size: 0.75rem; color: #E4E4E7; white-space: pre-wrap; line-height: 1.4;"></pre>
+        <div style="background: var(--bg-surface-inset); border-radius: 8px; padding: 1rem; overflow-y: auto; border: 1px solid var(--grey-300);">
+          <h4 style="color: var(--text-primary); font-size: 0.82rem; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; font-family: var(--font-mono); letter-spacing: 0.05em;">Extracted Clinical Content</h4>
+          <pre id="docViewerText" style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-secondary); white-space: pre-wrap; line-height: 1.4;"></pre>
         </div>
       </div>
 

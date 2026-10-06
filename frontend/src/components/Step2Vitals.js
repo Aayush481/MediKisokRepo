@@ -20,7 +20,7 @@ export function renderStep2VitalsAndIntake(app, i18n) {
     <div class="vitals-hardware-bay">
       <div class="bay-header">
         <div>
-          <h3 style="font-family: var(--font-display); font-size: 1.15rem; font-weight: 800; color: #FFFFFF;">
+          <h3 style="font-family: var(--font-display); font-size: 1.15rem; font-weight: 800; color: var(--text-primary);">
             ${i18n.t("vitals_title")}
           </h3>
           <p style="font-size: 0.78rem; color: var(--text-muted);">
@@ -98,7 +98,7 @@ export function renderStep2VitalsAndIntake(app, i18n) {
         <div style="display: flex; flex-direction: column; justify-content: space-between;">
           <div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-size: 0.78rem; color: #FFFFFF; font-weight: 700; font-family: var(--font-mono);">
+              <span style="font-size: 0.78rem; color: var(--text-primary); font-weight: 700; font-family: var(--font-mono);">
                 ${app.scanDuration >= 60000 ? i18n.t("diagnostic_scan_btn") : i18n.t("rapid_scan_btn")}:
               </span>
               ${app.patient.rppgVitals ? `
@@ -114,11 +114,11 @@ export function renderStep2VitalsAndIntake(app, i18n) {
 
             ${app.isRppgScanning ? `
               <div style="background: var(--bg-surface-inset); border: 1px solid var(--primary-glow); border-radius: 6px; padding: 8px 12px; margin-bottom: 10px;">
-                <div style="display: flex; justify-content: space-between; font-size: 0.76rem; color: #FFFFFF; font-family: var(--font-mono); font-weight: 600;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.76rem; color: var(--text-primary); font-family: var(--font-mono); font-weight: 600;">
                   <span id="rppgCountdownText">${app.rppgElapsedSec || '0.0'}s / ${(app.scanDuration/1000).toFixed(1)}s (Hold Still)</span>
                   <strong id="rppgProgressText" style="color: var(--primary);">${app.rppgProgress}%</strong>
                 </div>
-                <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; margin-top: 5px;">
+                <div style="width: 100%; height: 6px; background: var(--grey-200); border-radius: 3px; overflow: hidden; margin-top: 5px;">
                   <div id="rppgProgressBar" style="width: ${app.rppgProgress}%; height: 100%; background: var(--primary-gradient); transition: width 0.1s linear;"></div>
                 </div>
               </div>
@@ -178,7 +178,7 @@ export function renderStep2VitalsAndIntake(app, i18n) {
 
             <!-- Vitals calibrated notice -->
             ${app.patient.rppgVitals ? `
-              <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid var(--emerald-glow); border-radius: 6px; padding: 10px 14px; margin-top: 10px; font-size: 0.8rem; color: #FFFFFF; display: flex; align-items: center; gap: 8px;">
+              <div style="background: var(--green-subtle); border: 1px solid var(--green-border); border-radius: 6px; padding: 10px 14px; margin-top: 10px; font-size: 0.8rem; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                 <div>
                   <strong style="font-family: var(--font-mono); color: var(--emerald-light);">${i18n.t("vitals_summary_badge")}</strong>
@@ -230,7 +230,7 @@ export function renderStep2VitalsAndIntake(app, i18n) {
         <div class="card-3d" style="padding: 1.25rem; margin-bottom: 1.25rem;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
             <div>
-              <h4 style="font-size: 0.88rem; font-weight: 700; color: #FFFFFF;">${i18n.t("herbs_title")}</h4>
+              <h4 style="font-size: 0.88rem; font-weight: 700; color: var(--text-primary);">${i18n.t("herbs_title")}</h4>
               <p style="font-size: 0.72rem; color: var(--text-muted); margin: 0;">${i18n.t("herbs_sub")}</p>
             </div>
             <button class="btn-3d btn-3d-secondary" style="padding: 4px 10px; font-size: 0.72rem;" onclick="window.app.promptAddHerb()">${i18n.t("herbs_add_btn")}</button>
@@ -249,7 +249,7 @@ export function renderStep2VitalsAndIntake(app, i18n) {
 
         <!-- SOCRATES symptom questionnaire -->
         <div class="card-3d" style="padding: 1.25rem;">
-          <h4 style="font-size: 0.9rem; font-weight: 700; color: #FFFFFF; font-family: var(--font-mono); margin-bottom: 10px;">${i18n.t("socrates_title")}</h4>
+          <h4 style="font-size: 0.9rem; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono); margin-bottom: 10px;">${i18n.t("socrates_title")}</h4>
           
           <div style="margin-bottom: 12px;">
             <label class="input-label-3d">${SOCRATES_QUESTIONS.character.title}</label>
@@ -290,7 +290,7 @@ export function renderBodyMapModule(app, i18n) {
 
   return `
     <div class="bodymap-hardware-box">
-      <h4 style="font-size: 0.95rem; font-weight: 800; color: #FFFFFF; text-align: left;">
+      <h4 style="font-size: 0.95rem; font-weight: 800; color: var(--text-primary); text-align: left;">
         Interactive Anatomical Body Map
       </h4>
       <p style="font-size: 0.78rem; color: var(--text-muted); text-align: left;">
@@ -311,7 +311,7 @@ export function renderBodyMapModule(app, i18n) {
         </svg>
       </div>
 
-      <div style="font-size: 0.85rem; font-weight: 700; color: #FFFFFF; font-family: var(--font-mono); margin-bottom: 12px;">
+      <div style="font-size: 0.85rem; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono); margin-bottom: 12px;">
         Selected Site: <span style="color: var(--primary);">${hpi.site || 'None selected'}</span>
       </div>
 
@@ -331,8 +331,8 @@ export function renderAyushModule(app, i18n) {
   const prakritiResult = ayushEngine.calculatePrakriti(app.ayushAnswers);
 
   return `
-    <div class="bodymap-hardware-box" style="border-color: rgba(20, 184, 166, 0.4);">
-      <h4 style="font-size: 0.95rem; font-weight: 800; color: #FFFFFF; text-align: left;">
+    <div class="bodymap-hardware-box" style="border-color: var(--green-border);">
+      <h4 style="font-size: 0.95rem; font-weight: 800; color: var(--text-primary); text-align: left;">
         AYUSH Dashavidha Pariksha & Prakriti Assessment
       </h4>
       <p style="font-size: 0.78rem; color: var(--text-muted); text-align: left;">
@@ -344,7 +344,7 @@ export function renderAyushModule(app, i18n) {
           <span>Dominant Prakriti:</span>
           <span style="color: var(--teal-light); font-family: var(--font-mono);">${prakritiResult.dominant}</span>
         </div>
-        <div style="display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: #1E293B; border: 1px solid var(--border-light);">
+        <div style="display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: var(--grey-200); border: 1px solid var(--border-light);">
           <div style="width: ${prakritiResult.scores.vata}%; background: #38BDF8;" title="Vata: ${prakritiResult.scores.vata}%"></div>
           <div style="width: ${prakritiResult.scores.pitta}%; background: #F59E0B;" title="Pitta: ${prakritiResult.scores.pitta}%"></div>
           <div style="width: ${prakritiResult.scores.kapha}%; background: #10B981;" title="Kapha: ${prakritiResult.scores.kapha}%"></div>
@@ -354,7 +354,7 @@ export function renderAyushModule(app, i18n) {
       <div style="max-height: 260px; overflow-y: auto; text-align: left;">
         ${AYUSH_QUESTIONS.map(q => `
           <div style="margin-bottom: 12px; border-bottom: 1px solid var(--border-light); padding-bottom: 8px;">
-            <p style="font-size: 0.82rem; font-weight: 700; color: #FFFFFF;">${q.question}</p>
+            <p style="font-size: 0.82rem; font-weight: 700; color: var(--text-primary);">${q.question}</p>
             <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 6px;">
               ${q.options.map((opt, oIdx) => `
                 <label style="font-size: 0.78rem; display: flex; align-items: flex-start; gap: 6px; cursor: pointer; color: var(--text-secondary);">
