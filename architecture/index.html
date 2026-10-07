@@ -3,26 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MediKiosk • Architecture Blueprint</title>
+  <title>MediKiosk • 8-Layer Production Healthcare System Architecture</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #f8fafc;
-      --canvas: #ffffff;
-      --border: #e2e8f0;
-      --text: #0f172a;
-      --text-muted: #64748b;
+      --bg-color: #f8fafc;
+      --text-main: #0f172a;
       --font-hand: 'Caveat', cursive, sans-serif;
-      --font-sans: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      --font-ui: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: var(--font-hand);
-      background: #f1f5f9;
-      color: var(--text);
+      background: var(--bg-color);
+      color: var(--text-main);
       overflow: hidden;
       height: 100vh;
       display: flex;
@@ -30,17 +28,17 @@
       user-select: none;
     }
 
-    /* Clean Minimal Header */
     header {
       background: #ffffff;
-      border-bottom: 1.5px solid #cbd5e1;
-      padding: 12px 28px;
+      border-bottom: 1.5px solid #e2e8f0;
+      padding: 10px 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       z-index: 100;
       flex-shrink: 0;
-      font-family: var(--font-sans);
+      font-family: var(--font-ui);
+      gap: 16px;
     }
 
     .brand {
@@ -49,61 +47,92 @@
       gap: 12px;
     }
     .brand-badge {
-      background: #e0f2fe;
-      color: #0369a1;
-      border: 1px solid #bae6fd;
+      background: #0284c7;
+      color: #ffffff;
       font-size: 11px;
-      font-weight: 700;
-      padding: 4px 8px;
+      font-weight: 800;
+      padding: 3px 8px;
       border-radius: 6px;
-      text-transform: uppercase;
       letter-spacing: 0.5px;
     }
-    .brand h1 {
-      font-size: 16px;
+    .brand-info h1 {
+      font-size: 15px;
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1.2;
+    }
+    .brand-info p {
+      font-size: 11px;
+      color: #64748b;
+      font-weight: 500;
+    }
+
+    .pipeline-filters {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .filter-btn {
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px solid #cbd5e1;
+      font-size: 11px;
       font-weight: 700;
+      padding: 5px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-family: var(--font-ui);
+    }
+    .filter-btn:hover {
+      background: #e2e8f0;
       color: #0f172a;
     }
-    .brand p {
-      font-size: 12px;
-      color: #64748b;
+    .filter-btn.active {
+      background: #0284c7;
+      color: #ffffff;
+      border-color: #0369a1;
+      box-shadow: 0 2px 4px rgba(2, 132, 199, 0.25);
     }
+    .filter-btn.active[data-target="p1"] { background: #1971c2; border-color: #1864ab; }
+    .filter-btn.active[data-target="p2"] { background: #2b8a3e; border-color: #2b8a3e; }
+    .filter-btn.active[data-target="p3"] { background: #ae3ec9; border-color: #862e9c; }
+    .filter-btn.active[data-target="p4"] { background: #f76707; border-color: #d9480f; }
+    .filter-btn.active[data-target="p5"] { background: #e64980; border-color: #c2255c; }
+    .filter-btn.active[data-target="deploy"] { background: #343a40; border-color: #212529; }
 
     .header-actions {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
-
     .btn {
       background: #ffffff;
       color: #0f172a;
       border: 1.5px solid #cbd5e1;
       font-size: 12px;
-      font-weight: 600;
-      padding: 7px 14px;
-      border-radius: 8px;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 7px;
       cursor: pointer;
+      font-family: var(--font-ui);
       display: flex;
       align-items: center;
       gap: 6px;
-      transition: all 0.15s ease;
-      font-family: var(--font-sans);
+      transition: all 0.2s;
     }
-    .btn:hover {
-      background: #f8fafc;
-      border-color: #94a3b8;
-    }
+    .btn:hover { background: #f8fafc; border-color: #94a3b8; }
     .btn.primary {
-      background: #2563eb;
+      background: #0284c7;
       color: #ffffff;
-      border-color: #1d4ed8;
+      border-color: #0369a1;
     }
-    .btn.primary:hover {
-      background: #1d4ed8;
-    }
+    .btn.primary:hover { background: #0369a1; }
 
-    /* Infinite Canvas Viewport */
     .viewport {
       position: relative;
       flex: 1;
@@ -114,45 +143,48 @@
       background-image: radial-gradient(#cbd5e1 1.2px, transparent 1.2px);
       background-size: 24px 24px;
     }
-    .viewport:active {
-      cursor: grabbing;
-    }
+    .viewport:active { cursor: grabbing; }
 
     .canvas-content {
       position: absolute;
       top: 0;
       left: 0;
-      width: 1700px;
-      height: 750px;
+      width: 2040px;
+      height: 920px;
       transform-origin: 0 0;
+      transition: transform 0.05s ease-out;
     }
 
-    /* Containers & Pill Badges */
-    .arch-container {
+    /* Sketch Container */
+    .container-box {
       position: absolute;
-      border-radius: 18px;
+      border-radius: 16px;
       border: 2.5px solid;
       background: #ffffff;
+      box-shadow: 2px 4px 0 rgba(0,0,0,0.02);
+      transition: opacity 0.3s;
     }
     .container-pill {
       position: absolute;
-      top: -15px;
-      left: 28px;
-      height: 30px;
-      padding: 0 16px;
-      border-radius: 15px;
+      top: -14px;
+      left: 16px;
+      height: 28px;
+      padding: 0 14px;
+      border-radius: 14px;
       border: 2px solid;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 17px;
+      font-size: 15px;
       font-weight: 700;
+      background: #ffffff;
+      white-space: nowrap;
     }
 
-    /* Component Nodes */
-    .arch-node {
+    /* Hand-drawn component node */
+    .node-box {
       position: absolute;
-      border-radius: 12px;
+      border-radius: 10px;
       border: 2px solid;
       background: #ffffff;
       display: flex;
@@ -160,73 +192,129 @@
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 8px 12px;
+      padding: 6px 8px;
       box-shadow: 2px 3px 0 rgba(0,0,0,0.04);
-      transition: transform 0.15s ease;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .arch-node:hover {
-      transform: translateY(-2px);
+    .node-box:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+      z-index: 50;
+    }
+    .node-box.dimmed, .container-box.dimmed, svg path.dimmed, svg text.dimmed {
+      opacity: 0.15 !important;
+      filter: grayscale(80%);
     }
     .node-title {
-      font-size: 18px;
-      font-weight: 700;
-      line-height: 1.2;
-    }
-    .node-sub {
-      font-size: 14px;
-      line-height: 1.25;
-      margin-top: 4px;
-      opacity: 0.85;
-    }
-
-    /* Circle Nodes (Load Balancer / Gateway) */
-    .arch-circle {
-      position: absolute;
-      border-radius: 50%;
-      border: 2.5px solid;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      font-size: 18px;
+      font-size: 14.5px;
       font-weight: 700;
       line-height: 1.15;
-      box-shadow: 2px 4px 0 rgba(0,0,0,0.05);
-    }
-
-    /* HUD Zoom Controls */
-    .hud {
-      position: absolute;
-      bottom: 24px;
-      right: 24px;
-      background: #ffffff;
-      border: 1.5px solid #cbd5e1;
-      border-radius: 10px;
-      padding: 6px;
       display: flex;
       align-items: center;
-      gap: 6px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      font-family: var(--font-sans);
+      gap: 4px;
+    }
+    .node-role {
+      font-size: 12px;
+      line-height: 1.15;
+      margin-top: 2px;
+      font-weight: 600;
+      opacity: 0.9;
+    }
+    .node-tech {
+      font-size: 10.5px;
+      font-family: var(--font-mono);
+      background: rgba(0,0,0,0.06);
+      padding: 2px 5px;
+      border-radius: 4px;
+      margin-top: 2px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+    }
+
+    /* SVG Animated Arrows */
+    svg path {
+      transition: opacity 0.3s, stroke-width 0.3s;
+    }
+    svg path.highlighted {
+      stroke-width: 3.5px !important;
+      stroke-dasharray: 6 3;
+      animation: dash 1s linear infinite;
+    }
+    @keyframes dash {
+      to { stroke-dashoffset: -18; }
+    }
+
+    /* Component Details Modal Drawer */
+    .details-drawer {
+      position: fixed;
+      right: 20px;
+      bottom: 70px;
+      width: 380px;
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+      font-family: var(--font-ui);
+      padding: 16px;
+      z-index: 120;
+      transform: translateY(150%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .details-drawer.visible { transform: translateY(0); }
+    .drawer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 10px;
+      margin-bottom: 12px;
+    }
+    .drawer-title { font-size: 15px; font-weight: 800; color: #0f172a; }
+    .drawer-layer { font-size: 11px; font-weight: 700; color: #0284c7; text-transform: uppercase; }
+    .drawer-close {
+      background: none; border: none; font-size: 18px; cursor: pointer; color: #94a3b8;
+    }
+    .drawer-close:hover { color: #0f172a; }
+    .drawer-row { margin-bottom: 10px; font-size: 12px; }
+    .drawer-label { font-weight: 700; color: #475569; display: block; margin-bottom: 2px; }
+    .drawer-value { color: #0f172a; background: #f8fafc; padding: 6px 10px; border-radius: 6px; border: 1px solid #e2e8f0; font-family: var(--font-mono); font-size: 11.5px; word-break: break-all; }
+
+    /* HUD Controls */
+    .hud {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-family: var(--font-ui);
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+      z-index: 90;
     }
     .hud-btn {
       background: transparent;
       border: none;
       width: 28px;
       height: 28px;
-      border-radius: 6px;
+      border-radius: 4px;
       cursor: pointer;
-      font-size: 15px;
-      font-weight: 700;
+      font-weight: 800;
+      font-size: 14px;
       color: #334155;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    .hud-btn:hover {
-      background: #f1f5f9;
-    }
-    .hud-label {
-      font-size: 12px;
-      font-weight: 600;
+    .hud-btn:hover { background: #f1f5f9; color: #0f172a; }
+
+    .hud-scale {
+      font-size: 11px;
+      font-weight: 700;
       color: #64748b;
       padding: 0 6px;
     }
@@ -234,263 +322,531 @@
 </head>
 <body>
 
-  <!-- Top App Bar -->
   <header>
     <div class="brand">
-      <div class="brand-badge">SIH 2026</div>
-      <div>
-        <h1>MediKiosk • Simple & Professional Architecture</h1>
-        <p>Clean High-Level Blueprint: Client Hardware -> SPA -> Express Ingress -> Gemini AI & Database</p>
+      <div class="brand-badge">8-LAYER ARCH</div>
+      <div class="brand-info">
+        <h1>MediKiosk • Layered System Architecture</h1>
+        <p>Dataflow: Patient ➔ Frontend ➔ Clinical Services ➔ Security ➔ Backend ➔ AI Cloud ➔ Database</p>
       </div>
     </div>
 
+    <!-- Interactive Pipeline Filter Bar -->
+    <div class="pipeline-filters">
+      <button class="filter-btn active" data-target="all" onclick="filterPipeline('all')">🌐 All Layers</button>
+      <button class="filter-btn" data-target="p1" onclick="filterPipeline('p1')">🔵 P1: Intake & ABHA</button>
+      <button class="filter-btn" data-target="p2" onclick="filterPipeline('p2')">🟢 P2: Vitals & rPPG</button>
+      <button class="filter-btn" data-target="p3" onclick="filterPipeline('p3')">🟣 P3: Rx & Doc OCR</button>
+      <button class="filter-btn" data-target="p4" onclick="filterPipeline('p4')">🔴 P4: AI Analysis & NLP</button>
+      <button class="filter-btn" data-target="p5" onclick="filterPipeline('p5')">🟡 P5: Doctor Desk & FHIR</button>
+      <button class="filter-btn" data-target="deploy" onclick="filterPipeline('deploy')">🐳 L8: Deployment</button>
+    </div>
+
     <div class="header-actions">
-      <button class="btn" onclick="downloadExcalidraw()">
-        <span>📥</span> Download .excalidraw
+      <button class="btn" onclick="window.location.href='./medical_platform_architecture.excalidraw'">
+        📥 Download .excalidraw
       </button>
-      <button class="btn primary" onclick="openExcalidrawWeb()">
-        <span>🚀</span> Open on Excalidraw.com
+      <button class="btn primary" onclick="window.open('https://excalidraw.com', '_blank')">
+        🚀 Open on Excalidraw
       </button>
     </div>
   </header>
 
-  <!-- Interactive Canvas Viewport -->
   <div class="viewport" id="viewport">
     <div class="canvas-content" id="canvasContent">
 
-      <!-- SVG Connecting Arrows -->
-      <svg style="position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:10;">
+      <!-- SVG PIPELINE ARROWS (Non-Overlapping Horizontal Bands) -->
+      <svg style="position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:15;">
         <defs>
-          <marker id="arrow-black" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-            <path d="M 0 1 L 9 5 L 0 9 z" fill="#1e1e1e" />
-          </marker>
-          <marker id="arrow-green" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-            <path d="M 0 1 L 9 5 L 0 9 z" fill="#2f9e44" />
-          </marker>
-          <marker id="arrow-blue" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <marker id="arr-blue" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
             <path d="M 0 1 L 9 5 L 0 9 z" fill="#1971c2" />
           </marker>
-          <marker id="arrow-red" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <marker id="arr-green" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1 L 9 5 L 0 9 z" fill="#2b8a3e" />
+          </marker>
+          <marker id="arr-red" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
             <path d="M 0 1 L 9 5 L 0 9 z" fill="#e03131" />
           </marker>
-          <marker id="arrow-purple" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <marker id="arr-purple" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
             <path d="M 0 1 L 9 5 L 0 9 z" fill="#ae3ec9" />
+          </marker>
+          <marker id="arr-orange" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1 L 9 5 L 0 9 z" fill="#f76707" />
+          </marker>
+          <marker id="arr-pink" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1 L 9 5 L 0 9 z" fill="#e64980" />
           </marker>
         </defs>
 
-        <!-- WebCam -> rPPG -->
-        <path d="M 200 190 L 300 190" fill="none" stroke="#2f9e44" stroke-width="2.5" marker-end="url(#arrow-green)" />
-        <text x="250" y="180" fill="#2b8a3e" font-family="'Caveat', cursive" font-size="16" font-weight="700" text-anchor="middle">video feed</text>
+        <!-- BAND 1 (Y ~162): Pipeline 1: Patient Intake & ABHA (Blue) -->
+        <path class="pipe-p1" d="M 265 162 L 325 162" fill="none" stroke="#1971c2" stroke-width="2.5" marker-end="url(#arr-blue)" />
+        <text class="pipe-p1" x="270" y="152" fill="#1971c2" font-size="11" font-weight="700">P1: Voice & Form</text>
 
-        <!-- Patient -> Kiosk Wizard -->
-        <path d="M 200 310 L 300 310" fill="none" stroke="#1e1e1e" stroke-width="2.5" marker-end="url(#arrow-black)" />
-        <text x="250" y="300" fill="#212529" font-family="'Caveat', cursive" font-size="16" font-weight="700" text-anchor="middle">interacts</text>
+        <path class="pipe-p1" d="M 545 162 L 895 162" fill="none" stroke="#1971c2" stroke-width="2.5" marker-end="url(#arr-blue)" />
+        <text class="pipe-p1" x="680" y="152" fill="#1971c2" font-size="11" font-weight="700">Verify ABHA</text>
 
-        <!-- Medical Doc -> Kiosk Wizard -->
-        <path d="M 200 440 L 300 345" fill="none" stroke="#ae3ec9" stroke-width="2.5" marker-end="url(#arrow-purple)" />
-        <text x="250" y="405" fill="#862e9c" font-family="'Caveat', cursive" font-size="16" font-weight="700" text-anchor="middle">upload</text>
+        <path class="pipe-p1" d="M 1105 162 L 1165 162" fill="none" stroke="#1971c2" stroke-width="2.5" marker-end="url(#arr-blue)" />
+        <text class="pipe-p1" x="1112" y="152" fill="#1971c2" font-size="10" font-weight="700">POST /patients</text>
 
-        <!-- rPPG -> Kiosk Wizard -->
-        <path d="M 387 245 L 387 275" fill="none" stroke="#2f9e44" stroke-width="2.5" marker-end="url(#arrow-green)" />
-        <text x="415" y="265" fill="#2b8a3e" font-family="'Caveat', cursive" font-size="15" font-weight="700">vitals</text>
+        <path class="pipe-p1" d="M 1395 162 L 1755 162" fill="none" stroke="#1971c2" stroke-width="2.5" marker-end="url(#arr-blue)" />
+        <text class="pipe-p1" x="1540" y="152" fill="#1971c2" font-size="11" font-weight="700">Save to Database</text>
 
-        <!-- Kiosk Wizard -> Gateway Circle -->
-        <path d="M 475 320 L 805 320" fill="none" stroke="#e03131" stroke-width="2.5" marker-end="url(#arrow-red)" />
-        <text x="640" y="310" fill="#c92a2a" font-family="'Caveat', cursive" font-size="18" font-weight="700" text-anchor="middle">REST API</text>
+        <path class="pipe-p1" d="M 1865 205 L 1865 235" fill="none" stroke="#1971c2" stroke-width="2" marker-end="url(#arr-blue)" />
+        <text class="pipe-p1" x="1875" y="222" fill="#1971c2" font-size="10" font-weight="700">fallback</text>
 
-        <!-- Doctor Desk -> Gateway Circle -->
-        <path d="M 475 440 L 830 360" fill="none" stroke="#1971c2" stroke-width="2.5" marker-end="url(#arrow-blue)" />
-        <text x="650" y="420" fill="#1864ab" font-family="'Caveat', cursive" font-size="17" font-weight="700" text-anchor="middle">OPD review</text>
+        <!-- BAND 2 (Y ~272): Pipeline 2: Contactless rPPG Vitals (Green) -->
+        <path class="pipe-p2" d="M 265 272 L 325 272" fill="none" stroke="#2b8a3e" stroke-width="2.5" marker-end="url(#arr-green)" />
+        <text class="pipe-p2" x="272" y="262" fill="#2b8a3e" font-size="11" font-weight="700">P2: 60fps Video</text>
 
-        <!-- Gateway Circle -> Router -->
-        <path d="M 910 320 L 945 320" fill="none" stroke="#1971c2" stroke-width="2.5" marker-end="url(#arrow-blue)" />
-        <text x="927" y="310" fill="#1864ab" font-family="'Caveat', cursive" font-size="15" font-weight="700" text-anchor="middle">dispatch</text>
+        <path class="pipe-p2" d="M 545 272 L 605 272" fill="none" stroke="#2b8a3e" stroke-width="2.5" marker-end="url(#arr-green)" />
+        <text class="pipe-p2" x="552" y="262" fill="#2b8a3e" font-size="10" font-weight="700">Extract ROIs</text>
 
-        <!-- Router -> Core Services (path-1) -->
-        <path d="M 1060 300 L 1085 230" fill="none" stroke="#1971c2" stroke-width="2.5" marker-end="url(#arrow-blue)" />
-        <text x="1070" y="255" fill="#e03131" font-family="'Caveat', cursive" font-size="16" font-weight="700">path-1</text>
+        <path class="pipe-p2" d="M 835 272 L 1165 272" fill="none" stroke="#2b8a3e" stroke-width="2.5" marker-end="url(#arr-green)" />
+        <text class="pipe-p2" x="980" y="262" fill="#2b8a3e" font-size="11" font-weight="700">/detect-face</text>
 
-        <!-- Router -> Standards (path-2) -->
-        <path d="M 1060 340 L 1085 440" fill="none" stroke="#1971c2" stroke-width="2.5" marker-end="url(#arrow-blue)" />
-        <text x="1070" y="400" fill="#e03131" font-family="'Caveat', cursive" font-size="16" font-weight="700">path-2</text>
+        <path class="pipe-p2" d="M 1395 272 L 1455 272" fill="none" stroke="#2b8a3e" stroke-width="2.5" marker-end="url(#arr-green)" />
+        <text class="pipe-p2" x="1400" y="262" fill="#2b8a3e" font-size="10" font-weight="700">POS/Butterworth</text>
 
-        <!-- Router -> Gemini Vision -->
-        <path d="M 1060 285 L 1285 200" fill="none" stroke="#ae3ec9" stroke-width="2.5" marker-end="url(#arrow-purple)" />
-        <text x="1170" y="235" fill="#862e9c" font-family="'Caveat', cursive" font-size="16" font-weight="700" text-anchor="middle">doc OCR</text>
+        <!-- BAND 3 (Y ~382): Pipeline 3: Prescription & Document OCR (Purple) -->
+        <path class="pipe-p3" d="M 265 382 L 325 382" fill="none" stroke="#ae3ec9" stroke-width="2.5" marker-end="url(#arr-purple)" />
+        <text class="pipe-p3" x="272" y="372" fill="#862e9c" font-size="11" font-weight="700">P3: Upload Rx</text>
 
-        <!-- Gemini Vision -> AYUSH Engine (parsed meds) -->
-        <path d="M 1285 235 C 1000 235, 800 230, 675 310" fill="none" stroke="#ae3ec9" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#arrow-purple)" />
-        <text x="960" y="245" fill="#862e9c" font-family="'Caveat', cursive" font-size="15" font-weight="700" text-anchor="middle">parsed medicines for interaction check</text>
+        <path class="pipe-p3" d="M 545 382 L 605 382" fill="none" stroke="#ae3ec9" stroke-width="2.5" marker-end="url(#arr-purple)" />
+        <text class="pipe-p3" x="550" y="372" fill="#862e9c" font-size="10" font-weight="700">Tesseract/PDF</text>
 
-        <!-- Core Services -> MongoDB -->
-        <path d="M 1178 220 L 1285 445" fill="none" stroke="#2f9e44" stroke-width="2.5" marker-end="url(#arrow-green)" />
-        <text x="1235" y="325" fill="#2b8a3e" font-family="'Caveat', cursive" font-size="16" font-weight="700" text-anchor="middle">save data</text>
+        <path class="pipe-p3" d="M 835 382 L 1165 382" fill="none" stroke="#ae3ec9" stroke-width="2.5" marker-end="url(#arr-purple)" />
+        <text class="pipe-p3" x="970" y="372" fill="#862e9c" font-size="11" font-weight="700">/analyze-doc</text>
+
+        <path class="pipe-p3" d="M 1395 382 L 1455 382" fill="none" stroke="#ae3ec9" stroke-width="2.5" marker-end="url(#arr-purple)" />
+        <text class="pipe-p3" x="1400" y="372" fill="#862e9c" font-size="10" font-weight="700">Gemini Vision</text>
+
+        <!-- BAND 4 (Y ~492): Pipeline 4: AI Analysis & Herb-Drug Matrix (Orange) -->
+        <path class="pipe-p4" d="M 545 492 L 605 492" fill="none" stroke="#f76707" stroke-width="2.5" marker-end="url(#arr-orange)" />
+        <text class="pipe-p4" x="550" y="482" fill="#d9480f" font-size="10" font-weight="700">Symptoms</text>
+
+        <path class="pipe-p4" d="M 835 492 L 1165 492" fill="none" stroke="#f76707" stroke-width="2.5" marker-end="url(#arr-orange)" />
+        <text class="pipe-p4" x="970" y="482" fill="#d9480f" font-size="11" font-weight="700">Child Proc</text>
+
+        <path class="pipe-p4" d="M 1395 492 L 1455 492" fill="none" stroke="#f76707" stroke-width="2.5" marker-end="url(#arr-orange)" />
+        <text class="pipe-p4" x="1402" y="482" fill="#d9480f" font-size="10" font-weight="700">Drug Matrix</text>
+
+        <path class="pipe-p4" d="M 1695 492 L 1755 492" fill="none" stroke="#f76707" stroke-width="2.5" marker-end="url(#arr-orange)" />
+        <text class="pipe-p4" x="1700" y="482" fill="#d9480f" font-size="10" font-weight="700">Queue Token</text>
+
+        <!-- BAND 5 (Y ~602): Pipeline 5: Doctor Desk & FHIR Sync (Pink / Red) -->
+        <path class="pipe-p5" d="M 545 602 L 895 602" fill="none" stroke="#e64980" stroke-width="2.5" marker-end="url(#arr-pink)" />
+        <text class="pipe-p5" x="690" y="592" fill="#c2255c" font-size="11" font-weight="700">P5: FHIR Pack</text>
+
+        <path class="pipe-p5" d="M 1105 602 L 1165 602" fill="none" stroke="#e64980" stroke-width="2.5" marker-end="url(#arr-pink)" />
+        <text class="pipe-p5" x="1112" y="592" fill="#c2255c" font-size="10" font-weight="700">/fhir-bundle</text>
+
+        <path class="pipe-p5" d="M 1395 602 L 1755 602" fill="none" stroke="#e8590c" stroke-width="2.5" marker-end="url(#arr-orange)" />
+        <text class="pipe-p5" x="1540" y="592" fill="#d9480f" font-size="11" font-weight="700">Archive EMR</text>
+
+        <path class="pipe-p5" d="M 1755 602 C 1200 602, 600 492, 265 492" fill="none" stroke="#e8590c" stroke-width="2.5" marker-end="url(#arr-orange)" />
+        <text class="pipe-p5" x="960" y="545" fill="#d9480f" font-size="12" font-weight="700">Live OPD Queue Push</text>
       </svg>
 
       <!-- ========================================== -->
-      <!-- 1. INPUTS (LEFT)                           -->
+      <!-- LAYER 1: USER INTERACTION -->
       <!-- ========================================== -->
-      <div class="arch-node" style="left:60px; top:160px; width:140px; height:60px; border-color:#2f9e44; background:#ebfbee; color:#2b8a3e;">
-        <span class="node-title">HD WebCam</span>
-        <span class="node-sub">60 FPS Stream</span>
+      <div class="container-box layer-user" style="left:40px; top:90px; width:240px; height:590px; border-color:#1971c2; background:#f0f9ff;">
+        <div class="container-pill" style="border-color:#1971c2; background:#bae6fd; color:#0369a1;">1. User Interaction</div>
       </div>
 
-      <div class="arch-node" style="left:60px; top:280px; width:140px; height:65px; border-color:#1e1e1e; background:#f8f9fa; color:#212529;">
-        <span class="node-title">Patient / User</span>
-        <span class="node-sub">Touchscreen Kiosk</span>
+      <div class="node-box layer-user pipe-p1" style="left:55px; top:125px; width:210px; height:75px; border-color:#1971c2; color:#0369a1;"
+           onclick="showDetails('Patient Intake Wizard', '1. User Interaction', 'Demographics & Spoken Input', 'Touch Kiosk & Web Speech API')">
+        <span class="node-title">🧑‍🦱 Patient Intake Wizard</span>
+        <span class="node-role">Demographics & Spoken Input</span>
+        <span class="node-tech">Tech: Touch & Web Speech API</span>
       </div>
 
-      <div class="arch-node" style="left:60px; top:410px; width:140px; height:65px; border-color:#ae3ec9; background:#f8f0fc; color:#862e9c;">
-        <span class="node-title">Medical Doc</span>
-        <span class="node-sub">Prescription / Labs</span>
+      <div class="node-box layer-user pipe-p2" style="left:55px; top:235px; width:210px; height:75px; border-color:#2b8a3e; color:#2b8a3e;"
+           onclick="showDetails('HD WebCam Stream', '1. User Interaction', 'Facial Blood Perfusion Video', 'navigator.mediaDevices (60 FPS)')">
+        <span class="node-title">📷 HD WebCam Stream</span>
+        <span class="node-role">Facial Blood Perfusion Video</span>
+        <span class="node-tech">Tech: navigator.mediaDevices 60fps</span>
       </div>
 
-      <!-- ========================================== -->
-      <!-- 2. FRONTEND CONTAINER (SPA)                -->
-      <!-- ========================================== -->
-      <div class="arch-container" style="left:270px; top:120px; width:430px; height:480px; border-color:#1971c2; background:#f1f8ff;">
-        <div class="container-pill" style="border-color:#1971c2; background:#d0ebff; color:#1864ab;">
-          Frontend Client (SPA)
-        </div>
+      <div class="node-box layer-user pipe-p3" style="left:55px; top:345px; width:210px; height:75px; border-color:#ae3ec9; color:#862e9c;"
+           onclick="showDetails('Paper Rx & Lab Feeder', '1. User Interaction', 'Prescription Document Ingestion', 'Optical Scanner / Camera Snap')">
+        <span class="node-title">📄 Paper Rx & Lab Feeder</span>
+        <span class="node-role">Prescription Document Ingestion</span>
+        <span class="node-tech">Tech: Optical Scanner / Snap</span>
       </div>
 
-      <!-- Inside Frontend: Edge rPPG -->
-      <div class="arch-node" style="left:300px; top:160px; width:175px; height:85px; border-color:#2f9e44; color:#2b8a3e;">
-        <span class="node-title">Edge rPPG Engine</span>
-        <span class="node-sub">MediaPipe FaceMesh<br>POS & Butterworth DSP<br><b>HR, SpO2, RR, HRV</b></span>
+      <div class="node-box layer-user pipe-p5" style="left:55px; top:455px; width:210px; height:75px; border-color:#e8590c; color:#d9480f;"
+           onclick="showDetails('Doctor OPD Console', '1. User Interaction', 'Clinical Review & E-Prescribe', 'Doctor Workstation / Tablet')">
+        <span class="node-title">👨‍⚕️ Doctor OPD Console</span>
+        <span class="node-role">Clinical Review & E-Prescribe</span>
+        <span class="node-tech">Tech: Workstation / Tablet</span>
       </div>
 
-      <!-- Inside Frontend: Kiosk Intake Wizard -->
-      <div class="arch-node" style="left:300px; top:275px; width:175px; height:95px; border-color:#1971c2; color:#1864ab;">
-        <span class="node-title">Kiosk Intake Wizard</span>
-        <span class="node-sub">Step 1: 14-Digit ABHA<br>Step 2: Live Vitals UI<br>Step 3: Document Upload<br>Step 4: Clinical Summary</span>
-      </div>
-
-      <!-- Inside Frontend: Doctor Desk -->
-      <div class="arch-node" style="left:300px; top:400px; width:175px; height:80px; border-color:#1971c2; color:#1864ab;">
-        <span class="node-title">Doctor Desk</span>
-        <span class="node-sub">DoctorDashboard.js<br>OPD Queue & Review<br>FHIR Export Button</span>
-      </div>
-
-      <!-- Inside Frontend: AYUSH & Herb-Drug -->
-      <div class="arch-node" style="left:505px; top:275px; width:170px; height:95px; border-color:#ae3ec9; color:#862e9c;">
-        <span class="node-title">AYUSH & Herb-Drug</span>
-        <span class="node-sub">Dashavidha Pariksha<br>Prakriti Constitution<br>Herb-Drug Interaction<br>Contraindication Alert</span>
+      <div class="node-box layer-user" style="left:55px; top:565px; width:210px; height:75px; border-color:#1971c2; background:#e0f2fe; color:#0369a1;"
+           onclick="showDetails('Hospital Kiosk Station', '1. User Interaction', 'Ruggedized Touch Hardware Unit', 'Chromium Host Peripheral Engine')">
+        <span class="node-title">🖥️ Hospital Kiosk Station</span>
+        <span class="node-role">Ruggedized Hardware Enclosure</span>
+        <span class="node-tech">Tech: Chromium Host Engine</span>
       </div>
 
       <!-- ========================================== -->
-      <!-- 3. BACKEND CONTAINER (NODE & EXPRESS)      -->
+      <!-- LAYER 2: FRONTEND LAYER -->
       <!-- ========================================== -->
-      <div class="arch-container" style="left:770px; top:120px; width:430px; height:480px; border-color:#f76707; background:#fff9db;">
-        <div class="container-pill" style="border-color:#f76707; background:#ffe066; color:#d9480f;">
-          Backend (Node.js / Express)
-        </div>
+      <div class="container-box layer-front" style="left:310px; top:90px; width:250px; height:590px; border-color:#0284c7; background:#f8fafc;">
+        <div class="container-pill" style="border-color:#0284c7; background:#e2e8f0; color:#0f172a;">2. Frontend Layer [ES6/React]</div>
       </div>
 
-      <!-- Gateway Circle -->
-      <div class="arch-circle" style="left:805px; top:270px; width:105px; height:105px; border-color:#1971c2; background:#d0ebff; color:#1864ab;">
-        Express<br>Gateway<br><span style="font-size:14px; font-weight:600; opacity:0.8;">(Port 3000)</span>
+      <div class="node-box layer-front pipe-p1" style="left:325px; top:125px; width:220px; height:75px; border-color:#0284c7; color:#0369a1;"
+           onclick="showDetails('ES6 SPA Master Controller', '2. Frontend Layer', 'Global State Machine (app.js)', 'Vanilla ES6 Modules, window.app')">
+        <span class="node-title">⚙️ ES6 SPA Master Controller</span>
+        <span class="node-role">Global State Machine (app.js)</span>
+        <span class="node-tech">Tech: Vanilla ES6 SPA, window.app</span>
       </div>
 
-      <!-- Router Node -->
-      <div class="arch-node" style="left:945px; top:280px; width:115px; height:85px; border-color:#1971c2; color:#1864ab;">
-        <span class="node-title">API Router</span>
-        <span class="node-sub">/api/vitals<br>/api/parse-rx<br>/api/patients<br>/api/fhir</span>
+      <div class="node-box layer-front pipe-p1" style="left:325px; top:235px; width:220px; height:75px; border-color:#0284c7; color:#0369a1;"
+           onclick="showDetails('React Intake Components', '2. Frontend Layer', 'Stepper Wizard UI (Step 1 to 4)', 'React.js Architecture Models')">
+        <span class="node-title">⚛️ React UI Component Tree</span>
+        <span class="node-role">Stepper Wizard UI (Step 1 to 4)</span>
+        <span class="node-tech">Tech: React.js Component Architecture</span>
       </div>
 
-      <!-- Sub-container 1: Core Services -->
-      <div class="arch-container" style="left:1085px; top:160px; width:100px; height:175px; border-color:#1971c2; background:#e7f5ff;">
-        <div class="container-pill" style="left:10px; top:-12px; height:24px; padding:0 8px; font-size:13px; border-color:#1971c2; background:#d0ebff; color:#1864ab;">
-          Core Svc
-        </div>
-      </div>
-      <div class="arch-node" style="left:1092px; top:190px; width:86px; height:55px; border-color:#f76707; color:#d9480f;">
-        <span class="node-title" style="font-size:16px;">Patient<br>Ctrl</span>
-      </div>
-      <div class="arch-node" style="left:1092px; top:260px; width:86px; height:60px; border-color:#f76707; color:#d9480f;">
-        <span class="node-title" style="font-size:16px;">Python<br>Bridge</span>
-        <span class="node-sub" style="font-size:11px;">OpenCV cv2</span>
+      <div class="node-box layer-front pipe-p3" style="left:325px; top:345px; width:220px; height:75px; border-color:#0284c7; color:#0369a1;"
+           onclick="showDetails('Three.js 3D Gateway', '2. Frontend Layer', 'Interactive Medical Welcome', 'Three.js (r128) WebGL Scene')">
+        <span class="node-title">✨ Three.js 3D Gateway</span>
+        <span class="node-role">Interactive Medical Welcome</span>
+        <span class="node-tech">Tech: Three.js (r128) WebGL</span>
       </div>
 
-      <!-- Sub-container 2: Standards -->
-      <div class="arch-container" style="left:1085px; top:360px; width:100px; height:175px; border-color:#1971c2; background:#e7f5ff;">
-        <div class="container-pill" style="left:8px; top:-12px; height:24px; padding:0 8px; font-size:13px; border-color:#1971c2; background:#d0ebff; color:#1864ab;">
-          Standards
-        </div>
+      <div class="node-box layer-front pipe-p4" style="left:325px; top:455px; width:220px; height:75px; border-color:#0284c7; color:#0369a1;"
+           onclick="showDetails('i18n Translation Engine', '2. Frontend Layer', '6 Indic Languages (HI, BN, TA..)', 'i18n Localization Engine')">
+        <span class="node-title">🌐 i18n Translation Engine</span>
+        <span class="node-role">6 Indic Languages Localization</span>
+        <span class="node-tech">Tech: i18n Translation Service</span>
       </div>
-      <div class="arch-node" style="left:1092px; top:395px; width:86px; height:55px; border-color:#e64980; color:#c2255c;">
-        <span class="node-title" style="font-size:15px;">FHIR R4<br>Bundler</span>
-      </div>
-      <div class="arch-node" style="left:1092px; top:465px; width:86px; height:55px; border-color:#e64980; color:#c2255c;">
-        <span class="node-title" style="font-size:15px;">ABDM<br>Validator</span>
-        <span class="node-sub" style="font-size:11px;">14-Digit ID</span>
+
+      <div class="node-box layer-front pipe-p5" style="left:325px; top:565px; width:220px; height:75px; border-color:#e8590c; background:#fff4e6; color:#d9480f;"
+           onclick="showDetails('Doctor Dashboard Portal', '2. Frontend Layer', '30s Summary & Live OPD Queue', 'DoctorDashboard.js View Engine')">
+        <span class="node-title">🩺 Doctor Dashboard Portal</span>
+        <span class="node-role">30s Summary & Live OPD Queue</span>
+        <span class="node-tech">Tech: React OPD Dashboard View</span>
       </div>
 
       <!-- ========================================== -->
-      <!-- 4. CLOUD AI CONTAINER                      -->
+      <!-- LAYER 3: CLINICAL SERVICES LAYER -->
       <!-- ========================================== -->
-      <div class="arch-container" style="left:1260px; top:120px; width:240px; height:220px; border-color:#ae3ec9; background:#f8f0fc;">
-        <div class="container-pill" style="border-color:#ae3ec9; background:#eebefa; color:#862e9c;">
-          Clinical AI (Cloud)
-        </div>
+      <div class="container-box layer-clinical" style="left:590px; top:90px; width:260px; height:590px; border-color:#2b8a3e; background:#f4fbf7;">
+        <div class="container-pill" style="border-color:#2b8a3e; background:#d3f9d8; color:#2b8a3e;">3. Clinical Services</div>
       </div>
-      <div class="arch-node" style="left:1285px; top:165px; width:190px; height:70px; border-color:#ae3ec9; color:#862e9c;">
-        <span class="node-title">Google Gemini Vision</span>
-        <span class="node-sub">gemini-flash-lite-latest<br>Indian Cursive Rx OCR</span>
+
+      <div class="node-box layer-clinical pipe-p2" style="left:605px; top:125px; width:230px; height:75px; border-color:#2b8a3e; color:#2b8a3e;"
+           onclick="showDetails('rPPG Vitals DSP Engine', '3. Clinical Services', 'Contactless Pulse & SpO2', 'POS / CHROM + Butterworth 0.7-3.5Hz')">
+        <span class="node-title">📈 rPPG Vitals DSP Engine</span>
+        <span class="node-role">Contactless Pulse & SpO2</span>
+        <span class="node-tech">Tech: POS/CHROM + Butterworth</span>
       </div>
-      <div class="arch-node" style="left:1285px; top:250px; width:190px; height:65px; border-color:#ae3ec9; color:#862e9c;">
-        <span class="node-title">Medical Gatekeeper</span>
-        <span class="node-sub">Rejects Non-Medical Files<br>Extracts Latin Sigs & Labs</span>
+
+      <div class="node-box layer-clinical pipe-p2" style="left:605px; top:235px; width:230px; height:75px; border-color:#2b8a3e; color:#2b8a3e;"
+           onclick="showDetails('Face ROI Tracker', '3. Clinical Services', 'Forehead & Cheek Capillary ROIs', 'MediaPipe FaceMesh (478 Points)')">
+        <span class="node-title">👁️ Face ROI Tracker</span>
+        <span class="node-role">Forehead & Cheek Capillary ROIs</span>
+        <span class="node-tech">Tech: MediaPipe FaceMesh 478</span>
+      </div>
+
+      <div class="node-box layer-clinical pipe-p4" style="left:605px; top:345px; width:230px; height:75px; border-color:#2b8a3e; color:#2b8a3e;"
+           onclick="showDetails('Skeletal 3D Body Map', '3. Clinical Services', 'Pain & Symptom Localization', 'SOCRATES Symptom Decision Tree')">
+        <span class="node-title">🧍 Skeletal 3D Body Map</span>
+        <span class="node-role">Pain & Symptom Localization</span>
+        <span class="node-tech">Tech: SOCRATES Symptom Tree</span>
+      </div>
+
+      <div class="node-box layer-clinical pipe-p3" style="left:605px; top:455px; width:230px; height:75px; border-color:#ae3ec9; color:#862e9c;"
+           onclick="showDetails('Client OCR & PDF Reader', '3. Clinical Services', 'Fast Client Document Extraction', 'Tesseract.js v5 (WASM) + PDF.js 3.11')">
+        <span class="node-title">📑 Client OCR & PDF Reader</span>
+        <span class="node-role">Fast Client Document Extraction</span>
+        <span class="node-tech">Tech: Tesseract.js WASM + PDF.js</span>
+      </div>
+
+      <div class="node-box layer-clinical" style="left:605px; top:565px; width:230px; height:75px; border-color:#2b8a3e; color:#2b8a3e;"
+           onclick="showDetails('AYUSH Dashavidha Pariksha', '3. Clinical Services', 'Constitutional Prakriti Phenotyping', 'Vata / Pitta / Kapha Scoring Engine')">
+        <span class="node-title">🧘 AYUSH Dashavidha Pariksha</span>
+        <span class="node-role">Constitutional Phenotyping</span>
+        <span class="node-tech">Tech: Tridosha Scoring Engine</span>
       </div>
 
       <!-- ========================================== -->
-      <!-- 5. DATABASE CONTAINER                      -->
+      <!-- LAYER 4: SECURITY LAYER -->
       <!-- ========================================== -->
-      <div class="arch-container" style="left:1260px; top:380px; width:240px; height:220px; border-color:#2f9e44; background:#ebfbee;">
-        <div class="container-pill" style="border-color:#2f9e44; background:#b2f2bb; color:#2b8a3e;">
-          Data Persistence
-        </div>
+      <div class="container-box layer-sec" style="left:880px; top:90px; width:240px; height:590px; border-color:#e03131; background:#fff5f5;">
+        <div class="container-pill" style="border-color:#e03131; background:#ffc9c9; color:#c92a2a;">4. Security & Compliance</div>
       </div>
-      <div class="arch-node" style="left:1285px; top:425px; width:190px; height:70px; border-color:#2f9e44; color:#2b8a3e;">
-        <span class="node-title">MongoDB Database</span>
-        <span class="node-sub">patients, intakes, vitals<br>mongodb@7.7.0 driver</span>
+
+      <div class="node-box layer-sec pipe-p1" style="left:895px; top:125px; width:210px; height:75px; border-color:#e03131; color:#c92a2a;"
+           onclick="showDetails('ABDM Health ID Validator', '4. Security Layer', '14-digit ABHA QR Validation', 'ABDM NDHM Sandbox API & RegEx')">
+        <span class="node-title">🏛️ ABDM Health ID Validator</span>
+        <span class="node-role">14-digit ABHA QR Validation</span>
+        <span class="node-tech">Tech: ABDM Sandbox API & RegEx</span>
       </div>
-      <div class="arch-node" style="left:1285px; top:510px; width:190px; height:65px; border-color:#2f9e44; color:#2b8a3e;">
-        <span class="node-title">In-Memory Fallback</span>
-        <span class="node-sub">PatientDB (Zero-Config)<br>Guarantees Offline Uptime</span>
+
+      <div class="node-box layer-sec pipe-p1" style="left:895px; top:235px; width:210px; height:75px; border-color:#e03131; color:#c92a2a;"
+           onclick="showDetails('JWT Auth & Role Guard', '4. Security Layer', 'Kiosk Session vs Doctor Role Claims', 'RS256 JWT, HttpOnly Cookies')">
+        <span class="node-title">🔑 JWT Auth & Role Guard</span>
+        <span class="node-role">Kiosk vs Doctor Privilege Claims</span>
+        <span class="node-tech">Tech: RS256 JWT, HttpOnly Cookies</span>
+      </div>
+
+      <div class="node-box layer-sec pipe-p5" style="left:895px; top:345px; width:210px; height:75px; border-color:#e64980; color:#c2255c;"
+           onclick="showDetails('HL7 FHIR R4 Standard', '4. Security Layer', 'Interoperable Clinical Bundles', 'LOINC Codes (8867-4, 2708-6)')">
+        <span class="node-title">🏥 HL7 FHIR R4 Standard</span>
+        <span class="node-role">Interoperable Clinical Bundles</span>
+        <span class="node-tech">Tech: LOINC Vitals & SNOMED CT</span>
+      </div>
+
+      <div class="node-box layer-sec" style="left:895px; top:455px; width:210px; height:75px; border-color:#e03131; color:#c92a2a;"
+           onclick="showDetails('PHI Payload Encryption', '4. Security Layer', 'Transport & Rest Data Protection', 'HTTPS TLS 1.3 + Field Level Enc')">
+        <span class="node-title">🔒 PHI Payload Encryption</span>
+        <span class="node-role">Transport & Rest Data Security</span>
+        <span class="node-tech">Tech: HTTPS TLS 1.3 + Field Enc</span>
+      </div>
+
+      <div class="node-box layer-sec" style="left:895px; top:565px; width:210px; height:75px; border-color:#e03131; color:#c92a2a;"
+           onclick="showDetails('Process Error Guards', '4. Security Layer', 'Server Crash Prevention & CORS', 'uncaughtException & CORS Guards')">
+        <span class="node-title">🛡️ Process Error Guards</span>
+        <span class="node-role">Crash Prevention & CORS Filter</span>
+        <span class="node-tech">Tech: uncaughtException Guards</span>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- LAYER 5: BACKEND LAYER -->
+      <!-- ========================================== -->
+      <div class="container-box layer-back" style="left:1150px; top:90px; width:260px; height:590px; border-color:#f76707; background:#fff9db;">
+        <div class="container-pill" style="border-color:#f76707; background:#ffe066; color:#d9480f;">5. Backend Layer [Node/Py]</div>
+      </div>
+
+      <div class="node-box layer-back pipe-p1" style="left:1165px; top:125px; width:230px; height:75px; border-color:#f76707; color:#d9480f;"
+           onclick="showDetails('Node.js & Express 5.2 Server', '5. Backend Layer', 'REST Controller & API Gateway', 'Node.js 20 LTS, Express 5.2.1')">
+        <span class="node-title">🖥️ Express 5.2 Core Server</span>
+        <span class="node-role">REST Gateway on Port 3000</span>
+        <span class="node-tech">Tech: Node.js 20 LTS, Express 5.2</span>
+      </div>
+
+      <div class="node-box layer-back pipe-p1" style="left:1165px; top:235px; width:230px; height:75px; border-color:#f76707; color:#d9480f;"
+           onclick="showDetails('Modular API Router', '5. Backend Layer', 'Route Dispatcher (apiRoutes.js)', '/api/vitals, /analyze-doc, /patients')">
+        <span class="node-title">🔀 Modular API Router</span>
+        <span class="node-role">Route Dispatcher (apiRoutes.js)</span>
+        <span class="node-tech">Tech: Modular Express Router</span>
+      </div>
+
+      <div class="node-box layer-back pipe-p1" style="left:1165px; top:345px; width:230px; height:75px; border-color:#f76707; color:#d9480f;"
+           onclick="showDetails('Patient Intake Controller', '5. Backend Layer', 'Patient State Lifecycle & CRUD', 'patientController.js, Mongoose')">
+        <span class="node-title">👤 Patient Intake Controller</span>
+        <span class="node-role">Patient Intake Lifecycle & CRUD</span>
+        <span class="node-tech">Tech: patientController.js</span>
+      </div>
+
+      <div class="node-box layer-back pipe-p2" style="left:1165px; top:455px; width:230px; height:75px; border-color:#f76707; color:#d9480f;"
+           onclick="showDetails('Python Subprocess Bridge', '5. Backend Layer', 'child_process IPC stdio Supervisor', 'spawn(\'python\', [\'face_detector.py\'])')">
+        <span class="node-title">🐍 Python Subprocess Bridge</span>
+        <span class="node-role">child_process IPC stdio Bridge</span>
+        <span class="node-tech">Tech: Python IPC Subprocess</span>
+      </div>
+
+      <div class="node-box layer-back pipe-p2" style="left:1165px; top:565px; width:230px; height:75px; border-color:#2b8a3e; color:#2b8a3e;"
+           onclick="showDetails('OpenCV Face Mesh Worker', '5. Backend Layer', '478 Landmark ROI Subprocess', 'OpenCV (cv2) + MediaPipe Tasks')">
+        <span class="node-title">👁️ OpenCV Face Mesh Worker</span>
+        <span class="node-role">Sub-millimeter Landmark Worker</span>
+        <span class="node-tech">Tech: OpenCV (cv2) + MediaPipe</span>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- LAYER 6: AI CLOUD LAYER -->
+      <!-- ========================================== -->
+      <div class="container-box layer-ai" style="left:1440px; top:90px; width:270px; height:590px; border-color:#ae3ec9; background:#f8f0fc;">
+        <div class="container-pill" style="border-color:#ae3ec9; background:#eebefa; color:#862e9c;">6. AI Cloud Layer</div>
+      </div>
+
+      <div class="node-box layer-ai pipe-p3" style="left:1455px; top:125px; width:240px; height:75px; border-color:#ae3ec9; color:#862e9c;"
+           onclick="showDetails('Gemini Multimodal Vision API', '6. AI Cloud Layer', 'Prescription & Diagnostic Vision', 'gemini-flash-lite-latest (Google AI)')">
+        <span class="node-title">✍️ Gemini Vision API</span>
+        <span class="node-role">Multimodal Prescription Vision</span>
+        <span class="node-tech">Tech: Gemini Flash Lite Model</span>
+      </div>
+
+      <div class="node-box layer-ai pipe-p3" style="left:1455px; top:235px; width:240px; height:75px; border-color:#ae3ec9; color:#862e9c;"
+           onclick="showDetails('Indian Cursive Rx OCR', '6. AI Cloud Layer', 'Doctor Handwriting & Sig Codes', 'Latin Sig Parser (OD, BD, TDS, SOS)')">
+        <span class="node-title">📝 Cursive Rx & Sig OCR</span>
+        <span class="node-role">Doctor Handwriting & Sig Decoder</span>
+        <span class="node-tech">Tech: Latin Sig Grammar Parser</span>
+      </div>
+
+      <div class="node-box layer-ai pipe-p3" style="left:1455px; top:345px; width:240px; height:75px; border-color:#ae3ec9; color:#862e9c;"
+           onclick="showDetails('Authenticity Gatekeeper', '6. AI Cloud Layer', 'Safety & Non-Medical Guardrail', 'Rejects screenshots / pets / bills')">
+        <span class="node-title">🛡️ Authenticity Gatekeeper</span>
+        <span class="node-role">Safety & Non-Medical Guardrail</span>
+        <span class="node-tech">Tech: Strict Medical Guard Prompt</span>
+      </div>
+
+      <div class="node-box layer-ai pipe-p4" style="left:1455px; top:455px; width:240px; height:75px; border-color:#ae3ec9; color:#862e9c;"
+           onclick="showDetails('Clinical NLP & SNOMED Lexicon', '6. AI Cloud Layer', '250+ Indian Pharmacopoeia Drugs', 'prescriptionParser.js Drug Matcher')">
+        <span class="node-title">📖 Clinical NLP & SNOMED</span>
+        <span class="node-role">250+ Indian Pharmacopoeia Lexicon</span>
+        <span class="node-tech">Tech: SNOMED-CT Drug Matcher</span>
+      </div>
+
+      <div class="node-box layer-ai pipe-p4" style="left:1455px; top:565px; width:240px; height:75px; border-color:#e03131; background:#fff5f5; color:#c92a2a;"
+           onclick="showDetails('Herb-Drug Matrix & NEWS2', '6. AI Cloud Layer', 'Allopathy/AYUSH Conflict & Triage', 'herbDrugService.js + NEWS2 Rules')">
+        <span class="node-title">💊 Herb-Drug Matrix & NEWS2</span>
+        <span class="node-role">Allopathy/AYUSH & Red-Flag Triage</span>
+        <span class="node-tech">Tech: Herb-Drug Graph + NEWS2</span>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- LAYER 7: DATABASE LAYER -->
+      <!-- ========================================== -->
+      <div class="container-box layer-db" style="left:1740px; top:90px; width:250px; height:590px; border-color:#2b8a3e; background:#e6fcf5;">
+        <div class="container-pill" style="border-color:#2b8a3e; background:#c3fae8; color:#0ca678;">7. Database Layer</div>
+      </div>
+
+      <div class="node-box layer-db pipe-p1" style="left:1755px; top:125px; width:220px; height:80px; border-color:#2f9e44; color:#2b8a3e;"
+           onclick="showDetails('MongoDB Primary Database', '7. Database Layer', 'Production Electronic Health Records', 'mongodb@7.7.0 (MongoClient)')">
+        <span class="node-title">🍃 MongoDB Database</span>
+        <span class="node-role">Electronic Medical Records</span>
+        <span class="node-tech">Tech: mongodb@7.7.0 (MongoClient)</span>
+      </div>
+
+      <div class="node-box layer-db pipe-p1" style="left:1755px; top:235px; width:220px; height:80px; border-color:#2f9e44; color:#2b8a3e;"
+           onclick="showDetails('In-Memory PatientDB Cache', '7. Database Layer', 'Zero-Downtime Offline Fallback', 'Map() Key-Value RAM Store (db.js)')">
+        <span class="node-title">💾 In-Memory PatientDB</span>
+        <span class="node-role">Zero-Downtime Offline Fallback</span>
+        <span class="node-tech">Tech: Map() RAM Store (PatientDB)</span>
+      </div>
+
+      <div class="node-box layer-db pipe-p5" style="left:1755px; top:345px; width:220px; height:80px; border-color:#e64980; color:#c2255c;"
+           onclick="showDetails('FHIR Observation Archive', '7. Database Layer', 'Standardized Diagnostic Repository', 'HL7 FHIR R4 JSON Documents')">
+        <span class="node-title">📦 FHIR Resource Store</span>
+        <span class="node-role">Standardized Clinical Documents</span>
+        <span class="node-tech">Tech: HL7 FHIR R4 JSON Store</span>
+      </div>
+
+      <div class="node-box layer-db pipe-p4" style="left:1755px; top:455px; width:220px; height:80px; border-color:#e8590c; color:#d9480f;"
+           onclick="showDetails('OPD Priority Token Store', '7. Database Layer', 'Smart Hospital Queue Scheduling', 'Ticket #A-24 (Normal) / #EM-01 (Red)')">
+        <span class="node-title">🎟️ OPD Priority Token Store</span>
+        <span class="node-role">Smart Hospital Queue Scheduling</span>
+        <span class="node-tech">Tech: Ticket #A-24 / #EM-01</span>
+      </div>
+
+      <div class="node-box layer-db" style="left:1755px; top:565px; width:220px; height:80px; border-color:#495057; color:#212529;"
+           onclick="showDetails('Clinical Audit Log Store', '7. Database Layer', 'Tamper-Evident Session Log', 'Audit Trail Records (DISHA / HIPAA)')">
+        <span class="node-title">📊 Clinical Audit Log Store</span>
+        <span class="node-role">Tamper-Evident Session Log</span>
+        <span class="node-tech">Tech: Audit Trail Records</span>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- LAYER 8: DEPLOYMENT LAYER -->
+      <!-- ========================================== -->
+      <div class="container-box layer-deploy" style="left:40px; top:710px; width:1950px; height:150px; border-color:#343a40; background:#f8f9fa;">
+        <div class="container-pill" style="border-color:#343a40; background:#e9ecef; color:#212529;">8. Deployment & Cloud Infrastructure Layer [Docker, AWS, CI/CD]</div>
+      </div>
+
+      <div class="node-box layer-deploy" style="left:60px; top:745px; width:250px; height:95px; border-color:#1971c2; color:#1864ab;"
+           onclick="showDetails('Docker Container Engine', '8. Deployment Layer', 'Unified Isolated App Packaging', 'Dockerfile & docker-compose.yml')">
+        <span class="node-title">🐳 Docker Container Engine</span>
+        <span class="node-role">Multi-Language Packaging</span>
+        <span class="node-tech">Tech: Node.js 20 + Python 3 + cv2</span>
+      </div>
+
+      <div class="node-box layer-deploy" style="left:335px; top:745px; width:250px; height:95px; border-color:#f76707; color:#d9480f;"
+           onclick="showDetails('AWS Cloud Infrastructure', '8. Deployment Layer', 'Multi-AZ High-Availability Hosting', 'AWS VPC, EC2/ECS, App Load Balancer')">
+        <span class="node-title">☁️ AWS Cloud Infrastructure</span>
+        <span class="node-role">Multi-AZ High-Availability Hosting</span>
+        <span class="node-tech">Tech: AWS VPC, EC2/ECS, ALB</span>
+      </div>
+
+      <div class="node-box layer-deploy" style="left:610px; top:745px; width:250px; height:95px; border-color:#2b8a3e; color:#2b8a3e;"
+           onclick="showDetails('GitHub Actions CI/CD', '8. Deployment Layer', 'Automated Testing & Rolling Deploy', 'Continuous Integration Workflows')">
+        <span class="node-title">🚀 GitHub Actions CI/CD</span>
+        <span class="node-role">Automated Testing & Deploy</span>
+        <span class="node-tech">Tech: Continuous Integration Pipeline</span>
+      </div>
+
+      <div class="node-box layer-deploy" style="left:885px; top:745px; width:250px; height:95px; border-color:#0284c7; color:#0369a1;"
+           onclick="showDetails('Static Asset Pipeline', '8. Deployment Layer', 'Zero-Build Native ES6 Serving', 'Express Static Mounts (/frontend, /models)')">
+        <span class="node-title">⚡ Static Asset Pipeline</span>
+        <span class="node-role">Zero-Build Native ES6 Serving</span>
+        <span class="node-tech">Tech: Express Static Mounts</span>
+      </div>
+
+      <div class="node-box layer-deploy" style="left:1160px; top:745px; width:250px; height:95px; border-color:#ae3ec9; color:#862e9c;"
+           onclick="showDetails('Local Model Weights Binary', '8. Deployment Layer', 'On-Premise Machine Learning Weights', 'models/face_landmarker.task (5.8MB)')">
+        <span class="node-title">🧠 FaceLandmarker Weights</span>
+        <span class="node-role">On-Premise ML Weights</span>
+        <span class="node-tech">Tech: MediaPipe Model Binary</span>
+      </div>
+
+      <div class="node-box layer-deploy" style="left:1435px; top:745px; width:250px; height:95px; border-color:#e03131; color:#c92a2a;"
+           onclick="showDetails('Clinical Test Suites', '8. Deployment Layer', 'Precision & Accuracy Verification', '25+ test_*.js root test suites')">
+        <span class="node-title">🧪 Clinical Test Suites</span>
+        <span class="node-role">Precision & Accuracy Verification</span>
+        <span class="node-tech">Tech: 25+ Root Test Suites</span>
+      </div>
+
+      <div class="node-box layer-deploy" style="left:1710px; top:745px; width:260px; height:95px; border-color:#343a40; color:#212529;"
+           onclick="showDetails('Serverless Edge Deploy', '8. Deployment Layer', 'Serverless Edge API Hosting', 'vercel.json & netlify.toml Bridges')">
+        <span class="node-title">☁️ Serverless Edge Deploy</span>
+        <span class="node-role">Serverless Edge API Hosting</span>
+        <span class="node-tech">Tech: Vercel & Netlify Configs</span>
       </div>
 
     </div>
 
-    <!-- HUD Controls -->
+    <!-- Details Inspection Drawer -->
+    <div class="details-drawer" id="detailsDrawer">
+      <div class="drawer-header">
+        <div>
+          <div class="drawer-layer" id="drawerLayer">Layer</div>
+          <div class="drawer-title" id="drawerTitle">Component</div>
+        </div>
+        <button class="drawer-close" onclick="closeDrawer()">✕</button>
+      </div>
+      <div class="drawer-row">
+        <span class="drawer-label">System Role</span>
+        <div class="drawer-value" id="drawerRole">-</div>
+      </div>
+      <div class="drawer-row">
+        <span class="drawer-label">Technology Stack</span>
+        <div class="drawer-value" id="drawerTech">-</div>
+      </div>
+    </div>
+
+    <!-- HUD View Controls -->
     <div class="hud">
       <button class="hud-btn" onclick="zoomIn()" title="Zoom In">+</button>
       <button class="hud-btn" onclick="zoomOut()" title="Zoom Out">-</button>
-      <span class="hud-label" id="zoomLevel">90%</span>
       <button class="hud-btn" onclick="resetZoom()" title="Reset View">⤢</button>
+      <div class="hud-scale" id="scaleIndicator">82%</div>
     </div>
   </div>
 
   <script>
-    // Pan & Zoom
-    let scale = 0.90;
-    let panX = 40;
-    let panY = 20;
+    let scale = 0.82;
+    let panX = 30;
+    let panY = 15;
     let isPanning = false;
     let startX = 0;
     let startY = 0;
 
     const viewport = document.getElementById('viewport');
     const canvasContent = document.getElementById('canvasContent');
-    const zoomLevel = document.getElementById('zoomLevel');
+    const scaleIndicator = document.getElementById('scaleIndicator');
+    const detailsDrawer = document.getElementById('detailsDrawer');
 
     function updateTransform() {
-      canvasContent.style.transform = 'translate(' + panX + 'px, ' + panY + 'px) scale(' + scale + ')';
-      zoomLevel.textContent = Math.round(scale * 100) + '%';
+      canvasContent.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+      scaleIndicator.textContent = Math.round(scale * 100) + '%';
     }
 
     viewport.addEventListener('mousedown', (e) => {
-      if (e.target.closest('.hud')) return;
+      if (e.target.closest('.hud') || e.target.closest('.details-drawer')) return;
       isPanning = true;
       startX = e.clientX - panX;
       startY = e.clientY - panY;
@@ -508,40 +864,71 @@
     viewport.addEventListener('wheel', (e) => {
       e.preventDefault();
       const zoomFactor = e.deltaY < 0 ? 1.08 : 0.92;
-      const newScale = Math.min(Math.max(scale * zoomFactor, 0.4), 1.8);
-      
-      const mouseX = e.clientX - viewport.getBoundingClientRect().left;
-      const mouseY = e.clientY - viewport.getBoundingClientRect().top;
-      
-      panX = mouseX - (mouseX - panX) * (newScale / scale);
-      panY = mouseY - (mouseY - panY) * (newScale / scale);
-      scale = newScale;
+      scale = Math.min(Math.max(scale * zoomFactor, 0.35), 2.0);
       updateTransform();
     }, { passive: false });
 
-    function zoomIn() {
-      scale = Math.min(scale * 1.15, 1.8);
-      updateTransform();
+    function zoomIn() { scale = Math.min(scale * 1.15, 2.0); updateTransform(); }
+    function zoomOut() { scale = Math.max(scale * 0.85, 0.35); updateTransform(); }
+    function resetZoom() { scale = 0.82; panX = 30; panY = 15; updateTransform(); }
+
+    // Pipeline Highlighting / Filtering
+    function filterPipeline(pipelineKey) {
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-target') === pipelineKey);
+      });
+
+      const allNodes = document.querySelectorAll('.node-box, .container-box');
+      const allSvgPaths = document.querySelectorAll('svg path, svg text');
+
+      if (pipelineKey === 'all') {
+        allNodes.forEach(el => el.classList.remove('dimmed'));
+        allSvgPaths.forEach(el => {
+          el.classList.remove('dimmed');
+          el.classList.remove('highlighted');
+        });
+        return;
+      }
+
+      // Dim everything first
+      allNodes.forEach(el => el.classList.add('dimmed'));
+      allSvgPaths.forEach(el => {
+        el.classList.add('dimmed');
+        el.classList.remove('highlighted');
+      });
+
+      if (pipelineKey === 'deploy') {
+        document.querySelectorAll('.layer-deploy').forEach(el => el.classList.remove('dimmed'));
+        return;
+      }
+
+      // Highlight active pipeline
+      const targetClass = `pipe-${pipelineKey}`;
+      document.querySelectorAll(`.${targetClass}`).forEach(el => {
+        el.classList.remove('dimmed');
+        if (el.tagName && el.tagName.toLowerCase() === 'path') {
+          el.classList.add('highlighted');
+        }
+      });
+
+      // Keep respective containers visible
+      document.querySelectorAll('.container-box').forEach(c => c.classList.remove('dimmed'));
     }
-    function zoomOut() {
-      scale = Math.max(scale * 0.85, 0.4);
-      updateTransform();
+
+    // Details Inspection Drawer
+    function showDetails(title, layer, role, tech) {
+      document.getElementById('drawerTitle').textContent = title;
+      document.getElementById('drawerLayer').textContent = layer;
+      document.getElementById('drawerRole').textContent = role;
+      document.getElementById('drawerTech').textContent = tech;
+      detailsDrawer.classList.add('visible');
     }
-    function resetZoom() {
-      scale = 0.90;
-      panX = 40;
-      panY = 20;
-      updateTransform();
+
+    function closeDrawer() {
+      detailsDrawer.classList.remove('visible');
     }
+
     updateTransform();
-
-    function downloadExcalidraw() {
-      window.location.href = './medical_platform_architecture.excalidraw';
-    }
-
-    function openExcalidrawWeb() {
-      window.open('https://excalidraw.com', '_blank');
-    }
   </script>
 </body>
 </html>

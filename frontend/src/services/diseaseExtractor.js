@@ -344,6 +344,62 @@ export const CLINICAL_DISEASE_DICTIONARY = [
     category: "Spine & Musculoskeletal",
     acuity: "Chronic / Episodic",
     organSystem: "Spinal Column & Nerve Roots"
+  },
+
+  // --- Craniofacial, Skull, Paranasal Sinus & ENT Conditions ---
+  {
+    name: "Skull Fracture (Calvarial / Cranial Vault)",
+    synonyms: ["skull fracture", "cranial fracture", "calvarial fracture", "depressed skull fracture", "linear skull fracture", "vault fracture", "fracture of skull", "fracture skull", "calvarium fracture", "head injury fracture", "cranial vault fracture"],
+    icd10: "S02.9",
+    snomed: "88565004",
+    category: "Craniofacial & Neurotrauma",
+    acuity: "STAT Emergency",
+    organSystem: "Cranial Vault & Calvarium"
+  },
+  {
+    name: "Paranasal Sinusitis (Maxillary / Frontal)",
+    synonyms: ["sinusitis", "paranasal sinusitis", "maxillary sinusitis", "frontal sinusitis", "acute sinusitis", "chronic sinusitis", "sinus haziness", "mucosal thickening", "sinus opacity", "sinus opacification", "sinus inflammation", "pns sinusitis", "pansinusitis", "maxillary antrum opacification"],
+    icd10: "J01.90",
+    snomed: "36971009",
+    category: "Ear, Nose & Throat (ENT) / Radiology",
+    acuity: "Acute / Inflammatory",
+    organSystem: "Paranasal Sinuses & Upper Airway"
+  },
+  {
+    name: "Deviated Nasal Septum (DNS)",
+    synonyms: ["deviated nasal septum", "dns", "septal deviation", "nasal septal spur", "nasal obstruction", "deviated septum"],
+    icd10: "J34.2",
+    snomed: "402863004",
+    category: "Ear, Nose & Throat (ENT)",
+    acuity: "Structural / Mechanical",
+    organSystem: "Nasal Cavity & Septum"
+  },
+  {
+    name: "Facial Bone Fracture (ZMC / Orbit / Nasal Bone)",
+    synonyms: ["facial fracture", "facial bone fracture", "zygomatic fracture", "zmc fracture", "orbital fracture", "orbital blowout fracture", "nasal bone fracture", "nasal fracture", "maxillary fracture", "tripod fracture", "malar fracture", "orbital rim fracture"],
+    icd10: "S02.4",
+    snomed: "302251007",
+    category: "Craniofacial Trauma",
+    acuity: "STAT Emergency",
+    organSystem: "Facial Skeleton & Orbit"
+  },
+  {
+    name: "Mandibular Fracture / TMJ Injury",
+    synonyms: ["mandible fracture", "mandibular fracture", "jaw fracture", "broken jaw", "tmj dislocation", "subcondylar fracture", "parasymphyseal fracture", "mandibular angle fracture"],
+    icd10: "S02.6",
+    snomed: "77490008",
+    category: "Maxillofacial Trauma",
+    acuity: "STAT Emergency",
+    organSystem: "Mandible & TMJ"
+  },
+  {
+    name: "Traumatic Brain Injury (TBI) / Intracranial Trauma",
+    synonyms: ["head injury", "head trauma", "traumatic brain injury", "tbi", "concussion", "intracranial hemorrhage", "extradural hematoma", "edh", "subdural hematoma", "sdh", "subarachnoid hemorrhage", "sah", "intracranial bleed"],
+    icd10: "S06.9X9A",
+    snomed: "127295002",
+    category: "Neurotrauma & Emergency",
+    acuity: "STAT Emergency",
+    organSystem: "Brain & Intracranial Space"
   }
 ];
 

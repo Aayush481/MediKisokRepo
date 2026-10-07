@@ -8,6 +8,7 @@ import { prescriptionParser } from "./prescriptionParser.js";
 import { labParser } from "./labParser.js";
 import { documentClassifier } from "./medicalDocumentClassifier.js";
 import { diseaseExtractor } from "./diseaseExtractor.js";
+import { xrayAnalyzer } from "./xrayAnalyzer.js";
 
 const DEFAULT_API_KEY = typeof window !== "undefined" && window.__GEMINI_API_KEY__ ? window.__GEMINI_API_KEY__ : "";
 const CANDIDATE_MODELS = [
@@ -163,13 +164,27 @@ CRITICAL MEDICAL AUTHENTICITY VALIDATION:
    - A pathology report provides objective numerical laboratory measurements (e.g., Hemoglobin, Platelets, Fasting Glucose, Serum Creatinine).
    - It DOES NOT contain prescribed medications.
    - You MUST NOT generate a structured JSON medication array for pathology reports. The JSON medication array MUST BE COMPLETELY EMPTY [].
+6. If it is a Radiograph (X-Ray), CT Scan, MRI, Ultrasound, or Radiology Investigation Report:
+   - Identify the exact anatomical structure and projection:
+     * Paranasal Sinuses (PNS - Water's / Caldwell Projection)
+     * Skull & Cranial Vault (Calvarium AP & Lateral)
+     * Facial Skeleton & Bilateral Orbits (ZMC, Nasal Bones, Maxilla)
+     * Mandible & Temporomandibular Articulation (OPG / Panoramic)
+     * Brain & Neurocranium (NCCT Head)
+     * Bilateral Knee Joint | Shoulder Joint | Thorax & Lung Fields | Spine | Pelvis
+   - Detail all visible findings in ## Extracted Findings:
+     * Cortical bone continuity, presence or absence of fracture lines or step-off
+     * Sinus aeration, mucosal thickening, fluid levels, antral opacification
+     * Facial symmetry, orbital rim integrity, zygomatic arches
+     * Articulating joint spaces, alignment, soft tissue signs
+   - The JSON medication array MUST BE COMPLETELY EMPTY [].
 
 Structure the response as:
 ## Report Type
-[One of: 12-Lead ECG / EKG Strip | X-Ray Radiograph (<Anatomical Region>) | Pathology & Biochemistry Report | Doctor Prescription (Rx) | Hospital Discharge Summary | Non-Medical / Unrecognized Image]
+[One of: 12-Lead ECG / EKG Strip | X-Ray Radiograph (<Anatomical Region>) | Computed Tomography (CT) - <Region> | Pathology & Biochemistry Report | Doctor Prescription (Rx) | Hospital Discharge Summary | Non-Medical / Unrecognized Image]
 
 ## Anatomical Site / Region
-[Exact anatomical focus or system, e.g. Bilateral Knee Joint | Shoulder Joint | Thorax & Lung Fields | Cardiovascular System | Blood Biomarkers | Outpatient Pharmacotherapy | None]
+[Exact anatomical focus or system, e.g. Paranasal Sinuses (PNS) | Skull & Cranial Vault | Facial Skeleton & Orbits | Mandible & TMJ | Bilateral Knee Joint | Shoulder Joint | Thorax & Lung Fields | Cardiovascular System | Blood Biomarkers | Outpatient Pharmacotherapy | None]
 
 ## Root Clinical Cause / Diagnostic Finding
 [Primary diagnosis, impression, or root cause]
@@ -313,17 +328,9 @@ Always finish with: **NOT FOR CLINICAL USE WITHOUT PHYSICIAN REVIEW**`;
     }
 
     // Extract medications, lab results, and diseases
-    const isPathologyOrImaging = type === "pathology_report" || 
-                                 type === "xray_report" || 
-                                 type === "ecg_report" || 
-                                 isLabReport ||
-                                 (categoryLabel || "").toLowerCase().includes("pathology") || 
-                                 (categoryLabel || "").toLowerCase().includes("biochemistry") || 
-                                 (categoryLabel || "").toLowerCase().includes("laboratory") ||
-                                 (categoryLabel || "").toLowerCase().includes("blood");
-
+    const isPureImaging = type === "xray_report" || type === "ecg_report";
     let extractedMedications = [];
-    if (!isNonMedical && !isPathologyOrImaging) {
+    if (!isNonMedical && !isPureImaging) {
       extractedMedications = prescriptionParser.parsePrescriptionText(text);
       if (extractedMedications.length > 0 && type !== "discharge_summary") {
         type = "prescription";
@@ -331,12 +338,41 @@ Always finish with: **NOT FOR CLINICAL USE WITHOUT PHYSICIAN REVIEW**`;
         icon = "";
         badgeColor = "pill-success";
       }
-    } else {
-      extractedMedications = [];
     }
+
     const labResults = !isNonMedical ? labParser.parseLabReportText(text) : { flags: [], normalValues: [], artifacts: [] };
+
+    // Extract structured radiological findings if X-ray or CT
+    if (!isNonMedical && type === "xray_report") {
+      labResults.flags.push({
+        test: "Radiological Impression",
+        value: rootCause,
+        ref: anatomicalSite,
+        status: rootCause.toLowerCase().includes("fracture") ? "CRITICAL ACUTE" : "DIAGNOSTIC",
+        alertLevel: rootCause.toLowerCase().includes("fracture") ? "danger" : "info"
+      });
+
+      const findingsMatch = text.match(/(?:##|\*\*|###)?\s*Extracted Findings[^\n:]*\n([\s\S]*?)(?=(?:##|\*\*|###|\Z|$))/i);
+      if (findingsMatch) {
+        const lines = findingsMatch[1]
+          .split('\n')
+          .map(l => l.replace(/^[\s*•\-–]+/, '').trim())
+          .filter(l => l.length > 5 && !l.startsWith('```') && !l.toLowerCase().includes('not for clinical'));
+        lines.forEach(finding => {
+          labResults.flags.push({
+            test: "Radiological Finding",
+            value: finding,
+            ref: anatomicalSite,
+            status: "OBSERVED",
+            alertLevel: rootCause.toLowerCase().includes("fracture") ? "danger" : "info"
+          });
+        });
+      }
+    }
+
+    const clinicalContext = `${text}\n${rootCause}`;
     const extractedDiseases = !isNonMedical ? diseaseExtractor.extractDiseases(
-      text,
+      clinicalContext,
       labResults.flags,
       extractedMedications,
       rootCause
@@ -396,15 +432,11 @@ Always finish with: **NOT FOR CLINICAL USE WITHOUT PHYSICIAN REVIEW**`;
       };
     }
 
-    const isPathologyOrDiagnostic = parsed.type === "pathology_report" || 
-                                    parsed.type === "xray_report" || 
-                                    parsed.type === "ecg_report" || 
-                                    (parsed.categoryLabel || "").toLowerCase().includes("pathology") || 
-                                    (parsed.categoryLabel || "").toLowerCase().includes("biochemistry") || 
-                                    (parsed.categoryLabel || "").toLowerCase().includes("laboratory") ||
-                                    (parsed.categoryLabel || "").toLowerCase().includes("blood");
+    const isPureImaging = parsed.type === "xray_report" || parsed.type === "ecg_report";
+    const parsedMeds = parsed.extractedMedications || parsed.entities?.medications || [];
+    const isPurePathology = (parsed.type === "pathology_report" || (parsed.categoryLabel || "").toLowerCase().includes("pathology")) && parsedMeds.length === 0;
+    const meds = (isPureImaging || isPurePathology) ? [] : parsedMeds;
 
-    const meds = isPathologyOrDiagnostic ? [] : (parsed.extractedMedications || parsed.entities?.medications || []);
     const flags = parsed.labFlags || parsed.entities?.flags || [];
     const normals = parsed.labNormals || parsed.entities?.normalValues || [];
     const diseases = parsed.extractedDiseases || parsed.entities?.diseases || diseaseExtractor.extractDiseases(
@@ -426,8 +458,8 @@ Always finish with: **NOT FOR CLINICAL USE WITHOUT PHYSICIAN REVIEW**`;
       isValidMedical: true,
       docId: `DOC-${Date.now().toString().slice(-4)}`,
       title: `${parsed.categoryLabel} (${fileName})`,
-      type: isPathologyOrDiagnostic && parsed.type === "medical_record" ? "pathology_report" : parsed.type,
-      categoryLabel: parsed.categoryLabel,
+      type: (isPurePathology && parsed.type === "medical_record") ? "pathology_report" : (meds.length > 0 && !isPureImaging && parsed.type !== "discharge_summary" ? "prescription" : parsed.type),
+      categoryLabel: meds.length > 0 && !isPureImaging && parsed.type !== "discharge_summary" ? "Doctor Prescription (Rx)" : parsed.categoryLabel,
       badgeColor: parsed.badgeColor,
       icon: parsed.icon,
       date: new Date().toLocaleDateString(),
@@ -443,7 +475,7 @@ Always finish with: **NOT FOR CLINICAL USE WITHOUT PHYSICIAN REVIEW**`;
         normalValues: normals
       },
       extractedMedications: meds,
-      structuredPrescriptionJSON: (isPathologyOrDiagnostic || meds.length === 0) ? null : (parsed.structuredPrescriptionJSON || prescriptionParser.parseToStructuredJSON(parsed.fullGeminiText || parsed.extractedText || "")),
+      structuredPrescriptionJSON: (isPureImaging || isPurePathology || meds.length === 0) ? null : (parsed.structuredPrescriptionJSON || prescriptionParser.parseToStructuredJSON(parsed.fullGeminiText || parsed.extractedText || "")),
       extractedDiseases: diseases,
       labFlags: flags,
       confidence: parsed.confidence

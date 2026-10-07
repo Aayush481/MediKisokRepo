@@ -12,14 +12,21 @@ class XRayAnalyzer {
     const combinedText = `${ocrText} ${filename}`.toLowerCase();
 
     // 1. Text Marker Extraction from Film Margins
+    const isHeadCt = (combinedText.includes("ct") || combinedText.includes("ncct") || combinedText.includes("tomography")) && (combinedText.includes("head") || combinedText.includes("brain") || combinedText.includes("skull"));
+    const isPnsSinus = combinedText.includes("pns") || combinedText.includes("sinus") || combinedText.includes("sinuses") || combinedText.includes("sinusitis") || combinedText.includes("waters") || combinedText.includes("water's") || combinedText.includes("caldwell") || combinedText.includes("turbinate") || combinedText.includes("dns") || (combinedText.includes("septum") && !combinedText.includes("interventricular"));
+    const isMandibleTmj = combinedText.includes("mandib") || combinedText.includes("opg") || combinedText.includes("orthopantomogram") || combinedText.includes("tmj") || combinedText.includes("jaw") || combinedText.includes("temporomandibular") || combinedText.includes("condyle");
+    const isFacialBones = (combinedText.includes("face") || combinedText.includes("facial") || combinedText.includes("maxill") || combinedText.includes("zygoma") || combinedText.includes("orbit") || combinedText.includes("nasal") || combinedText.includes("zmc") || combinedText.includes("malar")) && !isPnsSinus;
+    const isHeadSkull = combinedText.includes("skull") || combinedText.includes("cranium") || combinedText.includes("cranial") || combinedText.includes("calvarium") || combinedText.includes("calvarial") || combinedText.includes("head") || combinedText.includes("brain") || combinedText.includes("vault") || combinedText.includes("sella") || combinedText.includes("cephalogram") || combinedText.includes("towne");
+
     const isShoulder = combinedText.includes("shoulder") || combinedText.includes("humerus") || combinedText.includes("clavicle") || combinedText.includes("scapula") || combinedText.includes("acromio");
     const isKnee = combinedText.includes("knee") || combinedText.includes("tibiofemoral") || combinedText.includes("patella") || combinedText.includes("femur") || combinedText.includes("tibia") || combinedText.includes("ghutna");
     const isChest = combinedText.includes("chest") || combinedText.includes("lung") || combinedText.includes("thorax") || combinedText.includes("cardiomegaly") || combinedText.includes("rib") || combinedText.includes("pleural") || combinedText.includes("cxr");
     const isSpine = combinedText.includes("spine") || combinedText.includes("lumbar") || combinedText.includes("cervical") || combinedText.includes("vertebra") || combinedText.includes("l-spine") || combinedText.includes("c-spine");
     const isPelvis = combinedText.includes("pelvis") || combinedText.includes("hip") || combinedText.includes("acetabulum") || combinedText.includes("femoral head");
 
-    const hasFracture = combinedText.includes("fracture") || combinedText.includes("cortical disruption") || combinedText.includes("dislocation") || combinedText.includes("broken") || combinedText.includes("subluxation");
+    const hasFracture = combinedText.includes("fracture") || combinedText.includes("cortical disruption") || combinedText.includes("dislocation") || combinedText.includes("broken") || combinedText.includes("subluxation") || combinedText.includes("step-off") || combinedText.includes("cortical discontinuity");
     const hasArthritis = combinedText.includes("osteoarthritis") || combinedText.includes("joint space narrowing") || combinedText.includes("osteophyte") || combinedText.includes("sclerosis") || combinedText.includes("sandhigata");
+    const hasSinusitis = combinedText.includes("sinusitis") || combinedText.includes("haziness") || combinedText.includes("mucosal thickening") || combinedText.includes("fluid level") || combinedText.includes("opacification") || combinedText.includes("opacity") || combinedText.includes("antral haziness");
 
     // 2. Image Grayscale & Visual Morphology Profiling via Canvas
     let visualProfile = await this.profileImageCanvas(dataUrl);
@@ -31,7 +38,95 @@ class XRayAnalyzer {
     let findings = [];
     let alertLevel = "info";
 
-    if (isShoulder || (!isKnee && !isChest && !isSpine && visualProfile.aspectRatio < 1.1 && visualProfile.upperDensity > 0.45)) {
+    // 3A. HEAD & CRANIOFACIAL SKELETON (Prioritized over generic shoulder density fallthrough)
+    if (isHeadCt) {
+      anatomicalRegion = "Neurocranium & Brain Parenchyma (Computed Tomography - NCCT Head)";
+      viewType = "Axial CT Slices (Brain & Bone Window)";
+      if (hasFracture || combinedText.includes("bleed") || combinedText.includes("hemorrhage") || combinedText.includes("hematoma") || combinedText.includes("tbi")) {
+        impression = "CRITICAL STAT: Acute Intracranial Pathology / Traumatic Brain Injury (TBI)";
+        alertLevel = "danger";
+        findings.push("Parenchymal attenuation changes and ventricular symmetry assessed.");
+        findings.push("Calvarial bone windows evaluated for traumatic vault disruption.");
+        findings.push("Immediate neurosurgical consult and clinical monitoring required.");
+      } else {
+        impression = "NCCT Head: Normal Brain Attenuation, Symmetrical Ventricles & No Hemorrhage";
+        alertLevel = "success";
+        findings.push("Normal gray-white matter differentiation; no hyperdense acute hemorrhage (EDH/SDH/SAH/ICH).");
+        findings.push("Ventricular system (lateral, third, fourth) and basal cisterns are symmetric without dilatation or midline shift.");
+        findings.push("Visualized cranial vault, facial bones, and paranasal sinuses are unremarkable.");
+      }
+    } else if (isPnsSinus) {
+      anatomicalRegion = "Paranasal Sinuses (PNS - Water's & Caldwell Projection)";
+      viewType = combinedText.includes("caldwell") ? "Caldwell (Occipitofrontal) Projection" : "Water's (Occipitomental) Projection";
+      if (hasSinusitis || (!combinedText.includes("clear") && !combinedText.includes("normal") && hasFracture === false)) {
+        impression = "Paranasal Sinusitis (Maxillary & Frontal Sinus Opacification / Mucosal Thickening)";
+        alertLevel = "warning";
+        findings.push("Bilateral maxillary sinuses visualized with mucosal thickening and antral opacification / fluid level.");
+        findings.push("Frontal sinuses and ethmoidal air cells evaluated for inflammatory aeration.");
+        findings.push("Nasal cavity demonstrates turbinate mucosal hypertrophy with impaired ostiomeatal drainage.");
+        findings.push("Bony sinus margins and orbital floors intact with no osteolytic destruction.");
+      } else if (combinedText.includes("dns") || combinedText.includes("septum")) {
+        impression = "Deviated Nasal Septum (DNS) with Sinus Ventilation Impairment";
+        alertLevel = "warning";
+        findings.push("Nasal septum shows marked curvature / bony spur impinging toward the nasal cavity.");
+        findings.push("Compensatory inferior turbinate hypertrophy with reduced nasal airway patency.");
+        findings.push("Paranasal sinuses demonstrate mild reactive mucosal thickening.");
+      } else {
+        impression = "Paranasal Sinuses (PNS): Well-Aerated Maxillary & Frontal Sinuses with No Sinusitis";
+        alertLevel = "success";
+        findings.push("Both maxillary and frontal sinuses appear clear, symmetric, and normally pneumatized.");
+        findings.push("No radiopaque fluid levels, mucosal thickening, or antral polyps detected.");
+        findings.push("Nasal septum is centrally aligned with intact facial bony architecture.");
+      }
+    } else if (isMandibleTmj) {
+      anatomicalRegion = "Mandible & Temporomandibular Articulation (OPG / Mandibular Series)";
+      viewType = combinedText.includes("opg") ? "Orthopantomogram (Panoramic OPG)" : "Mandible AP & Lateral Oblique";
+      if (hasFracture) {
+        impression = "CRITICAL: Mandibular Fracture with Cortical Discontinuity (Body / Angle / Condyle)";
+        alertLevel = "danger";
+        findings.push("Cortical disruption and step-off identified across mandibular body / angle / ramus.");
+        findings.push("Disruption of dental occlusal plane and alveolar margin visualized.");
+      } else {
+        impression = "Mandibular Radiograph: Intact Cortical Baseline & Symmetrical TMJ Condyles";
+        alertLevel = "success";
+        findings.push("Continuous inferior cortical border along mandibular symphysis, body, and angles.");
+        findings.push("Bilateral condylar heads seated symmetrically in the glenoid fossae.");
+        findings.push("Normal dentoalveolar architecture with no osteolytic lesion or cortical break.");
+      }
+    } else if (isFacialBones) {
+      anatomicalRegion = "Facial Skeleton & Bilateral Orbits Radiograph (ZMC / Nasal Vault)";
+      viewType = "Occipitomental (OM) / Water's Projection";
+      if (hasFracture) {
+        impression = "CRITICAL: Facial Bone Fracture (ZMC / Inferior Orbital Rim Discontinuity)";
+        alertLevel = "danger";
+        findings.push("Cortical step-off and bone displacement identified along zygomatic arch / orbital margin.");
+        findings.push("Associated maxillary sinus haziness (hemosinus) secondary to facial trauma.");
+        findings.push("Maxillofacial surgical evaluation recommended.");
+      } else {
+        impression = "Facial Skeleton Radiograph: Symmetrical Zygomatic Arches & Intact Orbital Rims";
+        alertLevel = "success";
+        findings.push("Bilateral orbital rims and zygomaticomaxillary arches show smooth cortical margins.");
+        findings.push("No orbital blowout fracture or soft tissue herniation into the maxillary antrum.");
+        findings.push("Nasal bridge and maxillary alveolar margin intact without fracture.");
+      }
+    } else if (isHeadSkull) {
+      anatomicalRegion = "Skull & Cranial Vault Radiograph (Calvarium AP & Lateral)";
+      viewType = combinedText.includes("towne") ? "Towne's Projection" : (combinedText.includes("lat") ? "Lateral Calvarial Projection" : "Anteroposterior (AP) Projection");
+      if (hasFracture) {
+        impression = "CRITICAL ALERT: Cranial Vault Fracture / Calvarial Cortical Discontinuity";
+        alertLevel = "danger";
+        findings.push("Linear / diastatic radiolucent fracture line identified traversing the calvarial vault.");
+        findings.push("Inner and outer tables of parietal / frontal bone evaluated for cortical depression.");
+        findings.push("Urgent non-contrast head CT (NCCT Brain) recommended to rule out underlying extradural or subdural hematoma.");
+      } else {
+        impression = "Intact Cranial Vault: No Skull Fracture, Lytic Bone Lesion, or Calvarial Defect";
+        alertLevel = "success";
+        findings.push("Cortical margins of inner and outer calvarial tables are smooth, continuous, and intact.");
+        findings.push("Normal coronal, sagittal, and lambdoid suture spacing without traumatic diastasis.");
+        findings.push("Sella turcica, vascular grooves, and basal cranial architecture within normal limits.");
+        findings.push("No radiopaque foreign bodies or abnormal intracranial calcifications visualized.");
+      }
+    } else if (isShoulder || (!isKnee && !isChest && !isSpine && !isPelvis && isShoulder)) {
       anatomicalRegion = "Shoulder Joint Radiograph (Glenohumeral & Acromioclavicular)";
       viewType = combinedText.includes("axial") ? "Axillary / Y-View" : "Anteroposterior (AP) View";
       

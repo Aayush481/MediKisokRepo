@@ -15,6 +15,7 @@ import { rppgService } from "./services/rppgVitalsService.js";
 import { meshService } from "./services/meshService.js";
 import { diseaseExtractor } from "./services/diseaseExtractor.js";
 import { i18n } from "./services/i18nService.js";
+import { validateAbhaId, formatAbhaInput, ABDM_REGISTRY } from "./services/abhaService.js";
 
 // Modular UI Components
 import { renderStepper } from "./components/Stepper.js";
@@ -23,6 +24,8 @@ import { renderStep2VitalsAndIntake, renderBodyMapModule, renderAyushModule } fr
 import { renderStep3Records } from "./components/Step3Records.js";
 import { renderStep4Summary, generateBarcodeSvg } from "./components/Step4Summary.js";
 import { renderDoctorDashboard } from "./components/DoctorDashboard.js";
+import { initHero3D, updateHeroActiveState } from "./components/HeroSection.js";
+import { SKELETAL_REGIONS } from "./components/SkeletalBodyMap.js";
 
 function generateMedicalDocSvg(type, title, facility, items = [], rootCause = "", patientName = "Priya Patel", token = "A-24") {
   const isRx = type === "prescription";
@@ -142,6 +145,11 @@ class MediKioskApp {
     this.oscilloscopeSamples = [];
     this.rppgElapsedSec = "0.0";
 
+    // ABHA e-KYC & Intake State
+    this.abhaMode = 'abha'; // 'abha' | 'manual'
+    this.abhaValidationError = null;
+    this.isAbhaVerifying = false;
+
     // Clean initial walk-in state
     this.resetPatientState();
 
@@ -193,6 +201,10 @@ class MediKioskApp {
       diagnoses: [],
       diseases: [],
       documents: [],
+      skeletalRegion: null,
+      skeletalRegions: [],
+      skeletalView: "anterior",
+      skeletalMcqAnswers: {},
       rppgVitals: null,
       isEmergency: false,
       tokenNumber: "A-" + Math.floor(10 + Math.random() * 89)
@@ -200,6 +212,7 @@ class MediKioskApp {
   }
 
   init() {
+    this.initTheme();
     this.currentLanguage = i18n.getLanguage() || "hi";
     speechService.setLanguage(this.currentLanguage);
     const langSelect = document.getElementById("langSelect");
@@ -207,6 +220,86 @@ class MediKioskApp {
     this.updateStaticHeaderTranslations();
     this.bindGlobalEvents();
     this.render();
+    initHero3D(this);
+    this.updateHeroActiveState(this.currentMode);
+  }
+
+  initTheme() {
+    const saved = localStorage.getItem('medikiosk-theme') || 'light';
+    this.currentTheme = saved;
+    document.documentElement.setAttribute('data-theme', saved);
+    this.updateThemeButton();
+  }
+
+  toggleTheme() {
+    this.currentTheme = (this.currentTheme === 'dark') ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', this.currentTheme);
+    localStorage.setItem('medikiosk-theme', this.currentTheme);
+    this.updateThemeButton();
+  }
+
+  updateThemeButton() {
+    const btn = document.getElementById('themeToggleBtn');
+    if (!btn) return;
+    const isDark = this.currentTheme === 'dark';
+    btn.innerHTML = isDark ? `<span>☀️ Light</span>` : `<span>🌙 Dark</span>`;
+  }
+
+  toggleHero() {
+    const hero = document.getElementById('heroSection');
+    if (!hero) return;
+    const isCollapsed = hero.classList.toggle('collapsed');
+    const btn = document.getElementById('heroToggleBtn');
+    if (btn) {
+      btn.innerHTML = isCollapsed ? `<span>✨ Show 3D</span>` : `<span>✨ Hide 3D</span>`;
+    }
+  }
+
+  updateHeroActiveState(mode) {
+    updateHeroActiveState(mode || this.currentMode);
+  }
+
+  enterPatientPortal() {
+    if (this.currentMode !== "kiosk") {
+      this.setMode("kiosk");
+    } else {
+      this.updateHeroActiveState("kiosk");
+    }
+    const target = document.getElementById("services");
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+
+  enterDoctorPortal() {
+    if (this.currentMode !== "doctor") {
+      this.setMode("doctor");
+    } else {
+      this.updateHeroActiveState("doctor");
+    }
+    const target = document.getElementById("services");
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+
+  navigateToService(stepNumber, optionalAyush = false) {
+    if (this.currentMode !== "kiosk") {
+      this.setMode("kiosk");
+    }
+    if (optionalAyush) {
+      this.goToStep(2);
+      if (!this.isAyushMode) {
+        this.toggleAyushMode();
+      }
+    } else {
+      this.goToStep(stepNumber);
+    }
+    this.updateHeroActiveState("kiosk");
+    const target = document.getElementById("services");
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   }
 
   bindGlobalEvents() {
@@ -264,6 +357,8 @@ class MediKioskApp {
     document.querySelectorAll(".mode-btn").forEach(btn => {
       btn.classList.toggle("active", btn.dataset.mode === mode);
     });
+
+    this.updateHeroActiveState(mode);
 
     if (mode === "kiosk" && this.currentStep === 2) {
       setTimeout(() => this.initCamera(), 100);
@@ -417,44 +512,24 @@ class MediKioskApp {
       });
     }
 
-    // Real-time reactive ABHA health card sync
-    const nameInput = document.getElementById("patientNameInput");
-    const ageInput = document.getElementById("patientAgeInput");
-    const genderInput = document.getElementById("patientGenderInput");
-    const abhaInput = document.getElementById("patientAbhaInput");
-    const mobileInput = document.getElementById("patientMobileInput");
+    // Real-time reactive manual registration input sync (only when not in verified ABHA mode)
+    if (!this.patient.isAbhaVerified) {
+      const nameInput = document.getElementById("patientNameInput");
+      const ageInput = document.getElementById("patientAgeInput");
+      const genderInput = document.getElementById("patientGenderInput");
+      const mobileInput = document.getElementById("patientMobileInput");
 
-    const syncAbhaCard = () => {
-      const name = nameInput?.value?.trim() || "Priya Patel";
-      const age = parseInt(ageInput?.value?.trim()) || 24;
-      const gender = genderInput?.value || "Female";
-      const abha = abhaInput?.value?.trim() || "91-8274-1923-0194";
-      const mobile = mobileInput?.value?.trim() || "+91 98765 43210";
-      const yob = 2026 - age;
-      const abhaAddress = name.toLowerCase().replace(/[^a-z0-9]/g, '') + "@abdm";
+      const syncManualInputs = () => {
+        if (nameInput) this.patient.name = nameInput.value.trim();
+        if (ageInput) this.patient.age = parseInt(ageInput.value.trim(), 10) || '';
+        if (genderInput) this.patient.gender = genderInput.value;
+        if (mobileInput) this.patient.mobile = mobileInput.value.trim();
+      };
 
-      const elName = document.getElementById("abhaCardPreviewName");
-      const elAbha = document.getElementById("abhaCardPreviewAbha");
-      const elAddress = document.getElementById("abhaCardPreviewAddress");
-      const elMeta = document.getElementById("abhaCardPreviewMeta");
-      const elMobile = document.getElementById("abhaCardPreviewMobile");
-
-      if (elName) elName.textContent = name;
-      if (elAbha) elAbha.textContent = abha;
-      if (elAddress) elAddress.textContent = abhaAddress;
-      if (elMeta) elMeta.textContent = `${gender} • YOB: ${yob}`;
-      if (elMobile) elMobile.textContent = mobile;
-
-      this.patient.name = nameInput?.value || '';
-      this.patient.age = ageInput?.value || '';
-      this.patient.gender = genderInput?.value || 'Female';
-      this.patient.abhaId = abhaInput?.value || '';
-      this.patient.mobile = mobileInput?.value || '';
-    };
-
-    [nameInput, ageInput, genderInput, abhaInput, mobileInput].forEach(el => {
-      if (el) el.addEventListener("input", syncAbhaCard);
-    });
+      [nameInput, ageInput, genderInput, mobileInput].forEach(el => {
+        if (el) el.addEventListener("input", syncManualInputs);
+      });
+    }
 
     const dropzone = document.getElementById("uploadDropzone");
     if (dropzone) {
@@ -569,9 +644,56 @@ class MediKioskApp {
         facility: "Advanced Imaging & Orthopedic Diagnostic Center",
         date: "Today",
         previewUrl: generateMedicalDocSvg("radiology", "Digital Skeletal Radiography", "Advanced Imaging Center", [], "Medial compartment joint space narrowing with subchondral sclerosis", this.patient.name || "Ramesh Kumar", this.patient.tokenNumber || "A-15"),
+        anatomicalSite: "Bilateral Knee Joint (Tibiofemoral Articulation)",
+        rootCause: "Degenerative Osteoarthritis with Medial Compartment Joint Space Narrowing (Sandhigata Vata)",
         medications: [],
-        diseases: [{ name: "Osteoarthritis of Bilateral Knee Joints", snomed: "239873007" }],
+        diseases: [{ name: "Osteoarthritis of Bilateral Knee Joints", snomed: "239873007", icd10: "M19.9" }],
         flags: [{ test: "Joint Space Width", param: "Knee Joint", value: "Narrowed (Grade III)", ref: "Normal Space", status: "ABNORMAL" }]
+      }];
+    } else if (type === "pns_xray" || type === "face") {
+      this.patient.documents = [{
+        id: "doc-sample-pns",
+        name: "Digital Radiogram - PNS Water's View.png",
+        type: "xray_report",
+        categoryLabel: "Paranasal Sinuses (PNS - Water's / Caldwell Projection)",
+        doctorName: "Dr. Vikram Sethi, MD (Radio)",
+        facility: "Metro Head & Neck Imaging & ENT Diagnostic Center",
+        date: "Today",
+        previewUrl: generateMedicalDocSvg("radiology", "PNS & Facial Bone Radiography", "Metro Head & Neck Imaging", [], "Maxillary sinus mucosal thickening and opacification with Deviated Nasal Septum", this.patient.name || "Ramesh Kumar", this.patient.tokenNumber || "A-15"),
+        anatomicalSite: "Paranasal Sinuses (PNS - Water's & Caldwell Projection)",
+        rootCause: "Paranasal Sinusitis (Maxillary & Frontal Sinus Opacification / Mucosal Thickening)",
+        medications: [],
+        diseases: [
+          { name: "Paranasal Sinusitis (Maxillary / Frontal)", icd10: "J01.90", snomed: "36971009", acuity: "Acute / Inflammatory", organSystem: "Paranasal Sinuses & Upper Airway" },
+          { name: "Deviated Nasal Septum (DNS)", icd10: "J34.2", snomed: "402863004", acuity: "Structural / Mechanical", organSystem: "Nasal Cavity & Septum" }
+        ],
+        flags: [
+          { test: "Radiological Impression", value: "Paranasal Sinusitis (Maxillary & Frontal Sinus Opacification)", ref: "Water's (Occipitomental) View", status: "DIAGNOSTIC", alertLevel: "warning" },
+          { test: "Maxillary Sinus Aeration", value: "Mucosal thickening and antral opacification / fluid level", ref: "Bilateral Antra", status: "ABNORMAL", alertLevel: "warning" },
+          { test: "Nasal Septum & Turbinates", value: "Septum shows marked deviation to left with turbinate hypertrophy", ref: "Nasal Cavity", status: "ABNORMAL", alertLevel: "warning" },
+          { test: "Orbital Rims & Zygoma", value: "Bilateral orbital rims and zygomatic arches intact with no step-off", ref: "Facial Skeleton", status: "INTACT", alertLevel: "info" }
+        ]
+      }];
+    } else if (type === "skull_xray" || type === "head") {
+      this.patient.documents = [{
+        id: "doc-sample-skull",
+        name: "Digital Radiogram - Skull AP & Lateral View.png",
+        type: "xray_report",
+        categoryLabel: "Skull & Cranial Vault Radiograph (Calvarium AP & Lateral)",
+        doctorName: "Dr. Vikram Sethi, MD (Radio)",
+        facility: "Trauma Neuroimaging & Orthopedic Radiology",
+        date: "Today",
+        previewUrl: generateMedicalDocSvg("radiology", "Cranial Vault Digital Radiography", "Trauma Neuroimaging Center", [], "Intact cranial vault inner and outer calvarial tables without fracture", this.patient.name || "Ramesh Kumar", this.patient.tokenNumber || "A-15"),
+        anatomicalSite: "Skull & Cranial Vault (Calvarium AP & Lateral)",
+        rootCause: "Intact Cranial Vault: No Skull Fracture, Lytic Bone Lesion, or Calvarial Defect",
+        medications: [],
+        diseases: [],
+        flags: [
+          { test: "Radiological Impression", value: "Intact Cranial Vault: No Skull Fracture or Lytic Bone Lesion", ref: "Skull AP & Lateral", status: "NORMAL", alertLevel: "success" },
+          { test: "Calvarium Table Integrity", value: "Continuous inner and outer cortical tables without traumatic step-off", ref: "Parietal & Frontal Vault", status: "INTACT", alertLevel: "info" },
+          { test: "Cranial Sutures Alignment", value: "Normal coronal, sagittal, and lambdoid suture spacing without diastasis", ref: "Sutural Borders", status: "NORMAL", alertLevel: "info" },
+          { test: "Basal Architecture & Sella", value: "Sella turcica, vascular grooves, and mastoid air cells within normal limits", ref: "Cranial Base", status: "NORMAL", alertLevel: "info" }
+        ]
       }];
     }
     this.render();
@@ -585,103 +707,143 @@ class MediKioskApp {
     }
   }
 
+  setAbhaMode(mode) {
+    this.abhaMode = mode;
+    this.abhaValidationError = null;
+    this.render();
+  }
+
+  handleAbhaInputChange(e) {
+    const input = e.target;
+    if (!input) return;
+    const formatted = formatAbhaInput(input.value);
+    input.value = formatted;
+    this.patient.abhaId = formatted;
+
+    // Clear error dynamically as user types
+    if (this.abhaValidationError) {
+      this.abhaValidationError = null;
+      input.classList.remove("input-error-glow");
+      const errBox = document.querySelector(".abha-validation-error-box");
+      if (errBox) errBox.remove();
+    }
+
+    // Update digit counter helper
+    const counter = document.getElementById("abhaDigitsCounter");
+    if (counter) {
+      if (formatted.includes("@")) {
+        counter.textContent = "ABHA Address (@abdm)";
+        counter.style.color = "var(--primary)";
+      } else {
+        const digitsCount = formatted.replace(/[^0-9]/g, "").length;
+        counter.textContent = `${digitsCount} / 14 digits`;
+        counter.style.color = digitsCount === 14 ? "var(--primary)" : "var(--grey-500)";
+      }
+    }
+  }
+
   verifyAbhaRecord(customId = null) {
     const input = document.getElementById("patientAbhaInput");
     const rawVal = (customId || (input ? input.value : "") || "").trim();
-    if (!rawVal) {
-      alert("Please enter a 14-digit ABHA Number (e.g. 91-8274-1923-0194) or mobile number.");
-      if (input) input.focus();
+
+    // Strict validation against ABDM format and rules
+    const validation = validateAbhaId(rawVal);
+    if (!validation.isValid) {
+      this.isAbhaVerifying = false;
+      this.abhaValidationError = validation.error;
+      this.render();
+      const reloadedInput = document.getElementById("patientAbhaInput");
+      if (reloadedInput) {
+        reloadedInput.focus();
+        reloadedInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
       return;
     }
 
+    // Valid ABHA ID -> trigger loading state and fetch patient record
     this.isAbhaVerifying = true;
+    this.abhaValidationError = null;
     this.render();
 
     setTimeout(() => {
       this.isAbhaVerifying = false;
-      const digitsOnly = rawVal.replace(/[^0-9]/g, '');
-      let formatted = rawVal;
-      if (digitsOnly.length === 14) {
-        formatted = `${digitsOnly.slice(0, 2)}-${digitsOnly.slice(2, 6)}-${digitsOnly.slice(6, 10)}-${digitsOnly.slice(10, 14)}`;
-      }
+      const details = validation.details;
+      const formattedId = validation.formattedId;
 
-      // Preserve entered user data if present; otherwise resolve verified demographic token
-      const currentName = document.getElementById("patientNameInput")?.value?.trim();
-      const currentAge = document.getElementById("patientAgeInput")?.value?.trim();
-      const currentGender = document.getElementById("patientGenderInput")?.value;
-      const currentMobile = document.getElementById("patientMobileInput")?.value?.trim();
-
-      const name = currentName || (rawVal.includes("4820") ? "Ramesh Kumar" : (rawVal.includes("7210") ? "Sunita Sharma" : "Aarav Sharma"));
-      const age = currentAge ? parseInt(currentAge) : (rawVal.includes("4820") ? 48 : (rawVal.includes("7210") ? 36 : 29));
-      const gender = currentGender || (rawVal.includes("7210") ? "Female" : "Male");
-      const mobile = currentMobile || "+91 98450 " + Math.floor(10000 + Math.random() * 89999);
-      const abhaAddress = (name.toLowerCase().replace(/[^a-z0-9]/g, '')) + "@abdm";
-
-      this.patient.name = name;
-      this.patient.age = age;
-      this.patient.gender = gender;
-      this.patient.mobile = mobile;
-      this.patient.abhaId = formatted;
+      // Automatically populate retrieved user details from ABHA card
+      this.patient.name = details.name;
+      this.patient.age = details.age;
+      this.patient.gender = details.gender;
+      this.patient.mobile = details.mobile;
+      this.patient.abhaId = formattedId;
       this.patient.isAbhaVerified = true;
       this.patient.abhaDetails = {
-        name,
-        age,
-        gender,
-        yob: 2026 - (parseInt(age) || 29),
-        mobile,
-        abhaNumber: formatted,
-        abhaAddress,
-        authMethod: "Aadhaar e-KYC / ABDM Token",
+        ...details,
         verifiedAt: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
       };
 
       this.render();
-    }, 550);
+    }, 400);
   }
 
   simulateAbhaQrScan() {
     this.isAbhaVerifying = true;
+    this.abhaValidationError = null;
     this.render();
 
     setTimeout(() => {
       this.isAbhaVerifying = false;
-      const name = "Vikram Aditya";
-      const age = 41;
-      const gender = "Male";
-      const mobile = "+91 98112 43210";
-      const abhaNumber = "91-3829-1029-4481";
-      const abhaAddress = "vikram.aditya@abdm";
+      const qrCitizen = ABDM_REGISTRY["91-3829-1029-4481"] || {
+        name: "Vikram Aditya",
+        age: 41,
+        gender: "Male",
+        dob: "22/03/1985",
+        yob: 1985,
+        mobile: "+91 98112 43210",
+        abhaNumber: "91-3829-1029-4481",
+        abhaAddress: "vikram.aditya@abdm",
+        bloodGroup: "AB+",
+        state: "Karnataka",
+        district: "Bengaluru Urban",
+        pin: "560001",
+        authMethod: "Optical QR / ABDM Token",
+        linkedRecordsCount: 3
+      };
 
-      this.patient.name = name;
-      this.patient.age = age;
-      this.patient.gender = gender;
-      this.patient.mobile = mobile;
-      this.patient.abhaId = abhaNumber;
+      this.patient.name = qrCitizen.name;
+      this.patient.age = qrCitizen.age;
+      this.patient.gender = qrCitizen.gender;
+      this.patient.mobile = qrCitizen.mobile;
+      this.patient.abhaId = qrCitizen.abhaNumber;
       this.patient.isAbhaVerified = true;
       this.patient.abhaDetails = {
-        name,
-        age,
-        gender,
-        yob: 1985,
-        mobile,
-        abhaNumber,
-        abhaAddress,
-        authMethod: "Optical QR / ABDM Token",
+        ...qrCitizen,
         verifiedAt: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
       };
 
       this.render();
-    }, 550);
+    }, 400);
   }
 
   resetAbhaVerification() {
     this.patient.isAbhaVerified = false;
     this.patient.abhaDetails = null;
     this.patient.abhaId = "";
+    this.patient.name = "";
+    this.patient.age = "";
+    this.patient.mobile = "";
+    this.abhaValidationError = null;
     this.render();
   }
 
   saveStep1AndNext() {
+    // If ABHA was verified, all demographics were fetched from ABHA card and verified!
+    if (this.patient.isAbhaVerified && this.patient.name) {
+      this.goToStep(2);
+      return;
+    }
+
+    // Manual registration mode validation
     const name = document.getElementById("patientNameInput")?.value?.trim() || "";
     const age = document.getElementById("patientAgeInput")?.value?.trim() || "";
     const gender = document.getElementById("patientGenderInput")?.value || "Female";
@@ -696,7 +858,7 @@ class MediKioskApp {
     }
 
     this.patient.name = name;
-    this.patient.age = age ? parseInt(age) : "";
+    this.patient.age = age ? parseInt(age, 10) : "";
     this.patient.gender = gender;
     this.patient.abhaId = abha;
     this.patient.mobile = mobile;
@@ -750,40 +912,25 @@ class MediKioskApp {
         return;
       }
 
-      const isPathologyOrLab = ocrResult.type === "pathology_report" || 
-                               ocrResult.type === "xray_report" || 
-                               ocrResult.type === "ecg_report" ||
-                               (ocrResult.categoryLabel || "").toLowerCase().includes("pathology") ||
-                               (ocrResult.categoryLabel || "").toLowerCase().includes("biochemistry") ||
-                               (ocrResult.categoryLabel || "").toLowerCase().includes("laboratory") ||
-                               (ocrResult.categoryLabel || "").toLowerCase().includes("blood") ||
-                               (ocrResult.categoryLabel || "").toLowerCase().includes("cbc") ||
-                               (ocrResult.categoryLabel || "").toLowerCase().includes("lipid") ||
-                               (ocrResult.categoryLabel || "").toLowerCase().includes("liver") ||
-                               (ocrResult.categoryLabel || "").toLowerCase().includes("kidney") ||
-                               (ocrResult.categoryLabel || "").toLowerCase().includes("urine") ||
-                               (ocrResult.labFlags && ocrResult.labFlags.length > 0) ||
-                               (ocrResult.entities?.flags && ocrResult.entities.flags.length > 0) ||
-                               (ocrResult.labNormals && ocrResult.labNormals.length > 0) ||
-                               (ocrResult.entities?.normalValues && ocrResult.entities.normalValues.length > 0);
+      const candidateMeds = ocrResult.entities?.medications || ocrResult.extractedMedications || [];
+      const isPureImaging = ocrResult.type === "xray_report" || ocrResult.type === "ecg_report";
+      const isPurePathology = (ocrResult.type === "pathology_report" || (ocrResult.categoryLabel || "").toLowerCase().includes("pathology")) && candidateMeds.length === 0;
 
-      if (isPathologyOrLab) {
-        if (ocrResult.type === "prescription" || ocrResult.type === "medical_record") {
-          ocrResult.type = "pathology_report";
-          ocrResult.categoryLabel = "Pathology & Biochemistry Report";
-          ocrResult.badgeColor = "pill-danger";
-          ocrResult.icon = "";
-        }
-        ocrResult.extractedMedications = [];
-        if (ocrResult.entities) ocrResult.entities.medications = [];
-        ocrResult.structuredPrescriptionJSON = null;
-      }
-
-      // Strictly zero out medications if the document is a pathology lab report or diagnostic scan
-      const newMeds = isPathologyOrLab ? [] : (ocrResult.entities?.medications || ocrResult.extractedMedications || []);
+      // Retain medications whenever genuine pharmacotherapy is present; zero out only for pure imaging or pure lab reports
+      const newMeds = (isPureImaging || isPurePathology) ? [] : candidateMeds;
       const newDiseases = ocrResult.entities?.diseases || ocrResult.extractedDiseases || [];
       const labFlags = ocrResult.entities?.flags || ocrResult.labFlags || [];
       const labNormals = ocrResult.entities?.normalValues || ocrResult.labNormals || [];
+
+      // If document contains authentic prescribed medications, ensure it is classified as Prescription Rx
+      if (newMeds.length > 0 && !isPureImaging) {
+        if (ocrResult.type !== "discharge_summary") {
+          ocrResult.type = "prescription";
+          ocrResult.categoryLabel = "Doctor Prescription (Rx)";
+          ocrResult.badgeColor = "pill-success";
+          ocrResult.icon = "";
+        }
+      }
 
       // Extract diseases if not already populated
       const allExtractedDiseases = newDiseases.length > 0 ? newDiseases : diseaseExtractor.extractDiseases(
@@ -803,8 +950,8 @@ class MediKioskApp {
         anatomicalSite: ocrResult.anatomicalSite,
         flags: labFlags,
         normalValues: labNormals,
-        medications: isPathologyOrLab ? [] : newMeds,
-        structuredPrescriptionJSON: isPathologyOrLab ? null : (ocrResult.structuredPrescriptionJSON || (newMeds.length > 0 ? prescriptionParser.parseToStructuredJSON(ocrResult.extractedText || '') : null)),
+        medications: newMeds,
+        structuredPrescriptionJSON: (isPureImaging || isPurePathology || newMeds.length === 0) ? null : (ocrResult.structuredPrescriptionJSON || prescriptionParser.parseToStructuredJSON(ocrResult.extractedText || ocrResult.rawOcrText || '')),
         extractedText: ocrResult.extractedText || ocrResult.rawOcrText || '',
         diseases: allExtractedDiseases
       });
@@ -818,7 +965,7 @@ class MediKioskApp {
       }
 
       // Update patient medications ONLY if the document had authentic prescriptions
-      if (newMeds.length > 0 && !isPathologyOrLab) {
+      if (newMeds.length > 0 && !isPureImaging && !isPurePathology) {
         const existingNames = new Set((this.patient.allopathicMeds || []).map(m => (typeof m === "string" ? m : m.name).toLowerCase()));
         const uniqueNew = newMeds.filter(m => !existingNames.has((typeof m === "string" ? m : m.name).toLowerCase()));
         this.patient.allopathicMeds = [...uniqueNew, ...(this.patient.allopathicMeds || [])];
@@ -1185,7 +1332,157 @@ class MediKioskApp {
 
   selectBodyPart(site) {
     this.patient.hpi.site = site;
+    const lower = (site || "").toLowerCase();
+    if (lower.includes('knee')) this.selectSkeletalRegion('knee');
+    else if (lower.includes('head') || lower.includes('sar')) this.selectSkeletalRegion('skull');
+    else if (lower.includes('chest') || lower.includes('chhati')) this.selectSkeletalRegion('thorax');
+    else if (lower.includes('shoulder')) this.selectSkeletalRegion('shoulder');
+    else if (lower.includes('throat') || lower.includes('gala')) this.selectSkeletalRegion('cervical_spine');
+    else if (lower.includes('arm')) this.selectSkeletalRegion('upper_limb');
+    else if (lower.includes('back') || lower.includes('peeth')) this.selectSkeletalRegion('thoracolumbar_spine');
+    else if (lower.includes('abdomen') || lower.includes('pet')) this.selectSkeletalRegion('pelvis_hip');
+    else this.render();
+  }
+
+  toggleSkeletalRegion(regionId) {
+    this.patient.skeletalRegions = this.patient.skeletalRegions || [];
+    const idx = this.patient.skeletalRegions.indexOf(regionId);
+    if (idx > -1) {
+      // Toggle off
+      this.patient.skeletalRegions.splice(idx, 1);
+      if (this.patient.skeletalRegion === regionId) {
+        this.patient.skeletalRegion = this.patient.skeletalRegions[this.patient.skeletalRegions.length - 1] || null;
+      }
+    } else {
+      // Toggle on
+      this.patient.skeletalRegions.push(regionId);
+      this.patient.skeletalRegion = regionId;
+      const region = SKELETAL_REGIONS[regionId];
+      if (region && !this.patient.skeletalMcqAnswers[regionId]) {
+        this.patient.skeletalMcqAnswers[regionId] = {
+          laterality: regionId === "knee" ? "Bilateral" : "Both Sides",
+          character: region.mcq.character.options[0] || "",
+          triggers: region.mcq.triggers.options[0] || "",
+          onset: region.mcq.onset.options[0] || "",
+          redFlags: []
+        };
+      }
+    }
+    this.synthesizeChiefComplaintFromSkeletal();
     this.render();
+  }
+
+  selectSkeletalRegion(regionId) {
+    this.toggleSkeletalRegion(regionId);
+  }
+
+  removeSkeletalRegion(regionId) {
+    this.patient.skeletalRegions = (this.patient.skeletalRegions || []).filter(id => id !== regionId);
+    if (this.patient.skeletalRegion === regionId) {
+      this.patient.skeletalRegion = this.patient.skeletalRegions[this.patient.skeletalRegions.length - 1] || null;
+    }
+    this.synthesizeChiefComplaintFromSkeletal();
+    this.render();
+  }
+
+  setActiveSkeletalRegion(regionId) {
+    this.patient.skeletalRegion = regionId;
+    this.render();
+  }
+
+  setSkeletalView(view) {
+    this.patient.skeletalView = view;
+    this.render();
+  }
+
+  setSkeletalLaterality(side) {
+    const regId = this.patient.skeletalRegion;
+    if (!regId) return;
+    if (!this.patient.skeletalMcqAnswers[regId]) {
+      this.patient.skeletalMcqAnswers[regId] = {};
+    }
+    this.patient.skeletalMcqAnswers[regId].laterality = side;
+    this.synthesizeChiefComplaintFromSkeletal();
+    this.render();
+  }
+
+  setSkeletalMcq(regionId, questionKey, optionVal, isMulti = false) {
+    if (!this.patient.skeletalMcqAnswers[regionId]) {
+      this.patient.skeletalMcqAnswers[regionId] = {};
+    }
+    const current = this.patient.skeletalMcqAnswers[regionId];
+    if (isMulti) {
+      current[questionKey] = current[questionKey] || [];
+      if (current[questionKey].includes(optionVal)) {
+        current[questionKey] = current[questionKey].filter(x => x !== optionVal);
+      } else {
+        current[questionKey].push(optionVal);
+      }
+    } else {
+      current[questionKey] = optionVal;
+    }
+    this.synthesizeChiefComplaintFromSkeletal();
+    this.render();
+  }
+
+  clearSkeletalSelection() {
+    this.patient.skeletalRegions = [];
+    this.patient.skeletalRegion = null;
+    this.patient.chiefComplaint = "";
+    this.patient.hpi.site = "";
+    this.render();
+  }
+
+  synthesizeChiefComplaintFromSkeletal() {
+    const regions = this.patient.skeletalRegions || (this.patient.skeletalRegion ? [this.patient.skeletalRegion] : []);
+    if (regions.length === 0) {
+      this.patient.chiefComplaint = "";
+      this.patient.hpi.site = "";
+      return;
+    }
+
+    const sentences = [];
+    const allSites = [];
+    const allAssociations = [];
+
+    regions.forEach(regId => {
+      const reg = SKELETAL_REGIONS[regId];
+      if (!reg) return;
+      const answers = this.patient.skeletalMcqAnswers?.[regId] || {};
+      const lat = answers.laterality || "Both sides";
+      const char = answers.character || "";
+      const trig = answers.triggers || "";
+      const onset = answers.onset || "";
+      const redFlags = answers.redFlags || [];
+
+      allSites.push(reg.name);
+      redFlags.forEach(rf => allAssociations.push(rf));
+
+      let clause = "";
+      if (char) {
+        clause += `${char} in ${reg.name.toLowerCase()} (${lat.toLowerCase()})`;
+      } else {
+        clause += `Pain in ${reg.name.toLowerCase()}`;
+      }
+      if (trig) {
+        clause += `, worse with ${trig.toLowerCase()}`;
+      }
+      if (onset) {
+        clause += ` (${onset.toLowerCase()})`;
+      }
+      sentences.push(clause);
+    });
+
+    const combined = sentences.length > 0 ? `Patient reports: ${sentences.join('; ')}.` : "";
+    this.patient.chiefComplaint = combined;
+    this.patient.hpi.site = allSites.join(', ');
+    this.patient.hpi.associations = Array.from(new Set(allAssociations));
+
+    // Emergency red-flag check
+    const flag = clinicalParser.checkRedFlags(this.patient.chiefComplaint, this.patient.hpi.severity || 5);
+    if (flag?.isEmergency) {
+      this.patient.isEmergency = true;
+    }
   }
 
   setHpiField(field, val) {

@@ -13,6 +13,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <!-- Tesseract.js for Real-Time OCR -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <!-- Three.js for 3D Hero Scene Visualization -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <!-- MediaPipe FaceMesh for Contactless rPPG Facial Tracking -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
 </head>
@@ -32,16 +34,24 @@
       </div>
     </div>
 
-    <div style="display: flex; align-items: center; gap: 12px;">
-      <div style="display: flex; align-items: center; gap: 8px; background: #F9FAFB; border: 1px solid var(--grey-300); padding: 5px 12px; border-radius: 6px; font-family: var(--font-mono); font-size: 0.72rem;">
-        <span style="width: 7px; height: 7px; border-radius: 50%; background: var(--primary); box-shadow: 0 0 6px var(--primary);"></span>
-        <span style="color: var(--grey-800); font-weight: 700;">STATION-04</span>
-        <span style="color: var(--grey-400);">•</span>
-        <span style="color: var(--grey-600);" id="liveClockDisplay">Live Sync</span>
-      </div>
+    <div class="station-live-badge">
+      <span style="width: 7px; height: 7px; border-radius: 50%; background: var(--primary); box-shadow: 0 0 6px var(--primary);"></span>
+      <span style="font-weight: 700;">STATION-04</span>
+      <span style="opacity: 0.5;">•</span>
+      <span id="liveClockDisplay">Live Sync</span>
     </div>
 
     <div class="nav-actions">
+      <!-- 3D Gateway Toggle -->
+      <button id="heroToggleBtn" class="hero-toggle-btn" title="Toggle 3D Gateway" onclick="window.app.toggleHero()">
+        <span>✨ Gateway</span>
+      </button>
+
+      <!-- Theme Switcher -->
+      <button id="themeToggleBtn" class="theme-toggle-btn" title="Toggle Dark/Light Mode" onclick="window.app.toggleTheme()">
+        <span>🌙 Dark</span>
+      </button>
+
       <!-- Mode Switcher -->
       <div class="mode-toggle-group">
         <button class="mode-btn active" data-mode="kiosk">
@@ -63,6 +73,169 @@
       </select>
     </div>
   </header>
+
+  <!-- 3D Animated Hero Section -->
+  <section id="heroSection" class="hero-3d-section">
+    <!-- WebGL Three.js 3D Background Canvas -->
+    <div class="hero-3d-canvas-wrapper">
+      <canvas id="heroCanvas3D"></canvas>
+      <div class="hero-gradient-overlay"></div>
+    </div>
+
+    <!-- Hero Content Container -->
+    <div class="hero-container">
+      <!-- Top Clinical Accreditation & Status Pill -->
+      <div class="hero-header-badge">
+        <span class="hero-pulse-dot"></span>
+        <span class="hero-badge-text">ABDM ACCREDITED • SMART INDIA HACKATHON 2026 • AI CLINICAL PLATFORM</span>
+      </div>
+
+      <!-- Main Headline & Subtitle -->
+      <h1 class="hero-headline">Autonomous Clinical Intake & Diagnostic Ecosystem</h1>
+      <p class="hero-subheadline">
+        Intelligent self-service triage, contactless vitals telemetry, and real-time physician decision intelligence.
+      </p>
+
+      <!-- Two Clear 3D Interactive Portals -->
+      <div class="hero-cards-grid">
+        <!-- Option A: Visit as Patient -->
+        <div class="hero-card-3d hero-card-patient active-portal" id="heroCardPatient" onclick="window.app.enterPatientPortal()">
+          <div class="hero-card-sheen"></div>
+          <div class="hero-card-inner">
+            <div class="hero-card-top-bar">
+              <span class="pill-3d pill-3d-emerald">👤 Patient Kiosk Mode</span>
+              <span class="hero-status-indicator active" id="heroPatientStatusDot">● Active Mode</span>
+            </div>
+
+            <div class="hero-card-visual">
+              <div class="hero-3d-icon-sphere patient-sphere">
+                <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                  <path d="M22 11l-3 3-2-2" stroke="var(--primary)" stroke-width="2"/>
+                </svg>
+              </div>
+              <div class="hero-visual-pulse-rings">
+                <span class="ring ring-1"></span>
+                <span class="ring ring-2"></span>
+              </div>
+            </div>
+
+            <div class="hero-card-text">
+              <h2 class="hero-card-title">Visit as Patient</h2>
+              <p class="hero-card-role-desc">Walk-In OPD Triage & Self-Service Check-In</p>
+            </div>
+
+            <div class="hero-card-features">
+              <div class="hero-feature-item">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                <span>Instant <strong>ABHA e-KYC</strong> Check-In</span>
+              </div>
+              <div class="hero-feature-item">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                <span><strong>Contactless rPPG Vitals</strong> (HR, SpO₂, HRV)</span>
+              </div>
+              <div class="hero-feature-item">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <span><strong>Medical OCR & X-Ray</strong> Digitization</span>
+              </div>
+            </div>
+
+            <div class="hero-card-action">
+              <button class="hero-btn-3d hero-btn-patient" type="button">
+                <span>Enter Patient Kiosk</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Option B: Visit as Doctor -->
+        <div class="hero-card-3d hero-card-doctor" id="heroCardDoctor" onclick="window.app.enterDoctorPortal()">
+          <div class="hero-card-sheen"></div>
+          <div class="hero-card-inner">
+            <div class="hero-card-top-bar">
+              <span class="pill-3d pill-3d-blue">🩺 Doctor Consultation Desk</span>
+              <span class="hero-status-indicator" id="heroDoctorStatusDot">● Ready</span>
+            </div>
+
+            <div class="hero-card-visual">
+              <div class="hero-3d-icon-sphere doctor-sphere">
+                <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/>
+                  <path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4"/>
+                  <circle cx="20" cy="10" r="2"/>
+                </svg>
+              </div>
+              <div class="hero-visual-pulse-rings">
+                <span class="ring ring-doctor-1"></span>
+                <span class="ring ring-doctor-2"></span>
+              </div>
+            </div>
+
+            <div class="hero-card-text">
+              <h2 class="hero-card-title">Visit as Doctor</h2>
+              <p class="hero-card-role-desc">Clinical Decision Cockpit & Live OPD Queue</p>
+            </div>
+
+            <div class="hero-card-features">
+              <div class="hero-feature-item">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <span><strong>Real-Time Live Queue</strong> & 30-min Alerts</span>
+              </div>
+              <div class="hero-feature-item">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                <span><strong>AI Clinical Impression</strong> & SNOMED CT</span>
+              </div>
+              <div class="hero-feature-item">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <span><strong>AYUSH Herb-Drug</strong> Safety & Interaction</span>
+              </div>
+            </div>
+
+            <div class="hero-card-action">
+              <button class="hero-btn-3d hero-btn-doctor" type="button">
+                <span>Open Doctor Desk</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Services Routing Bar with Smooth Scroll -->
+      <div class="hero-services-nav-bar">
+        <div class="hero-services-nav-left">
+          <span class="hero-services-tag">CLINICAL SERVICES</span>
+          <div class="hero-services-chips">
+            <button class="hero-service-chip" onclick="window.app.navigateToService(1)" title="ABHA Registration">
+              <span>🪪 Registration</span>
+            </button>
+            <button class="hero-service-chip" onclick="window.app.navigateToService(2)" title="Contactless Optical Vitals">
+              <span>🩺 Optical Vitals</span>
+            </button>
+            <button class="hero-service-chip" onclick="window.app.navigateToService(3)" title="Prescription & Lab OCR">
+              <span>📄 Document OCR</span>
+            </button>
+            <button class="hero-service-chip" onclick="window.app.navigateToService(2, true)" title="AYUSH Assessment">
+              <span>🌿 AYUSH Intake</span>
+            </button>
+            <button class="hero-service-chip" onclick="window.app.navigateToService(4)" title="Encounter Summary">
+              <span>📋 OPD Pass</span>
+            </button>
+          </div>
+        </div>
+
+        <a href="#services" class="hero-smooth-scroll-link" id="heroScrollToServices" title="Jump to Clinical Services">
+          <span>Explore Services</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Semantic Target for Smooth Scroll Routing -->
+  <div id="services" class="services-scroll-anchor"></div>
 
   <!-- Quick Action Bar -->
   <aside class="kiosk-quick-bar">

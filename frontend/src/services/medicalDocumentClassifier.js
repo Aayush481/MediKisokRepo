@@ -47,8 +47,8 @@ class MedicalDocumentClassifier {
 
     // B. X-Ray Radiographs: True monochrome radiography OR official radiology report with view & anatomical site
     const hasRadiologyHeader = /\b(department\s*of\s*radiology|radiological\s*(?:investigation|report)|digital\s*radiograph[y]?|x-ray|radiograph|radiology|cxr\b|computed\s*tomography|ct\s*scan|mri\s*scan|magnetic\s*resonance|ultrasound|sonography|usg\b)\b/i.test(text);
-    const hasRadiologyView = /\b(ap\s*(?:&|and)?\s*lateral|ap\s*views?|pa\s*views?|lateral\s*views?|oblique\s*views?|weight\s*bearing\s*views?|radiological\s*findings|findings:?|impression:?|view\b)\b/i.test(text);
-    const hasSkeletalSite = /\b(knee|shoulder|chest|lungs?|pulmonary|thorax|thoracic|cervical|lumbar|spine|pelvis|pelvic|hip|femur|tibia|fibula|humerus|clavicle|scapula|radius|ulna|hand|wrist|ankle|foot|skull|brain|abdomen)\b/i.test(text);
+    const hasRadiologyView = /\b(ap\s*(?:&|and)?\s*lateral|ap\s*views?|pa\s*views?|lateral\s*views?|oblique\s*views?|weight\s*bearing\s*views?|waters?\s*views?|caldwell\s*views?|opg\s*views?|panoramic\s*views?|towne'?s?\s*views?|cephalogram|radiological\s*findings|findings:?|impression:?|view\b)\b/i.test(text);
+    const hasSkeletalSite = /\b(knee|shoulder|chest|lungs?|pulmonary|thorax|thoracic|cervical|lumbar|spine|pelvis|pelvic|hip|femur|tibia|fibula|humerus|clavicle|scapula|radius|ulna|hand|wrist|ankle|foot|skull|brain|head|face|facial|cranium|cranial|calvarium|calvarial|pns|sinus|sinuses|sinusitis|waters|caldwell|mandible|mandibular|maxilla|maxillary|orbit|orbital|nasal|zygoma|zygomatic|tmj|opg|abdomen)\b/i.test(text);
     const hasXraySignal = (visual.isMonochromeRadiograph && !visual.isColorfulPhoto) ||
       (hasRadiologyHeader && hasRadiologyView && hasSkeletalSite && !visual.isColorfulPhoto);
 
@@ -325,16 +325,64 @@ class MedicalDocumentClassifier {
     let cause = "Diagnostic Radiographic Evaluation";
     let isAcute = false;
 
+    const hasHeadCt = (text.includes("ct") || text.includes("ncct") || text.includes("tomography")) && (text.includes("head") || text.includes("brain") || text.includes("skull"));
+    const hasPnsTerm = text.includes("pns") || text.includes("sinus") || text.includes("sinuses") || text.includes("sinusitis") || text.includes("waters") || text.includes("caldwell") || text.includes("turbinate") || text.includes("dns") || (text.includes("septum") && !text.includes("interventricular"));
+    const hasMandibleTerm = text.includes("mandib") || text.includes("opg") || text.includes("orthopantomogram") || text.includes("tmj") || text.includes("jaw") || text.includes("temporomandibular") || text.includes("condyle");
+    const hasFacialTerm = (text.includes("face") || text.includes("facial") || text.includes("maxill") || text.includes("zygoma") || text.includes("orbit") || text.includes("nasal") || text.includes("zmc") || text.includes("malar")) && !hasPnsTerm;
+    const hasSkullTerm = text.includes("skull") || text.includes("cranium") || text.includes("cranial") || text.includes("calvarium") || text.includes("calvarial") || text.includes("head") || text.includes("vault") || text.includes("sella") || text.includes("towne") || text.includes("cephalogram");
+
     const hasShoulderTerm = text.includes("shoulder") || text.includes("humerus") || text.includes("clavicle") || text.includes("scapula") || text.includes("acromio");
     const hasKneeTerm = text.includes("knee") || text.includes("tibia") || text.includes("femur") || text.includes("patella") || text.includes("tibiofemoral") || text.includes("ghutna");
     const hasChestTerm = text.includes("chest") || text.includes("lung") || text.includes("cxr") || text.includes("thorax") || text.includes("rib");
     const hasSpineTerm = text.includes("spine") || text.includes("lumbar") || text.includes("cervical") || text.includes("vertebra") || text.includes("l-spine") || text.includes("c-spine");
     const hasPelvisTerm = text.includes("pelvis") || text.includes("hip") || text.includes("acetabulum");
 
-    const hasFracture = text.includes("fracture") || text.includes("dislocation") || text.includes("disruption") || text.includes("broken") || text.includes("trauma");
+    const hasFracture = text.includes("fracture") || text.includes("dislocation") || text.includes("disruption") || text.includes("broken") || text.includes("trauma") || text.includes("step-off") || text.includes("discontinuity");
     const hasArthritis = text.includes("osteoarthritis") || text.includes("joint space") || text.includes("narrowing") || text.includes("osteophyte") || text.includes("sclerosis") || text.includes("sandhigata");
+    const hasSinusitis = text.includes("sinusitis") || text.includes("haziness") || text.includes("mucosal") || text.includes("opacif") || text.includes("opacity");
 
-    if (hasShoulderTerm) {
+    if (hasHeadCt) {
+      site = "Neurocranium & Brain (NCCT Head / Computed Tomography)";
+      if (hasFracture || text.includes("bleed") || text.includes("hemorrhage") || text.includes("hematoma")) {
+        cause = "CRITICAL: Traumatic Brain Injury / Acute Intracranial Hemorrhage Suspected";
+        isAcute = true;
+      } else {
+        cause = "NCCT Head: Normal Brain Attenuation, Symmetrical Ventricles & No Hemorrhage";
+      }
+    } else if (hasPnsTerm) {
+      site = "Paranasal Sinuses (PNS - Water's / Caldwell Projection)";
+      if (hasSinusitis || (!text.includes("clear") && !text.includes("normal") && !hasFracture)) {
+        cause = "Paranasal Sinusitis (Maxillary & Frontal Sinus Opacification / Mucosal Thickening)";
+      } else if (text.includes("dns") || text.includes("septum")) {
+        cause = "Deviated Nasal Septum (DNS) with Sinus Ventilation Impairment";
+      } else {
+        cause = "Paranasal Sinuses: Clear Frontal & Maxillary Aeration with No Sinusitis";
+      }
+    } else if (hasMandibleTerm) {
+      site = "Mandible & Temporomandibular Articulation (OPG / Mandibular Radiograph)";
+      if (hasFracture) {
+        cause = "CRITICAL: Mandibular Fracture with Cortical Discontinuity";
+        isAcute = true;
+      } else {
+        cause = "Mandibular Radiograph: Intact Cortical Baseline & Symmetrical TMJ Articulation";
+      }
+    } else if (hasFacialTerm) {
+      site = "Facial Skeleton & Bilateral Orbits (ZMC / Nasal Vault Radiograph)";
+      if (hasFracture) {
+        cause = "CRITICAL: Facial Bone Fracture (ZMC / Orbital Rim / Nasal Bone Discontinuity)";
+        isAcute = true;
+      } else {
+        cause = "Facial Skeleton Radiograph: Symmetrical Zygomatic Arches & Intact Orbital Rims";
+      }
+    } else if (hasSkullTerm) {
+      site = "Skull & Cranial Vault (Calvarium AP & Lateral Radiograph)";
+      if (hasFracture) {
+        cause = "CRITICAL: Cranial Vault Fracture / Calvarial Cortical Discontinuity";
+        isAcute = true;
+      } else {
+        cause = "Intact Cranial Vault: No Skull Fracture or Lytic Calvarial Bone Lesion";
+      }
+    } else if (hasShoulderTerm) {
       site = "Shoulder Joint (Glenohumeral / Acromioclavicular)";
       if (hasFracture) {
         cause = "Traumatic Disruption / Suspected Fracture of Proximal Humerus or Clavicle";

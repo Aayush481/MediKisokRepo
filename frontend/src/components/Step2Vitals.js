@@ -2,6 +2,7 @@
 
 import { SOCRATES_QUESTIONS } from "../services/clinicalParser.js";
 import { ayushEngine, AYUSH_QUESTIONS } from "../services/ayushEngine.js";
+import { renderSkeletalBodyMap } from "./SkeletalBodyMap.js";
 
 export function renderStep2VitalsAndIntake(app, i18n) {
   const vitals = app.patient.rppgVitals || {
@@ -199,7 +200,7 @@ export function renderStep2VitalsAndIntake(app, i18n) {
     </div>
 
     <!-- Symptom elicitation and body map -->
-    <div style="display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 1.5rem;">
+    <div style="display: grid; grid-template-columns: 1fr 1.15fr; gap: 1.5rem; align-items: start;">
       <div>
         <!-- Voice station -->
         <div class="voice-station-3d">
@@ -291,45 +292,7 @@ export function renderStep2VitalsAndIntake(app, i18n) {
 }
 
 export function renderBodyMapModule(app, i18n) {
-  const hpi = app.patient.hpi;
-
-  return `
-    <div class="bodymap-hardware-box">
-      <h4 style="font-size: 0.95rem; font-weight: 800; color: var(--text-primary); text-align: left;">
-        Interactive Anatomical Body Map
-      </h4>
-      <p style="font-size: 0.78rem; color: var(--text-muted); text-align: left;">
-        Tap anatomical area to localize symptom site
-      </p>
-
-      <div class="bodymap-svg-container">
-        <svg class="human-silhouette" viewBox="0 0 200 280">
-          <circle cx="100" cy="30" r="20" class="body-zone-target ${hpi.site.includes('Head') ? 'selected' : ''}" onclick="window.app.selectBodyPart('Head / Sar')"/>
-          <rect x="92" y="52" width="16" height="12" rx="3" class="body-zone-target ${hpi.site.includes('Throat') ? 'selected' : ''}" onclick="window.app.selectBodyPart('Throat / Gala')"/>
-          <rect x="70" y="66" width="60" height="40" rx="8" class="body-zone-target ${hpi.site.includes('Chest') ? 'selected' : ''}" onclick="window.app.selectBodyPart('Chest / Chhati')"/>
-          <rect x="45" y="70" width="20" height="65" rx="6" class="body-zone-target ${hpi.site.includes('Left') ? 'selected' : ''}" onclick="window.app.selectBodyPart('Left Arm / Shoulder')"/>
-          <rect x="135" y="70" width="20" height="65" rx="6" class="body-zone-target" onclick="window.app.selectBodyPart('Right Arm')"/>
-          <rect x="74" y="110" width="52" height="45" rx="8" class="body-zone-target ${hpi.site.includes('Abdomen') ? 'selected' : ''}" onclick="window.app.selectBodyPart('Abdomen / Pet')"/>
-          <rect x="76" y="158" width="48" height="25" rx="6" class="body-zone-target ${hpi.site.includes('Back') ? 'selected' : ''}" onclick="window.app.selectBodyPart('Back / Pelvis')"/>
-          <rect x="72" y="188" width="22" height="85" rx="8" class="body-zone-target ${hpi.site.includes('Knee') ? 'selected' : ''}" onclick="window.app.selectBodyPart('Knee Joints (Left)')"/>
-          <rect x="106" y="188" width="22" height="85" rx="8" class="body-zone-target ${hpi.site.includes('Knee') ? 'selected' : ''}" onclick="window.app.selectBodyPart('Knee Joints (Right)')"/>
-        </svg>
-      </div>
-
-      <div style="font-size: 0.85rem; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono); margin-bottom: 12px;">
-        Selected Site: <span style="color: var(--primary);">${hpi.site || 'None selected'}</span>
-      </div>
-
-      <div style="text-align: left;">
-        <label class="input-label-3d">Associated Symptoms</label>
-        <div class="chip-rack">
-          ${SOCRATES_QUESTIONS.associations.options.map(item => `
-            <button class="tactile-chip ${(hpi.associations || []).includes(item) ? 'selected' : ''}" onclick="window.app.toggleAssociation('${item}')">${item}</button>
-          `).join('')}
-        </div>
-      </div>
-    </div>
-  `;
+  return renderSkeletalBodyMap(app, i18n);
 }
 
 export function renderAyushModule(app, i18n) {

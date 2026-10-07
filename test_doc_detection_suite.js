@@ -61,6 +61,26 @@ async function runDocumentDetectionSuite() {
       },
       expectedType: "non_medical",
       mustBeValid: false
+    },
+    {
+      name: "7. Head & Cranial Vault Radiograph (Skull AP & Lateral)",
+      payload: {
+        fileName: "skull_calvarium_ap_lat.jpg",
+        mimeType: "image/jpeg",
+        reportText: "Digital Radiograph of Skull AP & Lateral Projections: Cortical margins of cranial vault and calvarium tables intact. No linear or depressed skull fracture. Sella turcica normal."
+      },
+      expectedType: "xray_report",
+      mustBeValid: true
+    },
+    {
+      name: "8. Paranasal Sinus (PNS) Radiograph (Water's View Sinusitis)",
+      payload: {
+        fileName: "pns_waters_view.jpg",
+        mimeType: "image/jpeg",
+        reportText: "X-Ray Paranasal Sinuses (Water's Occipitomental View): Bilateral maxillary sinuses demonstrate significant mucosal thickening and antral opacification with fluid level. Deviated nasal septum noted to the left. Frontal sinuses clear."
+      },
+      expectedType: "xray_report",
+      mustBeValid: true
     }
   ];
 

@@ -181,22 +181,20 @@ class OCREngine {
     let syndromicText = "";
     let xrayDetails = null;
 
-    // 1. Medications: Strictly ONLY extract if the document is an authentic doctor prescription or discharge medication chart.
-    // Pathology lab reports, biochemistry tests, X-rays, and ECGs NEVER contain prescribed medications.
-    const isLabOrImaging = classification.type === "pathology_report" || 
-                           classification.type === "xray_report" || 
-                           classification.type === "ecg_report" ||
-                           (classification.categoryLabel || "").toLowerCase().includes("pathology") ||
-                           (classification.categoryLabel || "").toLowerCase().includes("biochemistry") ||
-                           (classification.categoryLabel || "").toLowerCase().includes("laboratory");
+    // 1. Medications: Strictly ONLY extract if the document is an authentic doctor prescription, consultation note, or discharge medication chart.
+    const isImaging = classification.type === "xray_report" || classification.type === "ecg_report";
 
-    if (!isLabOrImaging && (classification.type === "prescription" || classification.type === "discharge_summary" || classification.type === "medical_record")) {
+    if (!isImaging) {
       extractedMedications = prescriptionParser.parsePrescriptionText(ocrText || fileName);
-      if (extractedMedications.length > 0 && classification.type === "medical_record") {
-        classification.type = "prescription";
-        classification.categoryLabel = "Doctor Prescription (Rx)";
-        classification.badgeColor = "pill-success";
-        classification.icon = "";
+      if (extractedMedications.length > 0) {
+        if (classification.type !== "discharge_summary") {
+          classification.type = "prescription";
+          classification.categoryLabel = "Doctor Prescription (Rx)";
+          classification.badgeColor = "pill-success";
+          classification.icon = "";
+        }
+      } else if (classification.type === "pathology_report") {
+        extractedMedications = [];
       }
     } else {
       extractedMedications = [];
@@ -212,12 +210,23 @@ class OCREngine {
       xrayDetails = await xrayAnalyzer.analyzeRadiograph(previewDataUrl, ocrText, fileName);
       if (xrayDetails) {
         labFlags.push({
-          test: "Radiological Vision Impression",
+          test: "Radiological Impression",
           value: xrayDetails.impression,
           ref: xrayDetails.anatomicalRegion,
           status: xrayDetails.alertLevel === "danger" ? "CRITICAL ACUTE" : "DIAGNOSTIC",
           alertLevel: xrayDetails.alertLevel
         });
+        if (Array.isArray(xrayDetails.findings)) {
+          xrayDetails.findings.forEach(f => {
+            labFlags.push({
+              test: "Radiological Finding",
+              value: f,
+              ref: xrayDetails.viewType || "Diagnostic View",
+              status: xrayDetails.alertLevel === "danger" ? "ALERT" : "OBSERVED",
+              alertLevel: xrayDetails.alertLevel === "danger" ? "danger" : "info"
+            });
+          });
+        }
       }
     } else if (classification.type === "ecg_report") {
       labFlags.push({
@@ -230,8 +239,9 @@ class OCREngine {
     }
 
     // 3. Diseases & Diagnoses
+    const clinicalContext = `${ocrText || fileName}\n${xrayDetails?.impression || ''}\n${(xrayDetails?.findings || []).join('\n')}`;
     const extractedDiseases = diseaseExtractor.extractDiseases(
-      ocrText || fileName,
+      clinicalContext,
       labFlags,
       extractedMedications,
       classification.rootCause
@@ -276,34 +286,36 @@ class OCREngine {
       formattedDisplay += `[Extracted Document Text Stream]:\n${ocrText.trim()}`;
     }
 
-    return {
-      success: true,
-      isValidMedical: true,
-      docId: `DOC-${Date.now().toString().slice(-4)}`,
-      title: `${classification.categoryLabel} (${fileName})`,
-      type: classification.type,
-      categoryLabel: classification.categoryLabel,
-      badgeColor: classification.badgeColor,
-      icon: classification.icon,
-      date: new Date().toLocaleDateString(),
-      facility: isPdf ? "Digital PDF Multi-Page Ingestion" : "Digitized Clinical Ingestion",
-      previewUrl: previewDataUrl,
-      rootCause: classification.rootCause,
-      anatomicalSite: classification.anatomicalSite,
-      extractedText: formattedDisplay,
-      entities: {
-        medications: extractedMedications,
-        diseases: extractedDiseases,
-        flags: labFlags,
-        normalValues: labNormals,
-        xrayFindings: xrayDetails
-      },
-      extractedMedications: isLabOrImaging ? [] : extractedMedications,
-      structuredPrescriptionJSON: (isLabOrImaging || extractedMedications.length === 0) ? null : prescriptionParser.parseToStructuredJSON(ocrText || fileName),
-      extractedDiseases: extractedDiseases,
-      labFlags: labFlags,
-      confidence: classification.confidence
-    };
+      const isPurePathology = classification.type === "pathology_report" && extractedMedications.length === 0;
+
+      return {
+        success: true,
+        isValidMedical: true,
+        docId: `DOC-${Date.now().toString().slice(-4)}`,
+        title: `${classification.categoryLabel} (${fileName})`,
+        type: classification.type,
+        categoryLabel: classification.categoryLabel,
+        badgeColor: classification.badgeColor,
+        icon: classification.icon,
+        date: new Date().toLocaleDateString(),
+        facility: isPdf ? "Digital PDF Multi-Page Ingestion" : "Digitized Clinical Ingestion",
+        previewUrl: previewDataUrl,
+        rootCause: classification.rootCause,
+        anatomicalSite: classification.anatomicalSite,
+        extractedText: formattedDisplay,
+        entities: {
+          medications: (isImaging || isPurePathology) ? [] : extractedMedications,
+          diseases: extractedDiseases,
+          flags: labFlags,
+          normalValues: labNormals,
+          xrayFindings: xrayDetails
+        },
+        extractedMedications: (isImaging || isPurePathology) ? [] : extractedMedications,
+        structuredPrescriptionJSON: (isImaging || isPurePathology || extractedMedications.length === 0) ? null : prescriptionParser.parseToStructuredJSON(ocrText || fileName),
+        extractedDiseases: extractedDiseases,
+        labFlags: labFlags,
+        confidence: classification.confidence
+      };
   }
 
   readFileAsDataURL(file) {

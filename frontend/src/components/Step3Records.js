@@ -5,17 +5,18 @@ export function renderStep3Records(app, i18n) {
   const latestDoc = (patient.documents && patient.documents.length > 0) ? patient.documents[0] : null;
   const allFlags = (patient.documents || []).flatMap(d => d.flags || []);
 
-  // Aggregate medications across patient and all documents (prescriptions & discharge summaries only)
+  // Aggregate medications across patient and all documents
   const seenMeds = new Set();
-  const docMeds = (patient.documents || [])
-    .filter(d => (d.type === "prescription" || d.type === "discharge_summary") && !((d.categoryLabel || "").toLowerCase().includes("pathology") || (d.categoryLabel || "").toLowerCase().includes("biochemistry")))
-    .flatMap(d => d.medications || []);
+  const docMeds = (patient.documents || []).flatMap(d => d.medications || []);
   const allExtractedMeds = [...(patient.allopathicMeds || []), ...docMeds].filter(m => {
     const name = ((typeof m === "string" ? m : (m.name || m.brandReported || "")) || "").toLowerCase();
     if (!name || seenMeds.has(name)) return false;
     seenMeds.add(name);
     return true;
   });
+
+  // Aggregate normal lab biomarkers across documents
+  const allNormals = (patient.documents || []).flatMap(d => d.normalValues || []);
 
   // Aggregate diseases & diagnoses across patient and all documents
   const seenDx = new Set();
@@ -67,6 +68,12 @@ export function renderStep3Records(app, i18n) {
             </button>
             <button type="button" class="sample-doc-btn" onclick="window.app.loadSampleDoc('xray')">
               🦴 Knee X-Ray
+            </button>
+            <button type="button" class="sample-doc-btn" onclick="window.app.loadSampleDoc('pns_xray')">
+              👃 PNS / Face X-Ray
+            </button>
+            <button type="button" class="sample-doc-btn" onclick="window.app.loadSampleDoc('skull_xray')">
+              🧠 Skull X-Ray
             </button>
           </div>
 
@@ -138,6 +145,20 @@ export function renderStep3Records(app, i18n) {
                   Facility: ${latestDoc.facility}
                 </p>
               ` : ''}
+              ${latestDoc.type === 'xray_report' ? `
+                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border-light);">
+                  <div style="display: flex; gap: 6px; align-items: baseline; margin-bottom: 4px;">
+                    <span style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono); text-transform: uppercase;">Focus:</span>
+                    <strong style="font-size: 0.8rem; color: var(--text-primary);">${latestDoc.anatomicalSite || 'Skeletal Architecture'}</strong>
+                  </div>
+                  <div style="display: flex; gap: 6px; align-items: baseline;">
+                    <span style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono); text-transform: uppercase;">Impression:</span>
+                    <span style="font-size: 0.78rem; color: ${(latestDoc.rootCause || '').includes('CRITICAL') || (latestDoc.rootCause || '').includes('Fracture') ? 'var(--crimson-light)' : 'var(--emerald-light)'}; font-weight: 600;">
+                      ${latestDoc.rootCause || 'Diagnostic Evaluation'}
+                    </span>
+                  </div>
+                </div>
+              ` : ''}
             </div>
           ` : ''}
 
@@ -166,24 +187,42 @@ export function renderStep3Records(app, i18n) {
             </div>
           </div>
 
-          <!-- Lab biomarker flags -->
+          <!-- Lab biomarker findings -->
           <div style="margin-bottom: 14px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
               <strong style="font-size: 0.8rem; color: var(--text-primary); text-transform: uppercase; font-family: var(--font-mono);">${i18n.t("lab_heading")}</strong>
-              <span class="pill-3d pill-3d-crimson" style="font-size: 0.7rem;">${allFlags.length} Flags</span>
+              <div style="display: flex; gap: 4px;">
+                ${allFlags.length > 0 ? `<span class="pill-3d pill-3d-crimson" style="font-size: 0.7rem;">${allFlags.length} Flags</span>` : ''}
+                ${allNormals.length > 0 ? `<span class="pill-3d pill-3d-emerald" style="font-size: 0.7rem;">${allNormals.length} Normal</span>` : ''}
+              </div>
             </div>
-            <div style="max-height: 140px; overflow-y: auto;">
-              ${allFlags.length > 0 ? allFlags.map(f => `
+            <div style="max-height: 160px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;">
+              ${allFlags.map(f => {
+                const isCrit = (f.status || '').includes('CRITICAL') || f.alertLevel === 'danger' || (f.value || '').includes('CRITICAL') || (f.value || '').includes('Fracture');
+                const isNormal = (f.status || '') === 'NORMAL' || (f.status || '') === 'INTACT' || f.alertLevel === 'success';
+                const pillClass = isCrit ? 'pill-3d-crimson' : (isNormal ? 'pill-3d-emerald' : 'pill-3d-blue');
+                return `
                 <div class="lab-flag-item-3d">
                   <div>
                     <strong style="color: var(--text-primary); font-size: 0.82rem; font-family: var(--font-mono);">${f.test || f.param}: ${f.value}</strong>
-                    <p style="font-size: 0.72rem; color: var(--text-muted);">Ref: ${f.ref} [${f.status}]</p>
+                    <p style="font-size: 0.72rem; color: var(--text-muted); margin: 2px 0 0 0;">${f.ref ? `Region/Ref: ${f.ref}` : ''} [${f.status || 'REPORTED'}]</p>
                   </div>
-                  <span class="pill-3d pill-3d-crimson">${(f.status || 'ABNORMAL').split(' ')[0]}</span>
+                  <span class="pill-3d ${pillClass}">${(f.status || 'OBSERVED').split(' ')[0]}</span>
                 </div>
-              `).join('') : `
-                <p style="font-size: 0.78rem; color: var(--text-muted); padding: 6px;">${i18n.t("lab_empty")}</p>
-              `}
+              `;
+              }).join('')}
+              ${allNormals.map(n => `
+                <div style="background: var(--bg-surface-inset); border: 1px solid var(--border-light); border-radius: 6px; padding: 6px 10px; display: flex; justify-content: space-between; align-items: center;">
+                  <div>
+                    <strong style="color: var(--text-primary); font-size: 0.8rem; font-family: var(--font-mono);">${n.test || n.param}: ${n.value}</strong>
+                    <p style="font-size: 0.7rem; color: var(--slate-400); margin: 2px 0 0 0;">Biological Ref: ${n.ref || 'Within Normal Limits'}</p>
+                  </div>
+                  <span class="pill-3d pill-3d-emerald" style="font-size: 0.65rem;">NORMAL</span>
+                </div>
+              `).join('')}
+              ${(allFlags.length === 0 && allNormals.length === 0) ? `
+                <p style="font-size: 0.78rem; color: var(--text-muted); padding: 6px; margin: 0;">${i18n.t("lab_empty")}</p>
+              ` : ''}
             </div>
           </div>
 
@@ -222,6 +261,17 @@ export function renderStep3Records(app, i18n) {
               `}
             </div>
           </div>
+
+          ${latestDoc && latestDoc.extractedText ? `
+            <div style="margin-top: 14px;">
+              <details style="background: var(--bg-surface-inset); border: 1px solid var(--border-light); border-radius: 6px; padding: 8px 12px; font-size: 0.78rem;">
+                <summary style="cursor: pointer; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono); outline: none;">
+                  📄 View Full Transcribed Stream & AI Findings
+                </summary>
+                <pre style="margin-top: 8px; white-space: pre-wrap; font-size: 0.72rem; color: var(--slate-300); font-family: var(--font-mono); max-height: 140px; overflow-y: auto; background: rgba(0,0,0,0.25); padding: 8px; border-radius: 4px; border: 1px solid var(--border-light);">${latestDoc.extractedText}</pre>
+              </details>
+            </div>
+          ` : ''}
 
           <div style="display: flex; justify-content: space-between; margin-top: 1.5rem;">
             <button class="btn-3d btn-3d-secondary" onclick="window.app.prevStep()">${i18n.t("btn_back")}</button>
