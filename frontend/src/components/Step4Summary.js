@@ -54,6 +54,11 @@ export function renderStep4Summary(app, i18n) {
   const medCount = (patient.allopathicMeds || []).length + (patient.documents || []).flatMap(d => d.medications || []).length;
   const flagCount = (patient.documents || []).flatMap(d => d.flags || []).length;
 
+  const assignedDoc = patient.assignedDoctor;
+  const deptName = assignedDoc ? assignedDoc.specialty : i18n.t("default_dept");
+  const cabinName = assignedDoc ? assignedDoc.cabin : "Cabin 04";
+  const doctorName = assignedDoc ? `${assignedDoc.name} (${assignedDoc.qualification || 'MD'})` : "Dr. Sharma (MD)";
+
   return `
     <div>
       <!-- Summary congratulations header -->
@@ -99,13 +104,13 @@ export function renderStep4Summary(app, i18n) {
                   <div class="token-label-text">${i18n.t("opd_token_header")}</div>
                   <div class="token-number-hero" style="color: var(--primary);">${token}</div>
                   <div class="token-dept-badge">
-                    <span>${i18n.t("default_dept")}</span>
+                    <span>${deptName}</span>
                   </div>
                 </div>
                 <div class="token-cabin-pill">
                   <div class="token-cabin-label">Attending Desk</div>
-                  <div class="token-cabin-value">Cabin 04</div>
-                  <div style="font-size: 0.72rem; color: var(--grey-600); margin-top: 2px;">Dr. Sharma (MD)</div>
+                  <div class="token-cabin-value">${cabinName}</div>
+                  <div style="font-size: 0.72rem; color: var(--grey-600); margin-top: 2px;">${doctorName}</div>
                 </div>
               </div>
 
@@ -149,7 +154,7 @@ export function renderStep4Summary(app, i18n) {
                   <div class="queue-step-node patient-target" title="Your turn">4</div>
                 </div>
                 <div class="queue-step-caption">
-                  <span>Now Serving at Cabin 04</span>
+                  <span>Now Serving at ${cabinName}</span>
                   <span style="color: var(--primary); font-weight: 700; font-family: var(--font-mono);">Your Position (${token})</span>
                 </div>
               </div>

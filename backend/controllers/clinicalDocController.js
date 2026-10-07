@@ -3,6 +3,7 @@ import { prescriptionParser } from '../../frontend/src/services/prescriptionPars
 import { labParser } from '../../frontend/src/services/labParser.js';
 import { diseaseExtractor } from '../../frontend/src/services/diseaseExtractor.js';
 import { xrayAnalyzer } from '../../frontend/src/services/xrayAnalyzer.js';
+import { clinicalTriageService, HOSPITAL_DOCTORS } from '../../frontend/src/services/clinicalTriageService.js';
 import Tesseract from 'tesseract.js';
 
 const GEMINI_API_KEY = process.env.GOOGLE_API_KEY || "";
@@ -715,6 +716,121 @@ Objectives:
         usage: null,
         validated: false,
         reason: err.message || "Prescription processing error"
+      });
+    }
+  }
+
+  static async triageSymptoms(req, res) {
+    try {
+      const patientData = req.body.patient || req.body || {};
+      const { chiefComplaint = "", hpi = {}, rppgVitals = null, age = 30, gender = "Female" } = patientData;
+
+      // 1. If Gemini API key is available, use LLM clinical reasoning
+      if (GEMINI_API_KEY) {
+        for (const candidateModel of CANDIDATE_MODELS) {
+          try {
+            const prompt = `You are a hospital OPD clinical triage expert.
+Evaluate this patient's clinical presentation:
+- Chief Complaint: "${chiefComplaint}"
+- HPI Details: Location: "${hpi.site || ''}", Character: "${hpi.character || ''}", Severity: ${hpi.severity || 0}/10, Associated: "${(hpi.associations || []).join(', ')}"
+- Vitals: Pulse: ${rppgVitals?.heartRate || 'Normal'}, SpO2: ${rppgVitals?.spO2 || 'Normal'}%
+- Patient: ${age}yo ${gender}
+
+TASK:
+1. Is this condition NORMAL/MILD and safe for home remedies (e.g. mild common cold, mild tension headache, mild acidity/gas, mild muscle soreness, minor throat tickle with severity <= 4)?
+2. If YES (isHomeRemedyEligible: true): Provide 3 specific, verified home remedies (herbal teas, warm gargles, cold milk, rest), lifestyle advice, and red flag warnings for when to see a doctor. Also suggest the backup doctor specialty if they still want a consultation.
+3. If NO (isHomeRemedyEligible: false): State why doctor consultation is required (e.g. suspected fracture, persistent high fever, chest pain, uncontrolled diabetes, abdominal colic) and assign the appropriate hospital doctor specialty from:
+   - Cardiology (Dr. V. K. Malhotra, OPD Cabin 4)
+   - Orthopedics (Dr. B. Sen, OPD Cabin 2)
+   - Pulmonology (Dr. A. Khan, OPD Cabin 5)
+   - Gastroenterology (Dr. S. K. Gupta, OPD Cabin 6)
+   - Neurology (Dr. K. S. Oberoi, OPD Cabin 7)
+   - ENT (Dr. Priya Nair, OPD Cabin 8)
+   - Endocrinology (Dr. R. Iyer, OPD Cabin 9)
+   - General Medicine (Dr. Sharma, OPD Cabin 3)
+   - AYUSH / Integrative (Dr. Ananya Sharma, OPD Cabin 1)
+
+Return strictly valid JSON in this exact structure:
+{
+  "severity": "MILD" | "MODERATE" | "SEVERE" | "CRITICAL",
+  "isHomeRemedyEligible": boolean,
+  "conditionTitle": "string",
+  "rationale": "string",
+  "recommendedAction": "HOME_CARE" | "DOCUMENT_UPLOAD_AND_DOCTOR_CONSULT",
+  "homeRemedies": [
+    { "name": "...", "instruction": "...", "mechanism": "..." }
+  ],
+  "lifestyleTips": ["..."],
+  "whenToSeeDoctor": "...",
+  "assignedSpecialty": "...",
+  "assignedDoctorKey": "cardiology" | "orthopedics" | "pulmonology" | "gastroenterology" | "neurology" | "ent" | "endocrinology" | "general" | "ayush"
+}`;
+
+            const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${candidateModel}:generateContent?key=${GEMINI_API_KEY}`;
+            const geminiRes = await fetch(geminiUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: { responseMimeType: "application/json", temperature: 0.1 }
+              }),
+              signal: AbortSignal.timeout(3000)
+            });
+
+            if (geminiRes.ok) {
+              const geminiData = await geminiRes.json();
+              const genText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+              if (genText) {
+                const parsed = JSON.parse(genText);
+                const docKey = parsed.assignedDoctorKey || "general";
+                const baseDoc = HOSPITAL_DOCTORS?.[docKey] || clinicalTriageService.matchDoctor(chiefComplaint);
+
+                return res.json({
+                  status: "success",
+                  source: "gemini_ai",
+                  triageResult: {
+                    severity: parsed.severity || "MODERATE",
+                    isHomeRemedyEligible: Boolean(parsed.isHomeRemedyEligible),
+                    recommendedAction: parsed.recommendedAction || (parsed.isHomeRemedyEligible ? "HOME_CARE" : "DOCUMENT_UPLOAD_AND_DOCTOR_CONSULT"),
+                    conditionKey: parsed.isHomeRemedyEligible ? "ai_home_care" : "clinical_consult",
+                    rationale: parsed.rationale || "AI Clinical Assessment completed.",
+                    triageBadge: parsed.isHomeRemedyEligible ? "MILD / HOME REMEDY ELIGIBLE" : "CLINICAL CONSULTATION REQUIRED",
+                    badgeColor: parsed.isHomeRemedyEligible ? "pill-3d-emerald" : "pill-3d-blue",
+                    homeRemedyPlan: parsed.isHomeRemedyEligible ? {
+                      title: parsed.conditionTitle || "Self-Care Guidance",
+                      conditionSummary: parsed.rationale,
+                      remedies: parsed.homeRemedies || [],
+                      lifestyleTips: parsed.lifestyleTips || [],
+                      whenToSeeDoctor: parsed.whenToSeeDoctor || "If symptoms persist beyond 48 hours."
+                    } : null,
+                    assignedDoctor: {
+                      ...baseDoc,
+                      rationale: parsed.rationale || `Assigned ${baseDoc.specialty}`
+                    }
+                  }
+                });
+              }
+            }
+          } catch (e) {
+            console.warn(`Gemini Triage Model ${candidateModel} note:`, e.message);
+          }
+        }
+      }
+
+      // Deterministic Clinical Rules fallback
+      const triageResult = clinicalTriageService.evaluateClientRules(patientData);
+      return res.json({
+        status: "success",
+        source: "clinical_rules",
+        triageResult
+      });
+    } catch (err) {
+      console.error("Triage controller error:", err);
+      const fallbackResult = clinicalTriageService.evaluateClientRules(req.body || {});
+      return res.json({
+        status: "success",
+        source: "fallback",
+        triageResult: fallbackResult
       });
     }
   }

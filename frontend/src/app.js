@@ -26,6 +26,7 @@ import { renderStep4Summary, generateBarcodeSvg } from "./components/Step4Summar
 import { renderDoctorDashboard } from "./components/DoctorDashboard.js";
 import { initHero3D, updateHeroActiveState } from "./components/HeroSection.js";
 import { SKELETAL_REGIONS } from "./components/SkeletalBodyMap.js";
+import { clinicalTriageService, HOSPITAL_DOCTORS } from "./services/clinicalTriageService.js";
 
 function generateMedicalDocSvg(type, title, facility, items = [], rootCause = "", patientName = "Priya Patel", token = "A-24") {
   const isRx = type === "prescription";
@@ -207,6 +208,8 @@ class MediKioskApp {
       skeletalMcqAnswers: {},
       rppgVitals: null,
       isEmergency: false,
+      assignedDoctor: null,
+      triageResult: null,
       tokenNumber: "A-" + Math.floor(10 + Math.random() * 89)
     };
   }
@@ -391,9 +394,13 @@ class MediKioskApp {
     }
   }
 
-  nextStep() {
+  async nextStep() {
     if (this.currentStep === 1) {
       this.saveStep1AndNext();
+      return;
+    }
+    if (this.currentStep === 2) {
+      await this.evaluateStep2SymptomsAndProceed();
       return;
     }
     if (this.currentStep < 4) {
@@ -402,6 +409,347 @@ class MediKioskApp {
         this.enqueuePatient();
       }
     }
+  }
+
+  async evaluateStep2SymptomsAndProceed() {
+    // Stop camera sensor when leaving Step 2
+    this.stopCamera();
+
+    // 1. Sync input values from textarea if present
+    const chiefInput = document.getElementById("chiefComplaintText");
+    if (chiefInput && chiefInput.value.trim()) {
+      this.patient.chiefComplaint = chiefInput.value.trim();
+    }
+
+    if (!this.patient.chiefComplaint) {
+      if (this.patient.skeletalRegions && this.patient.skeletalRegions.length > 0) {
+        this.patient.chiefComplaint = `${this.patient.skeletalRegions.join(', ')} pain and discomfort`;
+      } else {
+        this.patient.chiefComplaint = "General health checkup and malaise";
+      }
+    }
+
+    const modal = document.getElementById("triageModal");
+    const container = document.getElementById("triageModalContainer");
+    if (!modal || !container) {
+      this.goToStep(3);
+      return;
+    }
+
+    modal.style.display = "flex";
+    container.innerHTML = `
+      <div class="triage-modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 1.4rem;">🩺</span>
+          <div>
+            <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: var(--text-primary); font-family: var(--font-display);">AI Clinical Triage & Department Matching</h3>
+            <p style="margin: 0; font-size: 0.74rem; color: var(--text-muted);">Evaluating symptoms against clinical protocols & hospital department roster</p>
+          </div>
+        </div>
+        <span class="pill-3d pill-3d-blue">Processing Stream</span>
+      </div>
+
+      <div class="triage-modal-body" style="text-align: center; padding: 2.75rem 1.5rem;">
+        <div class="triage-loading-spinner"></div>
+        <h4 style="font-size: 1.1rem; font-weight: 800; color: var(--text-primary); margin-bottom: 6px;">
+          Evaluating Symptoms & Hemodynamics...
+        </h4>
+        <p style="font-size: 0.82rem; color: var(--text-secondary); max-width: 520px; margin: 0 auto 1.5rem auto; line-height: 1.5;">
+          Checking reported complaint <strong style="color: var(--primary);">"${this.patient.chiefComplaint}"</strong> for home self-care eligibility and matching appropriate hospital OPD department.
+        </p>
+        <div style="display: inline-flex; gap: 10px; font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono); background: var(--bg-surface-inset); padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border-light); flex-wrap: wrap; justify-content: center;">
+          <span>Pulse: ${this.patient.rppgVitals?.heartRate || '75'} BPM</span>
+          <span>•</span>
+          <span>SpO2: ${this.patient.rppgVitals?.spO2 || '98'}%</span>
+          <span>•</span>
+          <span>Severity: ${this.patient.hpi?.severity || 0}/10</span>
+          <span>•</span>
+          <span>Mode: ${this.isAyushMode ? 'AYUSH Holistic' : 'Allopathic Clinical'}</span>
+        </div>
+      </div>
+    `;
+
+    try {
+      const triage = await clinicalTriageService.evaluateSymptoms({
+        ...this.patient,
+        isAyushMode: this.isAyushMode
+      });
+
+      this.patient.triageResult = triage;
+      this.patient.assignedDoctor = triage.assignedDoctor;
+
+      if (triage.isHomeRemedyEligible && triage.homeRemedyPlan) {
+        this.renderHomeRemedyModal(triage);
+      } else {
+        this.renderEscalationModal(triage);
+      }
+    } catch (err) {
+      console.warn("Clinical triage evaluation notice:", err);
+      const fallback = clinicalTriageService.evaluateClientRules({
+        ...this.patient,
+        isAyushMode: this.isAyushMode
+      });
+      this.patient.triageResult = fallback;
+      this.patient.assignedDoctor = fallback.assignedDoctor;
+
+      if (fallback.isHomeRemedyEligible && fallback.homeRemedyPlan) {
+        this.renderHomeRemedyModal(fallback);
+      } else {
+        this.renderEscalationModal(fallback);
+      }
+    }
+  }
+
+  renderHomeRemedyModal(triage) {
+    const container = document.getElementById("triageModalContainer");
+    if (!container) return;
+
+    const plan = triage.homeRemedyPlan;
+    const doc = triage.assignedDoctor || HOSPITAL_DOCTORS.general;
+
+    container.innerHTML = `
+      <div class="triage-modal-header" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(52, 211, 153, 0.05) 100%); border-bottom: 1.5px solid var(--primary-border);">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 44px; height: 44px; border-radius: 12px; background: var(--primary-gradient); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
+            🌿
+          </div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="pill-3d pill-3d-emerald" style="font-size: 0.68rem; font-weight: 800;">MILD CONDITION • HOME REMEDY SUITABLE</span>
+              <span style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono);">Severity: ${this.patient.hpi?.severity || 0}/10</span>
+            </div>
+            <h3 style="margin: 4px 0 0 0; font-size: 1.15rem; font-weight: 800; color: var(--text-primary); font-family: var(--font-display);">
+              ${plan.title || 'Mild Self-Care Protocol'}
+            </h3>
+            ${plan.hi_title ? `<p style="margin: 2px 0 0 0; font-size: 0.8rem; color: var(--text-secondary); font-weight: 600;">${plan.hi_title}</p>` : ''}
+          </div>
+        </div>
+        <button class="btn-3d btn-3d-secondary" style="padding: 4px 10px; font-size: 0.82rem;" onclick="window.app.closeTriageModal()">✕</button>
+      </div>
+
+      <div class="triage-modal-body">
+        <div style="background: var(--bg-surface-inset); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 12px 16px; margin-bottom: 14px;">
+          <p style="margin: 0; font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5;">
+            <strong style="color: var(--primary);">Clinical Assessment:</strong> ${plan.conditionSummary || triage.rationale}
+          </p>
+        </div>
+
+        <h4 style="font-size: 0.88rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-primary); margin: 0 0 4px 0; font-family: var(--font-mono);">
+          Evidence-Based Verified Home Remedies & Self-Care:
+        </h4>
+
+        <div class="remedy-grid">
+          ${(plan.remedies || []).map(r => `
+            <div class="remedy-card">
+              <div class="remedy-icon-bubble">${r.icon || '🍵'}</div>
+              <div class="remedy-title">${r.name}</div>
+              <div class="remedy-instruction">${r.instruction}</div>
+              <div class="remedy-mechanism">
+                <strong>Mechanism:</strong> ${r.mechanism}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+
+        ${plan.lifestyleTips && plan.lifestyleTips.length > 0 ? `
+          <div style="background: var(--bg-surface-inset); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 12px 16px; margin-top: 10px;">
+            <strong style="font-size: 0.8rem; color: var(--text-primary); font-family: var(--font-mono); text-transform: uppercase; display: block; margin-bottom: 6px;">
+              💡 Lifestyle & Dietary Advice:
+            </strong>
+            <ul style="margin: 0; padding-left: 1.25rem; font-size: 0.78rem; color: var(--text-secondary); line-height: 1.5;">
+              ${plan.lifestyleTips.map(t => `<li style="margin-bottom: 3px;">${t}</li>`).join('')}
+            </ul>
+          </div>
+        ` : ''}
+
+        <div class="red-flag-alert-box">
+          <div class="red-flag-icon">⚠️</div>
+          <div class="red-flag-content">
+            <h5>When to Consult Doctor / Hospital Red Flags</h5>
+            <p>${plan.whenToSeeDoctor || 'If symptoms persist beyond 48 hours or worsen unexpectedly.'}</p>
+          </div>
+        </div>
+
+        <div style="margin-top: 14px; background: rgba(14, 165, 233, 0.06); border: 1px solid var(--blue-border); border-radius: var(--radius-md); padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 1.3rem;">👨‍⚕️</span>
+            <div>
+              <span style="font-size: 0.7rem; font-weight: 700; color: var(--blue); text-transform: uppercase; font-family: var(--font-mono);">Pre-Assigned Attending Doctor on Standby</span>
+              <div style="font-size: 0.85rem; font-weight: 800; color: var(--text-primary);">${doc.name} (${doc.specialty}) • <span class="cabin-tag">${doc.cabin}</span></div>
+            </div>
+          </div>
+          <span style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono); white-space: nowrap;">Wait ~${doc.avgWaitMins || 10}m</span>
+        </div>
+      </div>
+
+      <div class="triage-modal-footer">
+        <button class="btn-3d btn-3d-secondary" onclick="window.app.closeTriageModal()">
+          Close
+        </button>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <button class="btn-3d btn-3d-success" onclick="window.app.acceptHomeRemedies()">
+            🌿 Accept Home Care & Download Pass
+          </button>
+          <button class="btn-3d btn-3d-primary" onclick="window.app.proceedToRecordsFromTriage()">
+            🏥 Consult Doctor Anyway (Upload Documents) →
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  renderEscalationModal(triage) {
+    const container = document.getElementById("triageModalContainer");
+    if (!container) return;
+
+    const doc = triage.assignedDoctor || HOSPITAL_DOCTORS.general;
+
+    container.innerHTML = `
+      <div class="triage-modal-header" style="background: linear-gradient(135deg, rgba(14, 165, 233, 0.1) 0%, rgba(99, 102, 241, 0.06) 100%); border-bottom: 1.5px solid var(--blue-border);">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 44px; height: 44px; border-radius: 12px; background: var(--blue-gradient); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);">
+            🏥
+          </div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="pill-3d ${triage.badgeColor || 'pill-3d-blue'}" style="font-size: 0.68rem; font-weight: 800;">
+                ${triage.triageBadge || 'CLINICAL CONSULTATION REQUIRED'}
+              </span>
+              <span style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono);">Automated Hospital Match</span>
+            </div>
+            <h3 style="margin: 4px 0 0 0; font-size: 1.15rem; font-weight: 800; color: var(--text-primary); font-family: var(--font-display);">
+              Clinical Consultation & Records Review Required
+            </h3>
+          </div>
+        </div>
+        <button class="btn-3d btn-3d-secondary" style="padding: 4px 10px; font-size: 0.82rem;" onclick="window.app.proceedToRecordsFromTriage()">✕</button>
+      </div>
+
+      <div class="triage-modal-body">
+        <div style="background: var(--bg-surface-inset); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 14px 16px; margin-bottom: 16px;">
+          <strong style="font-size: 0.82rem; color: var(--text-primary); font-family: var(--font-mono); text-transform: uppercase; display: block; margin-bottom: 4px;">
+            AI Clinical Rationale:
+          </strong>
+          <p style="margin: 0; font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5;">
+            ${triage.rationale || 'Patient presentation requires formal clinical physical evaluation and diagnostic review by an attending specialist.'}
+          </p>
+        </div>
+
+        <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(14, 165, 233, 0.08) 100%); border: 1.5px solid var(--primary-border); border-radius: var(--radius-lg); padding: 16px; display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px;">
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <div style="width: 56px; height: 56px; border-radius: 14px; background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.7rem; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35); flex-shrink: 0;">
+              👨‍⚕️
+            </div>
+            <div>
+              <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 2px;">
+                <span class="pill-3d pill-3d-emerald" style="font-size: 0.66rem; font-weight: 800;">AUTOMATICALLY SELECTED SPECIALIST</span>
+                <span class="cabin-tag">${doc.cabin}</span>
+              </div>
+              <h4 style="margin: 0; font-size: 1.12rem; font-weight: 800; color: var(--text-primary);">${doc.name} <span style="font-size: 0.82rem; font-weight: normal; color: var(--text-secondary);">(${doc.qualification})</span></h4>
+              <p style="margin: 3px 0 0 0; font-size: 0.82rem; font-weight: 700; color: var(--primary);">${doc.specialty}</p>
+              <p style="margin: 2px 0 0 0; font-size: 0.74rem; color: var(--text-muted);">${doc.wing}, Room ${doc.room} • Est. Wait: ~${doc.avgWaitMins || 15} Mins</p>
+            </div>
+          </div>
+          <div style="text-align: right; flex-shrink: 0;">
+            <span class="pill-3d pill-3d-blue" style="font-size: 0.74rem;">Matched</span>
+          </div>
+        </div>
+
+        <div style="background: var(--bg-surface-inset); border: 1px dashed var(--border-medium); border-radius: var(--radius-md); padding: 12px 16px;">
+          <strong style="font-size: 0.78rem; color: var(--text-primary); font-family: var(--font-mono); text-transform: uppercase; display: block; margin-bottom: 2px;">
+            Next Step: Step 3 (Document Uploadation)
+          </strong>
+          <p style="margin: 0; font-size: 0.78rem; color: var(--text-secondary); line-height: 1.45;">
+            Please proceed to upload any prior prescriptions, pathology lab reports, or X-rays. MediKiosk OCR will extract diagnostic findings directly for <strong>${doc.name}</strong>.
+          </p>
+        </div>
+      </div>
+
+      <div class="triage-modal-footer">
+        <span style="font-size: 0.74rem; color: var(--text-muted); font-family: var(--font-mono);" id="triageCountdownNotice">
+          Forwarding to Step 3 in 2 seconds...
+        </span>
+        <button class="btn-3d btn-3d-primary" onclick="window.app.proceedToRecordsFromTriage()">
+          Proceed to Document Uploadation (Step 3) →
+        </button>
+      </div>
+    `;
+
+    // Auto forward after 2.5 seconds
+    this.triageTimer = setTimeout(() => {
+      this.proceedToRecordsFromTriage();
+    }, 2500);
+  }
+
+  proceedToRecordsFromTriage() {
+    if (this.triageTimer) {
+      clearTimeout(this.triageTimer);
+      this.triageTimer = null;
+    }
+    const modal = document.getElementById("triageModal");
+    if (modal) modal.style.display = "none";
+    this.goToStep(3);
+  }
+
+  closeTriageModal() {
+    if (this.triageTimer) {
+      clearTimeout(this.triageTimer);
+      this.triageTimer = null;
+    }
+    const modal = document.getElementById("triageModal");
+    if (modal) modal.style.display = "none";
+  }
+
+  acceptHomeRemedies() {
+    if (this.triageTimer) {
+      clearTimeout(this.triageTimer);
+      this.triageTimer = null;
+    }
+    const plan = this.patient.triageResult?.homeRemedyPlan;
+    const doc = this.patient.assignedDoctor || HOSPITAL_DOCTORS.general;
+    const patientName = this.patient.name || "Walk-in Patient";
+    const token = this.patient.tokenNumber || "A-15";
+
+    const passText = `=====================================================
+MEDIKIOSK DIGITAL HEALTHCARE - AI SELF-CARE CLINICAL PASS
+=====================================================
+PATIENT: ${patientName.toUpperCase()}
+TOKEN: ${token}
+UHID: ${this.patient.id}
+DATE: ${new Date().toLocaleDateString('en-GB')} ${new Date().toLocaleTimeString('en-US')}
+
+CLINICAL IMPRESSION:
+${plan?.title || 'Mild Self-Care Protocol'}
+${plan?.conditionSummary || ''}
+
+VERIFIED HOME REMEDIES:
+${(plan?.remedies || []).map((r, i) => `${i+1}. ${r.name}\n   - Instruction: ${r.instruction}\n   - Mechanism: ${r.mechanism}`).join('\n\n')}
+
+LIFESTYLE & DIETARY ADVICE:
+${(plan?.lifestyleTips || []).map(t => `* ${t}`).join('\n')}
+
+WHEN TO VISIT HOSPITAL DOCTOR:
+${plan?.whenToSeeDoctor || 'If symptoms persist beyond 48 hours.'}
+
+ASSIGNED OPD SPECIALIST ON STANDBY:
+${doc.name} (${doc.specialty} • ${doc.cabin}, Room ${doc.room})
+=====================================================
+MediKiosk Enterprise v2.4 • ABDM Compliant First-Mile Triage
+=====================================================`;
+
+    const blob = new Blob([passText], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `MediKiosk_SelfCare_Pass_${token}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    alert(`🌿 Self-Care Guidance Pass downloaded successfully!\n\nYour verified home remedies for "${plan?.title || 'mild symptoms'}" are saved. If symptoms worsen, proceed to OPD ${doc.cabin}.`);
+
+    this.closeTriageModal();
   }
 
   prevStep() {
@@ -414,6 +762,7 @@ class MediKioskApp {
     const clone = JSON.parse(JSON.stringify(this.patient));
     if (!clone.mobile && this.patient.mobile) clone.mobile = this.patient.mobile;
     if (!clone.name && this.patient.name) clone.name = this.patient.name;
+    if (this.patient.assignedDoctor) clone.assignedDoctor = this.patient.assignedDoctor;
 
     const existingIdx = this.doctorQueue.findIndex(p => p.id === clone.id);
     if (existingIdx >= 0) {

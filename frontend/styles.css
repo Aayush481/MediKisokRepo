@@ -17,7 +17,7 @@
                         #F8FAFC;
   --bg-primary: #FFFFFF;
   --bg-secondary: #F1F5F9;
-  --bg-darkest: #F1F5F9;
+  --bg-surface: rgba(255, 255, 255, 0.92);
   --bg-surface-inset: #F8FAFC;
   --bg-card: rgba(255, 255, 255, 0.92);
   --bg-card-glass: rgba(255, 255, 255, 0.82);
@@ -168,6 +168,7 @@
   --bg-primary: #0F172A;
   --bg-secondary: #1E293B;
   --bg-darkest: #070B12;
+  --bg-surface: rgba(15, 23, 42, 0.9);
   --bg-surface-inset: #0B1120;
   --bg-card: rgba(15, 23, 42, 0.85);
   --bg-card-glass: rgba(15, 23, 42, 0.72);
@@ -2781,4 +2782,306 @@ select.input-text-3d {
   color: #FFFFFF;
   border-color: var(--primary);
   box-shadow: 0 2px 8px rgba(14, 165, 233, 0.35);
+}
+
+/* ========================================================
+   AI CLINICAL TRIAGE & AUTOMATED DOCTOR SELECTION STYLES
+   ======================================================== */
+
+.assigned-doctor-banner {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(14, 165, 233, 0.08) 100%);
+  border: 1.5px solid var(--primary-border);
+  border-radius: var(--radius-lg);
+  padding: 14px 18px;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.08);
+  animation: slideDownFade 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideDownFade {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.assigned-doc-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.assigned-doc-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  flex-shrink: 0;
+}
+
+.assigned-doc-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.assigned-doc-chip-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.assigned-doc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--primary-subtle);
+  border: 1px solid var(--primary-border);
+  color: var(--primary-dark);
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+.assigned-doc-name {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.assigned-doc-meta {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.cabin-tag {
+  background: var(--bg-surface-inset);
+  border: 1px solid var(--border-medium);
+  padding: 1px 7px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--primary-dark);
+}
+
+.assigned-doc-rationale {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  margin-top: 3px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.assigned-doc-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.assigned-doc-wait-badge {
+  background: var(--bg-surface-inset);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 6px 12px;
+  text-align: center;
+}
+
+.assigned-doc-wait-num {
+  font-size: 1rem;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  color: var(--primary);
+  display: block;
+}
+
+.assigned-doc-wait-lbl {
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  font-weight: 700;
+}
+
+/* Modal Triage Containers */
+.triage-modal-wrapper {
+  max-width: 820px;
+  width: 95vw;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-primary);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-light);
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  animation: zoomInModal 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes zoomInModal {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.triage-modal-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-surface-inset);
+}
+
+.triage-modal-body {
+  padding: 22px 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.triage-modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-surface-inset);
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Home Remedy Specific Cards */
+.remedy-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin: 16px 0;
+}
+
+.remedy-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.remedy-card:hover {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.12);
+}
+
+.remedy-icon-bubble {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: var(--green-subtle);
+  border: 1px solid var(--green-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  margin-bottom: 10px;
+}
+
+.remedy-title {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  line-height: 1.3;
+}
+
+.remedy-instruction {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 10px;
+  flex: 1;
+}
+
+.remedy-mechanism {
+  background: var(--bg-surface-inset);
+  border-left: 3px solid var(--primary);
+  padding: 6px 10px;
+  border-radius: 0 6px 6px 0;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.red-flag-alert-box {
+  background: #FFFBEB;
+  border: 1.5px solid #FCD34D;
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  margin-top: 14px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+[data-theme="dark"] .red-flag-alert-box {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+.red-flag-icon {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.red-flag-content h5 {
+  margin: 0 0 3px 0;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #B45309;
+}
+
+[data-theme="dark"] .red-flag-content h5 {
+  color: #FBBF24;
+}
+
+.red-flag-content p {
+  margin: 0;
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.triage-loading-spinner {
+  width: 56px;
+  height: 56px;
+  border: 4px solid var(--border-light);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 20px auto;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }

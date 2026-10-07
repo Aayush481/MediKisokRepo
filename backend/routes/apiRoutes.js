@@ -26,9 +26,10 @@ router.get('/health', (req, res) => {
 router.get('/face-detector-status', FaceDetectorController.getStatus);
 router.post('/detect-face', FaceDetectorController.detectFace);
 
-// Multimodal Clinical Document AI
+// Multimodal Clinical Document AI & Symptoms Triage
 router.post('/analyze-document', ClinicalDocController.analyzeDocument);
 router.post('/parse-prescription', ClinicalDocController.parsePrescription);
+router.post('/triage-symptoms', ClinicalDocController.triageSymptoms);
 
 // Patient Store
 router.get('/patients', PatientController.getAllPatients);

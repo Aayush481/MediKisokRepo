@@ -28,7 +28,42 @@ export function renderStep3Records(app, i18n) {
     return true;
   });
 
+  const assignedDoc = patient.assignedDoctor;
+
   return `
+    ${assignedDoc ? `
+      <div class="assigned-doctor-banner">
+        <div class="assigned-doc-left">
+          <div class="assigned-doc-avatar">👨‍⚕️</div>
+          <div class="assigned-doc-info">
+            <div class="assigned-doc-chip-row">
+              <span class="assigned-doc-chip">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                AI Assigned OPD Specialist
+              </span>
+              <span class="cabin-tag">${assignedDoc.cabin || 'OPD Cabin'}</span>
+            </div>
+            <h3 class="assigned-doc-name">${assignedDoc.name} <span style="font-size: 0.82rem; font-weight: normal; color: var(--text-secondary);">(${assignedDoc.qualification || ''})</span></h3>
+            <div class="assigned-doc-meta">
+              <span style="font-weight: 700; color: var(--primary);">${assignedDoc.specialty}</span>
+              <span>•</span>
+              <span>${assignedDoc.wing || 'Specialty Wing'}, Room ${assignedDoc.room || '--'}</span>
+            </div>
+            <div class="assigned-doc-rationale">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <span>Matched for: <strong>${assignedDoc.rationale || patient.chiefComplaint || 'Reported symptoms'}</strong></span>
+            </div>
+          </div>
+        </div>
+        <div class="assigned-doc-right">
+          <div class="assigned-doc-wait-badge">
+            <span class="assigned-doc-wait-num">~${assignedDoc.avgWaitMins || 15}m</span>
+            <span class="assigned-doc-wait-lbl">Est. Wait</span>
+          </div>
+        </div>
+      </div>
+    ` : ''}
+
     <div class="card-3d">
       <div class="card-header-3d">
         <div>
