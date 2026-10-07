@@ -3085,3 +3085,295 @@ select.input-text-3d {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* ========================================================
+   VISCERAL ORGAN BODY MAPPING & LAYER SWITCHER STYLES
+   ======================================================== */
+.skeleton-layer-controls {
+  display: flex;
+  background: var(--bg-surface-inset);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 3px;
+  gap: 3px;
+}
+
+.layer-switch-btn {
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 5px 11px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.layer-switch-btn:hover {
+  color: var(--text-primary);
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.layer-switch-btn.active {
+  background: var(--primary-gradient);
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);
+}
+
+/* Categorized Quick Chips Layout */
+.skeleton-chips-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.chips-category-group {
+  background: var(--bg-surface-inset);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+}
+
+.chips-category-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.72rem;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.chips-category-hint {
+  font-size: 0.66rem;
+  font-weight: normal;
+  color: var(--text-muted);
+  text-transform: none;
+}
+
+.organ-chips-rack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Organ Quick Chips with Chromatic Coding */
+.quick-bone-chip.organ-chip {
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-medium);
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.quick-bone-chip.organ-chip-heart {
+  border-color: rgba(239, 68, 68, 0.4);
+}
+.quick-bone-chip.organ-chip-heart:hover,
+.quick-bone-chip.organ-chip-heart.active {
+  border-color: #EF4444 !important;
+  background: rgba(239, 68, 68, 0.14) !important;
+  color: #EF4444 !important;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.3) !important;
+}
+
+.quick-bone-chip.organ-chip-kidneys {
+  border-color: rgba(16, 185, 129, 0.4);
+}
+.quick-bone-chip.organ-chip-kidneys:hover,
+.quick-bone-chip.organ-chip-kidneys.active {
+  border-color: #10B981 !important;
+  background: rgba(16, 185, 129, 0.14) !important;
+  color: #10B981 !important;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.3) !important;
+}
+
+.quick-bone-chip.organ-chip-liver {
+  border-color: rgba(245, 158, 11, 0.4);
+}
+.quick-bone-chip.organ-chip-liver:hover,
+.quick-bone-chip.organ-chip-liver.active {
+  border-color: #F59E0B !important;
+  background: rgba(245, 158, 11, 0.14) !important;
+  color: #F59E0B !important;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.3) !important;
+}
+
+.quick-bone-chip.organ-chip-stomach {
+  border-color: rgba(251, 146, 60, 0.4);
+}
+.quick-bone-chip.organ-chip-stomach:hover,
+.quick-bone-chip.organ-chip-stomach.active {
+  border-color: #FB923C !important;
+  background: rgba(251, 146, 60, 0.14) !important;
+  color: #FB923C !important;
+  box-shadow: 0 0 12px rgba(251, 146, 60, 0.3) !important;
+}
+
+.quick-bone-chip.organ-chip-lungs {
+  border-color: rgba(56, 189, 248, 0.4);
+}
+.quick-bone-chip.organ-chip-lungs:hover,
+.quick-bone-chip.organ-chip-lungs.active {
+  border-color: #38BDF8 !important;
+  background: rgba(56, 189, 248, 0.14) !important;
+  color: #38BDF8 !important;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.3) !important;
+}
+
+/* ========================================================
+   SVG BIOLUMINESCENT ORGAN ELEMENTS
+   ======================================================== */
+.organ-zone {
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.organ-element {
+  stroke-width: 1.2;
+  transition: all 0.25s ease;
+}
+
+.organ-lungs {
+  stroke: #0284C7;
+}
+
+.organ-heart {
+  stroke: #EF4444;
+}
+
+.organ-liver {
+  stroke: #D97706;
+}
+
+.organ-stomach {
+  stroke: #EA580C;
+}
+
+.organ-kidney {
+  stroke: #059669;
+}
+
+/* Interactive Hover States */
+.organ-zone:hover .organ-element {
+  transform-origin: center;
+  stroke-width: 2.2 !important;
+  filter: url(#organSelectedGlow) drop-shadow(0 0 12px rgba(56, 189, 248, 0.8)) !important;
+}
+
+.organ-zone:hover .organ-heart {
+  stroke: #FF4D4D !important;
+  filter: url(#organSelectedGlow) drop-shadow(0 0 16px rgba(239, 68, 68, 0.9)) !important;
+}
+
+.organ-zone:hover .organ-liver {
+  stroke: #FBBF24 !important;
+  filter: url(#organSelectedGlow) drop-shadow(0 0 16px rgba(245, 158, 11, 0.9)) !important;
+}
+
+.organ-zone:hover .organ-kidney {
+  stroke: #34D399 !important;
+  filter: url(#organSelectedGlow) drop-shadow(0 0 16px rgba(16, 185, 129, 0.9)) !important;
+}
+
+.organ-zone:hover .organ-stomach {
+  stroke: #FED7AA !important;
+  filter: url(#organSelectedGlow) drop-shadow(0 0 16px rgba(251, 146, 60, 0.9)) !important;
+}
+
+/* Active Selection Halos */
+.organ-zone.active-organ .organ-element {
+  stroke-width: 2.5 !important;
+  filter: url(#organSelectedGlow) drop-shadow(0 0 20px rgba(56, 189, 248, 1)) !important;
+}
+
+.organ-zone.active-organ .organ-heart {
+  stroke: #FFFFFF !important;
+  filter: url(#organSelectedGlow) drop-shadow(0 0 24px rgba(239, 68, 68, 1)) !important;
+}
+
+.organ-zone.active-organ .organ-liver {
+  stroke: #FFFFFF !important;
+  filter: url(#organSelectedGlow) drop-shadow(0 0 24px rgba(245, 158, 11, 1)) !important;
+}
+
+.organ-zone.active-organ .organ-kidney {
+  stroke: #FFFFFF !important;
+  filter: url(#organSelectedGlow) drop-shadow(0 0 24px rgba(16, 185, 129, 1)) !important;
+}
+
+/* Organ Diagnostic Beacons */
+.organ-beacon {
+  fill: #FFFFFF;
+  stroke-width: 1.5;
+  transition: all 0.3s ease;
+}
+
+.organ-beacon-heart {
+  stroke: #EF4444;
+  fill: #EF4444;
+}
+
+.organ-beacon-liver {
+  stroke: #F59E0B;
+  fill: #F59E0B;
+}
+
+.organ-beacon-stomach {
+  stroke: #FB923C;
+  fill: #FB923C;
+}
+
+.organ-beacon-kidney {
+  stroke: #10B981;
+  fill: #10B981;
+}
+
+.organ-beacon-lungs {
+  stroke: #38BDF8;
+  fill: #38BDF8;
+}
+
+.organ-beacon.pulse {
+  animation: organBeaconPulse 1.4s infinite ease-in-out;
+}
+
+@keyframes organBeaconPulse {
+  0% { r: 3.5; stroke-width: 1.5; opacity: 1; }
+  50% { r: 7.5; stroke-width: 2.8; opacity: 0.8; }
+  100% { r: 3.5; stroke-width: 1.5; opacity: 1; }
+}
+
+.active-organ-ring {
+  animation: organRingSpin 3s linear infinite;
+  transform-origin: center;
+}
+
+@keyframes organRingSpin {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: 12; }
+}
+
+/* Bone Dimming in Organ Focus Mode */
+.bone-dimmed .bone-element,
+.bone-dimmed .bone-element-path,
+.bone-dimmed .bone-element-rib {
+  opacity: 0.22 !important;
+  transition: opacity 0.3s ease;
+}
+
+.bone-dimmed .bone-beacon {
+  opacity: 0.15 !important;
+}
+
+.layer-organs-active .bone-zone:not(.active-bone):hover .bone-element {
+  opacity: 0.7 !important;
+}
+

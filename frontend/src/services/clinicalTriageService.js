@@ -98,6 +98,17 @@ export const HOSPITAL_DOCTORS = {
     avgWaitMins: 10,
     keywords: ["ayush", "ayurveda", "prakriti", "vata", "pitta", "kapha", "herbal", "chronic lifestyle", "rejuvenation", "panchakarma", "natural"]
   },
+  nephrology_urology: {
+    id: "doc-nephro",
+    name: "Dr. Arvind Rathore",
+    qualification: "MD, DM (Nephrology), DNB",
+    specialty: "Nephrology & Renal Medicine",
+    cabin: "OPD Cabin 10",
+    wing: "Renal Sciences & Dialysis Suite",
+    room: "1002",
+    avgWaitMins: 15,
+    keywords: ["kidney", "renal", "flank", "gurda", "gurde", "stone", "pathri", "urine", "peshab", "burning urine", "creatinine", "nephritis", "loin", "dysuria", "hematuria", "costovertebral", "kidneys"]
+  },
   general: {
     id: "doc-gen",
     name: "Dr. Sharma",
@@ -539,6 +550,7 @@ class ClinicalTriageService {
       "neurology",
       "ent",
       "endocrinology",
+      "nephrology_urology",
       "ayush"
     ];
 

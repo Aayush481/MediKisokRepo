@@ -205,6 +205,7 @@ class MediKioskApp {
       skeletalRegion: null,
       skeletalRegions: [],
       skeletalView: "anterior",
+      bodyMapLayer: "all",
       skeletalMcqAnswers: {},
       rppgVitals: null,
       isEmergency: false,
@@ -1682,14 +1683,19 @@ MediKiosk Enterprise v2.4 • ABDM Compliant First-Mile Triage
   selectBodyPart(site) {
     this.patient.hpi.site = site;
     const lower = (site || "").toLowerCase();
-    if (lower.includes('knee')) this.selectSkeletalRegion('knee');
+    if (lower.includes('heart') || lower.includes('dil') || lower.includes('cardiac') || lower.includes('angina')) this.selectSkeletalRegion('heart');
+    else if (lower.includes('kidney') || lower.includes('gurda') || lower.includes('flank') || lower.includes('pathri') || lower.includes('renal')) this.selectSkeletalRegion('kidneys');
+    else if (lower.includes('liver') || lower.includes('jigar') || lower.includes('yakrit') || lower.includes('jaundice')) this.selectSkeletalRegion('liver');
+    else if (lower.includes('stomach') || lower.includes('pet') || lower.includes('acidity') || lower.includes('gastric') || lower.includes('aamashay')) this.selectSkeletalRegion('stomach');
+    else if (lower.includes('lung') || lower.includes('fephda') || lower.includes('breath') || lower.includes('asthma')) this.selectSkeletalRegion('lungs');
+    else if (lower.includes('knee')) this.selectSkeletalRegion('knee');
     else if (lower.includes('head') || lower.includes('sar')) this.selectSkeletalRegion('skull');
     else if (lower.includes('chest') || lower.includes('chhati')) this.selectSkeletalRegion('thorax');
     else if (lower.includes('shoulder')) this.selectSkeletalRegion('shoulder');
     else if (lower.includes('throat') || lower.includes('gala')) this.selectSkeletalRegion('cervical_spine');
     else if (lower.includes('arm')) this.selectSkeletalRegion('upper_limb');
     else if (lower.includes('back') || lower.includes('peeth')) this.selectSkeletalRegion('thoracolumbar_spine');
-    else if (lower.includes('abdomen') || lower.includes('pet')) this.selectSkeletalRegion('pelvis_hip');
+    else if (lower.includes('abdomen') || lower.includes('pelvis') || lower.includes('hip')) this.selectSkeletalRegion('pelvis_hip');
     else this.render();
   }
 
@@ -1741,6 +1747,11 @@ MediKiosk Enterprise v2.4 • ABDM Compliant First-Mile Triage
 
   setSkeletalView(view) {
     this.patient.skeletalView = view;
+    this.render();
+  }
+
+  setBodyMapLayer(layer) {
+    this.patient.bodyMapLayer = layer;
     this.render();
   }
 

@@ -248,9 +248,28 @@ export function renderStep4Summary(app, i18n) {
                 Patient Consultation Instructions
               </strong>
               <p style="font-size: 0.76rem; color: var(--text-secondary); margin: 4px 0 0 0; line-height: 1.4;">
-                Please proceed to <strong>First Floor, Cabin 04 (General Medicine)</strong>. The attending nurse will verify your token <strong>${token}</strong> when called on the corridor display.
+                Please proceed to <strong>${assignedDoc?.wing || 'First Floor'}, ${cabinName} (${deptName})</strong>. The attending nurse will verify your token <strong>${token}</strong> when called on the corridor display.
               </p>
             </div>
+
+            <!-- Home Remedy Self-Care Protocol Banner if Eligible -->
+            ${patient.triageResult?.homeRemedyPlan ? `
+              <div style="background: rgba(16, 185, 129, 0.08); border: 1.5px solid var(--primary-border); border-radius: 6px; padding: 10px 14px; margin-top: 10px;">
+                <strong style="font-size: 0.76rem; color: var(--primary); font-family: var(--font-mono); text-transform: uppercase; display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                  <span>🌿</span> Attached Evidence-Based Self-Care Protocol
+                </strong>
+                <p style="font-size: 0.74rem; font-weight: 700; color: var(--text-primary); margin: 0 0 3px 0;">
+                  ${patient.triageResult.homeRemedyPlan.title} (${patient.triageResult.homeRemedyPlan.hi_title || ''})
+                </p>
+                <div style="display: flex; flex-direction: column; gap: 3px; margin-top: 4px;">
+                  ${(patient.triageResult.homeRemedyPlan.remedies || []).map(r => `
+                    <div style="font-size: 0.72rem; color: var(--text-secondary); line-height: 1.35;">
+                      <strong>${r.icon || '🍵'} ${r.name}:</strong> ${r.instruction}
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            ` : ''}
           </div>
 
           <!-- FHIR Digital Health Record Export Card -->

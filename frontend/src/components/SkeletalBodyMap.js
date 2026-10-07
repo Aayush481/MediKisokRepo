@@ -224,6 +224,289 @@ export const SKELETAL_REGIONS = {
     }
   },
 
+  heart: {
+    id: "heart",
+    category: "visceral",
+    name: "Heart & Chest",
+    hindiName: "हृदय और छाती (दिल का भाग)",
+    latinName: "Cor & Precordium",
+    snomed: "80891009",
+    icd10: "I20 / R07.2",
+    clinicalName: "Precordium & Cardiac Region",
+    icon: "🫀",
+    hotspot: { x: 174, y: 146 },
+    mcq: {
+      character: {
+        title: "1. How does your chest / heart feel?",
+        hindiTitle: "छाती या दिल में कैसा महसूस हो रहा है?",
+        options: [
+          "Heavy squeezing pressure or crushing tightness on chest ⚠️",
+          "Sharp stabbing or pricking pain near heart",
+          "Fluttering, racing heartbeats or skipped beats (palpitations)",
+          "Burning ache behind breastbone with acid discomfort",
+          "Crushing pain spreading to left arm, neck, or jaw ⚠️"
+        ]
+      },
+      triggers: {
+        title: "2. What brings on or worsens the chest discomfort?",
+        hindiTitle: "किस चीज़ से तकलीफ शुरू या बढ़ जाती है?",
+        options: [
+          "Walking fast, climbing stairs, or physical exertion ⚠️",
+          "Mental stress, sudden anxiety, or emotional excitement",
+          "Lying down flat after eating a meal",
+          "Taking a deep breath or coughing",
+          "Started suddenly while resting quietly ⚠️"
+        ]
+      },
+      onset: {
+        title: "3. When did this chest discomfort start?",
+        hindiTitle: "यह तकलीफ कब शुरू हुई?",
+        options: [
+          "Suddenly started within the last 1 to 2 hours ⚠️",
+          "Earlier today (intermittent / comes and goes)",
+          "For the past 2 to 3 days with activity",
+          "Chronic pattern for several weeks"
+        ]
+      },
+      redFlags: {
+        title: "4. Any other critical warning signs? (Select all that apply)",
+        hindiTitle: "क्या इनमें से कोई अन्य गंभीर लक्षण भी हैं?",
+        options: [
+          "Shortness of breath / gasping for air ⚠️",
+          "Cold sweating and clamminess ⚠️",
+          "Feeling dizzy, faint, or lightheaded ⚠️",
+          "Nausea or vomiting sensation",
+          "Pain radiating down left arm or up into jaw ⚠️"
+        ]
+      }
+    }
+  },
+
+  lungs: {
+    id: "lungs",
+    category: "visceral",
+    name: "Lungs & Respiratory",
+    hindiName: "फेफड़े और सांस की नली",
+    latinName: "Pulmones & Bronchi",
+    snomed: "39607008",
+    icd10: "R06 / J45",
+    clinicalName: "Pulmonary & Bronchial Fields",
+    icon: "🫁",
+    hotspot: { x: 160, y: 138 },
+    mcq: {
+      character: {
+        title: "1. How does your chest and breathing feel?",
+        hindiTitle: "सांस और फेफड़ों में कैसी तकलीफ है?",
+        options: [
+          "Tight chest with wheezing or whistling sound",
+          "Shortness of breath even when resting or speaking ⚠️",
+          "Sharp stabbing chest pain when taking a deep breath (pleuritic)",
+          "Persistent coughing with heavy rattling phlegm",
+          "Dry hacking cough with tickling in airways"
+        ]
+      },
+      triggers: {
+        title: "2. What makes breathing more difficult?",
+        hindiTitle: "सांस लेने में तकलीफ कब बढ़ती है?",
+        options: [
+          "Cold air, dust, smoke, or physical exertion",
+          "Lying flat in bed at night",
+          "Seasonal weather change",
+          "Continuous speaking or climbing stairs"
+        ]
+      },
+      onset: {
+        title: "3. When did this breathing issue begin?",
+        hindiTitle: "यह कब से हो रहा है?",
+        options: [
+          "Sudden breathlessness starting today ⚠️",
+          "Over the past 2 to 3 days following a cold",
+          "Chronic asthma / bronchitis history for years",
+          "Worsened progressively over this week"
+        ]
+      },
+      redFlags: {
+        title: "4. Any emergency respiratory signs? (Select all that apply)",
+        hindiTitle: "क्या इनमें से कोई अन्य गंभीर लक्षण हैं?",
+        options: [
+          "Bluish lips or fingertips (low oxygen / cyanosis) ⚠️",
+          "Coughing up blood or pinkish foam ⚠️",
+          "High fever with heavy chest rattling ⚠️",
+          "Unable to speak full sentences without gasping ⚠️",
+          "Extreme fatigue and confusion"
+        ]
+      }
+    }
+  },
+
+  liver: {
+    id: "liver",
+    category: "visceral",
+    name: "Liver & Gallbladder",
+    hindiName: "लिवर और पित्ताशय (दाहिनी कोख)",
+    latinName: "Hepar & Cholecyst",
+    snomed: "181268008",
+    icd10: "K76 / R10.1",
+    clinicalName: "Right Upper Quadrant (RUQ) / Hepato-Biliary",
+    icon: "🩺",
+    hotspot: { x: 141, y: 180 },
+    mcq: {
+      character: {
+        title: "1. How does the discomfort on your right side feel?",
+        hindiTitle: "दाहिनी तरफ पसलियों के नीचे कैसा दर्द है?",
+        options: [
+          "Constant dull heavy ache under right ribs",
+          "Sharp cramping spasms that come in waves after eating",
+          "Tenderness or fullness when touching right upper belly",
+          "Bloated and tight feeling after meals"
+        ]
+      },
+      triggers: {
+        title: "2. What makes the pain worse?",
+        hindiTitle: "किस चीज़ से दर्द बढ़ता है?",
+        options: [
+          "Eating oily, fatty, or heavy spicy meals",
+          "Taking a deep breath or bending forward",
+          "Pressing on the right side under ribs",
+          "Worse at night or a few hours after dinner"
+        ]
+      },
+      onset: {
+        title: "3. How long has this been present?",
+        hindiTitle: "यह परेशानी कब से है?",
+        options: [
+          "Sudden severe attack starting today ⚠️",
+          "Recurrent episodes over past few weeks",
+          "Gradual dull ache for months",
+          "Started after a fatty meal yesterday"
+        ]
+      },
+      redFlags: {
+        title: "4. Any associated liver / bile signs? (Select all that apply)",
+        hindiTitle: "क्या इनमें से कोई अन्य लक्षण मौजूद हैं?",
+        options: [
+          "Yellowish color in eyes or skin (Jaundice) ⚠️",
+          "Dark brown or tea-colored urine ⚠️",
+          "Pale or clay-colored stools",
+          "Nausea or throwing up bitter fluid",
+          "High fever with shivering / chills ⚠️"
+        ]
+      }
+    }
+  },
+
+  stomach: {
+    id: "stomach",
+    category: "visceral",
+    name: "Stomach & Upper Belly",
+    hindiName: "पेट और आमाशय (ऊपरी पेट)",
+    latinName: "Gaster / Epigastrium",
+    snomed: "274381002",
+    icd10: "K29 / K30",
+    clinicalName: "Epigastric & Gastric Region",
+    icon: "🥣",
+    hotspot: { x: 168, y: 184 },
+    mcq: {
+      character: {
+        title: "1. How does your stomach feel?",
+        hindiTitle: "पेट में कैसा दर्द या जलन है?",
+        options: [
+          "Burning gnawing ache in the upper center of my belly",
+          "Severe cramping and sharp abdominal spasms",
+          "Bloated, heavy, and full with painful gas",
+          "Sour fluid coming up throat (acid reflux / heartburn)"
+        ]
+      },
+      triggers: {
+        title: "2. What worsens or triggers it?",
+        hindiTitle: "किस चीज़ से तकलीफ बढ़ती है?",
+        options: [
+          "Eating spicy, oily food or drinking tea/coffee",
+          "Having an empty stomach (pain relieved temporarily by food)",
+          "Lying down right after eating",
+          "Mental stress or missing meals"
+        ]
+      },
+      onset: {
+        title: "3. How long have you had this stomach issue?",
+        hindiTitle: "यह समस्या कब से है?",
+        options: [
+          "Started today after eating",
+          "For the past 2 to 3 days",
+          "Chronic problem for several months",
+          "Woke up at night with severe burning"
+        ]
+      },
+      redFlags: {
+        title: "4. Any serious digestive signs? (Select all that apply)",
+        hindiTitle: "क्या इनमें से कोई अन्य लक्षण हैं?",
+        options: [
+          "Vomiting coffee-colored fluid or blood ⚠️",
+          "Black tarry stools ⚠️",
+          "Severe rigid belly that hurts intensely to touch ⚠️",
+          "Inability to keep water or food down",
+          "Unexplained significant weight loss"
+        ]
+      }
+    }
+  },
+
+  kidneys: {
+    id: "kidneys",
+    category: "visceral",
+    name: "Kidneys & Flank",
+    hindiName: "गुर्दे और कमर का निचला हिस्सा (कमर-पसली)",
+    latinName: "Renes & Loin",
+    snomed: "64033007",
+    icd10: "N20 / N23 / R10.2",
+    clinicalName: "Costovertebral Flank & Renal Angle",
+    icon: "🩸",
+    hotspot: { x: 160, y: 202 },
+    mcq: {
+      character: {
+        title: "1. How does the pain in your flank / sides feel?",
+        hindiTitle: "कमर के दोनों तरफ या गुर्दे में कैसा दर्द है?",
+        options: [
+          "Intense, unbearable cramping waves (loin-to-groin colic) ⚠️",
+          "Dull persistent ache on one side of my lower back",
+          "Sharp stabbing pain in the side under the back ribs",
+          "Burning and heavy ache deep inside my flank"
+        ]
+      },
+      triggers: {
+        title: "2. What makes it worse or what triggers it?",
+        hindiTitle: "दर्द कब बढ़ता है?",
+        options: [
+          "Pain shoots down towards my lower groin or bladder",
+          "Moving, walking, or tapping on my back ribs",
+          "Holding urine or not drinking enough water",
+          "Severe pain that makes me restless and unable to lie still"
+        ]
+      },
+      onset: {
+        title: "3. When did this flank pain start?",
+        hindiTitle: "यह दर्द कब शुरू हुआ?",
+        options: [
+          "Suddenly hit me today with excruciating intensity ⚠️",
+          "Started 1 to 2 days ago and gradually worsened",
+          "Repeated attacks (history of kidney stones)",
+          "Low-grade dull ache for over a week"
+        ]
+      },
+      redFlags: {
+        title: "4. Any urinary or infection signs? (Select all that apply)",
+        hindiTitle: "क्या इनमें से कोई अन्य परेशानी है?",
+        options: [
+          "Burning sensation or sharp pain when passing urine",
+          "Blood in urine (reddish or pinkish urine) ⚠️",
+          "High fever with shivering and cold chills ⚠️",
+          "Extreme difficulty passing urine or stopped urine flow ⚠️",
+          "Frequent urgent need to urinate every few minutes"
+        ]
+      }
+    }
+  },
+
   upper_limb: {
     id: "upper_limb",
     name: "Arm & Elbow",
@@ -661,12 +944,21 @@ export const SKELETAL_REGIONS = {
  * @param {'anterior' | 'posterior'} view
  * @param {string[]} selectedRegionIds
  */
-export function generateSkeletonSvg(view = 'anterior', selectedRegionIds = []) {
+/**
+ * Generates Anatomically Accurate SVG Paths for the Human Skeleton and Visceral Internal Organs
+ * Supports multiple selected regions simultaneously with indexed badges and layer isolation
+ * @param {'anterior' | 'posterior'} view
+ * @param {string[]} selectedRegionIds
+ * @param {'all' | 'organs' | 'skeleton'} layer
+ */
+export function generateSkeletonSvg(view = 'anterior', selectedRegionIds = [], layer = 'all') {
   const isPosterior = view === 'posterior';
   const selectedList = Array.isArray(selectedRegionIds) ? selectedRegionIds : (selectedRegionIds ? [selectedRegionIds] : []);
+  const showOrgans = layer !== 'skeleton';
+  const boneDimClass = layer === 'organs' ? 'bone-dimmed' : '';
 
   const getRegionClass = (id) => {
-    return selectedList.includes(id) ? 'active-bone' : '';
+    return selectedList.includes(id) ? 'active-bone active-organ' : '';
   };
 
   const getRegionBadge = (id) => {
@@ -676,7 +968,7 @@ export function generateSkeletonSvg(view = 'anterior', selectedRegionIds = []) {
   };
 
   return `
-    <svg class="skeleton-svg-cad" viewBox="0 0 320 590" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+    <svg class="skeleton-svg-cad ${layer === 'organs' ? 'layer-organs-active' : ''}" viewBox="0 0 320 590" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <!-- Holographic grid pattern -->
         <pattern id="cadGrid" width="20" height="20" patternUnits="userSpaceOnUse">
@@ -688,6 +980,18 @@ export function generateSkeletonSvg(view = 'anterior', selectedRegionIds = []) {
           <feGaussianBlur stdDeviation="3.5" result="blur" />
           <feComponentTransfer in="blur" result="glow">
             <feFuncA type="linear" slope="1.8"/>
+          </feComponentTransfer>
+          <feMerge>
+            <feMergeNode in="glow" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+
+        <!-- Bioluminescent Organ Glow Filter -->
+        <filter id="organSelectedGlow" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="4.5" result="blur" />
+          <feComponentTransfer in="blur" result="glow">
+            <feFuncA type="linear" slope="2.2"/>
           </feComponentTransfer>
           <feMerge>
             <feMergeNode in="glow" />
@@ -712,6 +1016,42 @@ export function generateSkeletonSvg(view = 'anterior', selectedRegionIds = []) {
           <stop offset="50%" stop-color="#0284C7" />
           <stop offset="100%" stop-color="#0369A1" />
         </linearGradient>
+
+        <!-- Visceral Organ Anatomical Gradients -->
+        <!-- Heart (Precordium Crimson) -->
+        <radialGradient id="heartGrad" cx="40%" cy="35%" r="65%">
+          <stop offset="0%" stop-color="#FF6B6B" />
+          <stop offset="50%" stop-color="#DC2626" />
+          <stop offset="100%" stop-color="#991B1B" />
+        </radialGradient>
+
+        <!-- Liver (Hepatic RUQ Amber/Bronze) -->
+        <radialGradient id="liverGrad" cx="45%" cy="35%" r="65%">
+          <stop offset="0%" stop-color="#FCD34D" />
+          <stop offset="45%" stop-color="#D97706" />
+          <stop offset="100%" stop-color="#78350F" />
+        </radialGradient>
+
+        <!-- Stomach (Epigastric Coral) -->
+        <radialGradient id="stomachGrad" cx="35%" cy="35%" r="65%">
+          <stop offset="0%" stop-color="#FDBA74" />
+          <stop offset="55%" stop-color="#EA580C" />
+          <stop offset="100%" stop-color="#9A3412" />
+        </radialGradient>
+
+        <!-- Kidneys (Renal Flank Emerald) -->
+        <radialGradient id="kidneyGrad" cx="40%" cy="40%" r="60%">
+          <stop offset="0%" stop-color="#6EE7B7" />
+          <stop offset="50%" stop-color="#059669" />
+          <stop offset="100%" stop-color="#064E3B" />
+        </radialGradient>
+
+        <!-- Lungs (Pulmonary Aerated Cyan) -->
+        <radialGradient id="lungGrad" cx="40%" cy="40%" r="65%">
+          <stop offset="0%" stop-color="#BAE6FD" />
+          <stop offset="50%" stop-color="#0284C7" />
+          <stop offset="100%" stop-color="#0369A1" />
+        </radialGradient>
       </defs>
 
       <!-- Background HUD Telemetry Grid -->
@@ -720,8 +1060,10 @@ export function generateSkeletonSvg(view = 'anterior', selectedRegionIds = []) {
       <!-- Center plumbline -->
       <line x1="160" y1="10" x2="160" y2="580" stroke="rgba(56, 189, 248, 0.15)" stroke-width="0.75" stroke-dasharray="4,4" />
 
-      <!-- 1. HEAD & FACE -->
-      <g class="bone-zone ${getRegionClass('skull')}" data-region="skull" onclick="window.app.toggleSkeletalRegion('skull')" style="cursor: pointer;">
+      <!-- ========================================================
+           1. HEAD & FACE
+           ======================================================== -->
+      <g class="bone-zone ${getRegionClass('skull')} ${boneDimClass}" data-region="skull" onclick="window.app.toggleSkeletalRegion('skull')" style="cursor: pointer;">
         <title>Head & Face (Tap to select)</title>
         ${!isPosterior ? `
           <path d="M 132,44 C 132,18 144,12 160,12 C 176,12 188,18 188,44 C 188,54 186,60 182,64 L 178,64 L 178,67 C 178,74 172,79 160,79 C 148,79 142,74 142,67 L 142,64 L 138,64 C 134,60 132,54 132,44 Z" class="bone-element" filter="url(#boneDepthShadow)"/>
@@ -739,8 +1081,10 @@ export function generateSkeletonSvg(view = 'anterior', selectedRegionIds = []) {
         ${selectedList.includes('skull') ? `<circle cx="160" cy="46" r="8" fill="none" stroke="#38BDF8" stroke-width="1.2" stroke-dasharray="2,2"/>` : ''}
       </g>
 
-      <!-- 2. NECK -->
-      <g class="bone-zone ${getRegionClass('cervical_spine')}" data-region="cervical_spine" onclick="window.app.toggleSkeletalRegion('cervical_spine')" style="cursor: pointer;">
+      <!-- ========================================================
+           2. NECK & CERVICAL SPINE
+           ======================================================== -->
+      <g class="bone-zone ${getRegionClass('cervical_spine')} ${boneDimClass}" data-region="cervical_spine" onclick="window.app.toggleSkeletalRegion('cervical_spine')" style="cursor: pointer;">
         <title>Neck (Tap to select)</title>
         <rect x="154" y="82" width="12" height="4" rx="1.5" class="bone-element" />
         <rect x="153" y="88" width="14" height="4.5" rx="1.5" class="bone-element" />
@@ -752,8 +1096,10 @@ export function generateSkeletonSvg(view = 'anterior', selectedRegionIds = []) {
         <circle cx="160" cy="100" r="3.5" class="bone-beacon ${selectedList.includes('cervical_spine') ? 'pulse' : ''}" />
       </g>
 
-      <!-- 3. SHOULDER -->
-      <g class="bone-zone ${getRegionClass('shoulder')}" data-region="shoulder" onclick="window.app.toggleSkeletalRegion('shoulder')" style="cursor: pointer;">
+      <!-- ========================================================
+           3. SHOULDER & CLAVICLES
+           ======================================================== -->
+      <g class="bone-zone ${getRegionClass('shoulder')} ${boneDimClass}" data-region="shoulder" onclick="window.app.toggleSkeletalRegion('shoulder')" style="cursor: pointer;">
         <title>Shoulders (Tap to select)</title>
         ${!isPosterior ? `
           <path d="M 154,117 C 142,115 125,121 108,120" stroke="currentColor" class="bone-element-path" stroke-width="4.2" stroke-linecap="round" fill="none" filter="url(#boneDepthShadow)"/>
@@ -768,8 +1114,144 @@ export function generateSkeletonSvg(view = 'anterior', selectedRegionIds = []) {
         <circle cx="212" cy="122" r="3.5" class="bone-beacon ${selectedList.includes('shoulder') ? 'pulse' : ''}" />
       </g>
 
-      <!-- 4. CHEST & RIBS -->
-      <g class="bone-zone ${getRegionClass('thorax')}" data-region="thorax" onclick="window.app.toggleSkeletalRegion('thorax')" style="cursor: pointer;">
+      <!-- ========================================================
+           VISCERAL INTERNAL ORGANS (ANTERIOR / FRONT VIEW)
+           Lungs, Heart (Precordium), Liver, Stomach, Kidneys
+           ======================================================== -->
+      ${(!isPosterior && showOrgans) ? `
+        <!-- 4A. LUNGS & RESPIRATORY SYSTEM -->
+        <g class="organ-zone ${getRegionClass('lungs')}" data-region="lungs" onclick="window.app.toggleSkeletalRegion('lungs')" style="cursor: pointer;">
+          <title>Lungs & Bronchial Fields (Tap if breathing or chest discomfort)</title>
+          <!-- Right Lung (Viewer's Left) -->
+          <path d="M 132,126 C 142,124 150,130 152,142 C 153,156 148,172 138,174 C 128,174 122,160 124,142 C 126,130 128,126 132,126 Z" class="organ-element organ-lungs" fill="url(#lungGrad)" filter="${selectedList.includes('lungs') ? 'url(#organSelectedGlow)' : 'url(#boneDepthShadow)'}" opacity="${selectedList.includes('lungs') ? '1' : (layer === 'organs' ? '0.92' : '0.75')}"/>
+          <!-- Left Lung with cardiac notch (Viewer's Right) -->
+          <path d="M 188,126 C 178,124 170,130 168,142 C 167,152 173,158 173,166 C 173,172 178,174 182,174 C 192,174 198,160 196,142 C 194,130 192,126 188,126 Z" class="organ-element organ-lungs" fill="url(#lungGrad)" filter="${selectedList.includes('lungs') ? 'url(#organSelectedGlow)' : 'url(#boneDepthShadow)'}" opacity="${selectedList.includes('lungs') ? '1' : (layer === 'organs' ? '0.92' : '0.75')}"/>
+          <circle cx="138" cy="148" r="3.5" class="organ-beacon organ-beacon-lungs ${selectedList.includes('lungs') ? 'pulse' : ''}" />
+          <circle cx="182" cy="148" r="3.5" class="organ-beacon organ-beacon-lungs ${selectedList.includes('lungs') ? 'pulse' : ''}" />
+          ${selectedList.includes('lungs') ? `<circle cx="138" cy="148" r="8" fill="none" stroke="#38BDF8" stroke-width="1.2" stroke-dasharray="2,2"/>` : ''}
+        </g>
+
+        <!-- 4B. HEART & PRECORDIUM (Cardiac Mediastinum) -->
+        <g class="organ-zone ${getRegionClass('heart')}" data-region="heart" onclick="window.app.toggleSkeletalRegion('heart')" style="cursor: pointer;">
+          <title>Heart & Precordium (Tap if pain, heaviness, or racing in heart/chest)</title>
+          <!-- Aorta Arch -->
+          <path d="M 158,131 C 158,124 166,123 168,126 C 170,129 170,134 167,137" fill="none" stroke="#EF4444" stroke-width="2.6" stroke-linecap="round"/>
+          <path d="M 164,134 L 160,138" stroke="#38BDF8" stroke-width="2.2" stroke-linecap="round"/>
+          <!-- Anatomical Heart Muscle Silhouette -->
+          <path d="M 160,136 C 166,132 175,133 178,138 C 183,145 183,157 175,166 C 171,171 166,173 165,173 C 163,171 159,166 157,158 C 155,149 156,140 160,136 Z" class="organ-element organ-heart" fill="url(#heartGrad)" filter="${selectedList.includes('heart') ? 'url(#organSelectedGlow)' : 'url(#boneDepthShadow)'}" opacity="${selectedList.includes('heart') ? '1' : (layer === 'organs' ? '0.96' : '0.88')}"/>
+          <!-- Dynamic ECG Cardiogram Rhythm Beacon -->
+          <path d="M 160,152 L 164,152 L 166,145 L 168,158 L 170,149 L 172,152 L 176,152" fill="none" stroke="#FFFFFF" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/>
+          <circle cx="168" cy="153" r="3.5" class="organ-beacon organ-beacon-heart ${selectedList.includes('heart') ? 'pulse' : ''}" />
+          ${selectedList.includes('heart') ? `<circle cx="168" cy="153" r="9" fill="none" stroke="#EF4444" stroke-width="1.6" stroke-dasharray="3,3" class="active-organ-ring"/>` : ''}
+        </g>
+
+        <!-- 4C. LIVER & GALLBLADDER (Right Upper Quadrant) -->
+        <g class="organ-zone ${getRegionClass('liver')}" data-region="liver" onclick="window.app.toggleSkeletalRegion('liver')" style="cursor: pointer;">
+          <title>Liver & Gallbladder (Right Upper Quadrant - Tap if pain under right ribs)</title>
+          <!-- Hepatic Wedge Silhouette -->
+          <path d="M 125,168 C 136,165 152,166 158,172 C 159,178 156,188 152,193 C 146,198 135,198 127,194 C 123,190 122,179 125,168 Z" class="organ-element organ-liver" fill="url(#liverGrad)" filter="${selectedList.includes('liver') ? 'url(#organSelectedGlow)' : 'url(#boneDepthShadow)'}" opacity="${selectedList.includes('liver') ? '1' : (layer === 'organs' ? '0.95' : '0.86')}"/>
+          <!-- Gallbladder -->
+          <ellipse cx="140" cy="195" rx="3.5" ry="4.5" fill="#10B981" stroke="#047857" stroke-width="0.8" />
+          <circle cx="140" cy="182" r="3.5" class="organ-beacon organ-beacon-liver ${selectedList.includes('liver') ? 'pulse' : ''}" />
+          ${selectedList.includes('liver') ? `<circle cx="140" cy="182" r="9" fill="none" stroke="#F59E0B" stroke-width="1.6" stroke-dasharray="3,3" class="active-organ-ring"/>` : ''}
+        </g>
+
+        <!-- 4D. STOMACH & EPIGASTRIUM (Left Upper Quadrant) -->
+        <g class="organ-zone ${getRegionClass('stomach')}" data-region="stomach" onclick="window.app.toggleSkeletalRegion('stomach')" style="cursor: pointer;">
+          <title>Stomach & Epigastrium (Tap if burning, acidity, or pain in stomach)</title>
+          <!-- J-shaped Stomach Silhouette -->
+          <path d="M 160,174 C 166,171 176,173 179,179 C 182,186 180,196 174,201 C 168,206 162,204 160,198 C 158,193 162,188 162,184 C 162,179 159,176 160,174 Z" class="organ-element organ-stomach" fill="url(#stomachGrad)" filter="${selectedList.includes('stomach') ? 'url(#organSelectedGlow)' : 'url(#boneDepthShadow)'}" opacity="${selectedList.includes('stomach') ? '1' : (layer === 'organs' ? '0.95' : '0.86')}"/>
+          <circle cx="170" cy="188" r="3.5" class="organ-beacon organ-beacon-stomach ${selectedList.includes('stomach') ? 'pulse' : ''}" />
+          ${selectedList.includes('stomach') ? `<circle cx="170" cy="188" r="9" fill="none" stroke="#FB923C" stroke-width="1.6" stroke-dasharray="3,3" class="active-organ-ring"/>` : ''}
+        </g>
+
+        <!-- 4E. KIDNEYS (Bilateral Flank Anterior Projections) -->
+        <g class="organ-zone ${getRegionClass('kidneys')}" data-region="kidneys" onclick="window.app.toggleSkeletalRegion('kidneys')" style="cursor: pointer;">
+          <title>Kidneys & Flank (Tap if pain in side flanks or loin)</title>
+          <!-- Right Kidney (Viewer's Left) -->
+          <path d="M 130,200 C 137,198 142,203 142,212 C 142,220 137,224 130,222 C 126,220 125,210 126,204 C 127,201 128,200 130,200 Z" class="organ-element organ-kidney" fill="url(#kidneyGrad)" filter="${selectedList.includes('kidneys') ? 'url(#organSelectedGlow)' : 'url(#boneDepthShadow)'}" opacity="${selectedList.includes('kidneys') ? '1' : (layer === 'organs' ? '0.95' : '0.85')}"/>
+          <!-- Left Kidney (Viewer's Right) -->
+          <path d="M 190,196 C 183,194 178,199 178,208 C 178,216 183,220 190,218 C 194,216 195,206 194,200 C 193,197 192,196 190,196 Z" class="organ-element organ-kidney" fill="url(#kidneyGrad)" filter="${selectedList.includes('kidneys') ? 'url(#organSelectedGlow)' : 'url(#boneDepthShadow)'}" opacity="${selectedList.includes('kidneys') ? '1' : (layer === 'organs' ? '0.95' : '0.85')}"/>
+          <circle cx="134" cy="210" r="3.5" class="organ-beacon organ-beacon-kidney ${selectedList.includes('kidneys') ? 'pulse' : ''}" />
+          <circle cx="186" cy="206" r="3.5" class="organ-beacon organ-beacon-kidney ${selectedList.includes('kidneys') ? 'pulse' : ''}" />
+          ${selectedList.includes('kidneys') ? `
+            <circle cx="134" cy="210" r="8" fill="none" stroke="#10B981" stroke-width="1.5" stroke-dasharray="2,2"/>
+            <circle cx="186" cy="206" r="8" fill="none" stroke="#10B981" stroke-width="1.5" stroke-dasharray="2,2"/>
+          ` : ''}
+        </g>
+
+        <!-- High-Contrast HUD Organ Callouts in Organ Focus Layer -->
+        ${layer === 'organs' ? `
+          <g class="organ-hud-labels" pointer-events="none">
+            <!-- Heart Callout -->
+            <line x1="178" y1="145" x2="228" y2="145" stroke="#EF4444" stroke-width="1" stroke-dasharray="2,2" opacity="0.85"/>
+            <circle cx="228" cy="145" r="2.2" fill="#EF4444"/>
+            <text x="232" y="148" font-family="'JetBrains Mono', monospace" font-size="7.5" font-weight="800" fill="#EF4444">🫀 HEART</text>
+
+            <!-- Liver Callout -->
+            <line x1="125" y1="180" x2="72" y2="180" stroke="#F59E0B" stroke-width="1" stroke-dasharray="2,2" opacity="0.85"/>
+            <circle cx="72" cy="180" r="2.2" fill="#F59E0B"/>
+            <text x="68" y="183" text-anchor="end" font-family="'JetBrains Mono', monospace" font-size="7.5" font-weight="800" fill="#F59E0B">🩺 LIVER</text>
+
+            <!-- Stomach Callout -->
+            <line x1="179" y1="190" x2="228" y2="190" stroke="#FB923C" stroke-width="1" stroke-dasharray="2,2" opacity="0.85"/>
+            <circle cx="228" cy="190" r="2.2" fill="#FB923C"/>
+            <text x="232" y="193" font-family="'JetBrains Mono', monospace" font-size="7.5" font-weight="800" fill="#FB923C">🥣 STOMACH</text>
+
+            <!-- Kidney Callout -->
+            <line x1="128" y1="212" x2="72" y2="212" stroke="#10B981" stroke-width="1" stroke-dasharray="2,2" opacity="0.85"/>
+            <circle cx="72" cy="212" r="2.2" fill="#10B981"/>
+            <text x="68" y="215" text-anchor="end" font-family="'JetBrains Mono', monospace" font-size="7.5" font-weight="800" fill="#10B981">🩸 KIDNEYS</text>
+          </g>
+        ` : ''}
+      ` : ''}
+
+      <!-- ========================================================
+           POSTERIOR ORGAN MAPPING (BACK VIEW)
+           Kidneys at Costovertebral Angle (CVA), Heart & Liver Referral
+           ======================================================== -->
+      ${(isPosterior && showOrgans) ? `
+        <!-- BILATERAL KIDNEYS AT COSTOVERTEBRAL ANGLE (CVA) - PRIMARY NEPHROLOGICAL SITE -->
+        <g class="organ-zone ${getRegionClass('kidneys')}" data-region="kidneys" onclick="window.app.toggleSkeletalRegion('kidneys')" style="cursor: pointer;">
+          <title>Kidneys (Costovertebral Angle / Flank - Primary site for renal stones & kidney pain)</title>
+          <!-- Left Kidney (Viewer Left) -->
+          <path d="M 132,194 C 142,192 147,198 147,208 C 147,218 142,224 133,222 C 126,220 124,208 126,200 C 128,196 130,194 132,194 Z" class="organ-element organ-kidney" fill="url(#kidneyGrad)" filter="${selectedList.includes('kidneys') ? 'url(#organSelectedGlow)' : 'url(#boneDepthShadow)'}" opacity="${selectedList.includes('kidneys') ? '1' : '0.94'}"/>
+          <!-- Right Kidney (Viewer Right) -->
+          <path d="M 188,198 C 178,196 173,202 173,212 C 173,222 178,228 187,226 C 194,224 196,212 194,204 C 192,200 190,198 188,198 Z" class="organ-element organ-kidney" fill="url(#kidneyGrad)" filter="${selectedList.includes('kidneys') ? 'url(#organSelectedGlow)' : 'url(#boneDepthShadow)'}" opacity="${selectedList.includes('kidneys') ? '1' : '0.94'}"/>
+          <!-- Renal Angle / CVA Beacons -->
+          <circle cx="136" cy="208" r="4" class="organ-beacon organ-beacon-kidney ${selectedList.includes('kidneys') ? 'pulse' : ''}" />
+          <circle cx="184" cy="212" r="4" class="organ-beacon organ-beacon-kidney ${selectedList.includes('kidneys') ? 'pulse' : ''}" />
+          ${selectedList.includes('kidneys') ? `
+            <circle cx="136" cy="208" r="9" fill="none" stroke="#10B981" stroke-width="1.8" stroke-dasharray="3,3" class="active-organ-ring"/>
+            <circle cx="184" cy="212" r="9" fill="none" stroke="#10B981" stroke-width="1.8" stroke-dasharray="3,3" class="active-organ-ring"/>
+          ` : ''}
+          <!-- Anatomical Renal Markers -->
+          <text x="136" y="233" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="7" font-weight="800" fill="#10B981">L. KIDNEY</text>
+          <text x="184" y="237" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="7" font-weight="800" fill="#10B981">R. KIDNEY</text>
+          <text x="160" y="247" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="6.5" font-weight="700" fill="#38BDF8" opacity="0.9">COSTOVERTEBRAL ANGLE (CVA)</text>
+        </g>
+
+        <!-- CARDIAC REFERRED PAIN ZONE (Left Scapular Radiation / T1-T4 Dermatomes) -->
+        <g class="organ-zone ${getRegionClass('heart')}" data-region="heart" onclick="window.app.toggleSkeletalRegion('heart')" style="cursor: pointer;">
+          <title>Cardiac Angina Radiation Zone (Left Scapula / Back - Tap if chest pain spreads to back)</title>
+          <path d="M 166,134 C 176,132 186,136 188,146 C 189,155 182,163 174,164 C 168,165 164,158 164,150 C 164,142 165,135 166,134 Z" fill="rgba(239, 68, 68, 0.22)" stroke="#EF4444" stroke-width="1.2" stroke-dasharray="3,3" filter="url(#boneDepthShadow)"/>
+          <circle cx="176" cy="148" r="3.5" class="organ-beacon organ-beacon-heart ${selectedList.includes('heart') ? 'pulse' : ''}" />
+          <text x="176" y="161" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="6.5" font-weight="700" fill="#F87171">HEART REFERRAL</text>
+        </g>
+
+        <!-- HEPATIC / GALLBLADDER POSTERIOR SUBCOSTAL ZONE -->
+        <g class="organ-zone ${getRegionClass('liver')}" data-region="liver" onclick="window.app.toggleSkeletalRegion('liver')" style="cursor: pointer;">
+          <title>Liver & Gallbladder Posterior Zone (Right Subcostal Area)</title>
+          <path d="M 132,172 C 140,170 150,173 152,182 C 154,192 148,198 140,199 C 132,200 128,192 128,184 C 128,176 130,173 132,172 Z" fill="rgba(245, 158, 11, 0.22)" stroke="#F59E0B" stroke-width="1.2" stroke-dasharray="3,3" filter="url(#boneDepthShadow)"/>
+          <circle cx="140" cy="184" r="3.5" class="organ-beacon organ-beacon-liver ${selectedList.includes('liver') ? 'pulse' : ''}" />
+          <text x="140" y="196" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="6.5" font-weight="700" fill="#FBBF24">LIVER ZONE</text>
+        </g>
+      ` : ''}
+
+      <!-- ========================================================
+           5. CHEST & RIBS (THORAX)
+           ======================================================== -->
+      <g class="bone-zone ${getRegionClass('thorax')} ${boneDimClass}" data-region="thorax" onclick="window.app.toggleSkeletalRegion('thorax')" style="cursor: pointer;">
         <title>Chest & Ribs (Tap to select)</title>
         <path d="M 152,120 C 135,119 126,127 151,128" stroke="currentColor" class="bone-element-rib" stroke-width="2.4" fill="none"/>
         <path d="M 168,120 C 185,119 194,127 169,128" stroke="currentColor" class="bone-element-rib" stroke-width="2.4" fill="none"/>
@@ -793,8 +1275,10 @@ export function generateSkeletonSvg(view = 'anterior', selectedRegionIds = []) {
         <circle cx="160" cy="150" r="3.5" class="bone-beacon ${selectedList.includes('thorax') ? 'pulse' : ''}" />
       </g>
 
-      <!-- 5. LOWER BACK & SPINE -->
-      <g class="bone-zone ${getRegionClass('thoracolumbar_spine')}" data-region="thoracolumbar_spine" onclick="window.app.toggleSkeletalRegion('thoracolumbar_spine')" style="cursor: pointer;">
+      <!-- ========================================================
+           6. LOWER BACK & LUMBAR SPINE
+           ======================================================== -->
+      <g class="bone-zone ${getRegionClass('thoracolumbar_spine')} ${boneDimClass}" data-region="thoracolumbar_spine" onclick="window.app.toggleSkeletalRegion('thoracolumbar_spine')" style="cursor: pointer;">
         <title>Lower Back (Tap to select)</title>
         <rect x="151" y="185" width="18" height="6.5" rx="2" class="bone-element" />
         <rect x="150" y="193" width="20" height="7" rx="2" class="bone-element" />
@@ -807,8 +1291,10 @@ export function generateSkeletonSvg(view = 'anterior', selectedRegionIds = []) {
         <circle cx="160" cy="208" r="3.5" class="bone-beacon ${selectedList.includes('thoracolumbar_spine') ? 'pulse' : ''}" />
       </g>
 
-      <!-- 6. PELVIS & HIPS -->
-      <g class="bone-zone ${getRegionClass('pelvis_hip')}" data-region="pelvis_hip" onclick="window.app.toggleSkeletalRegion('pelvis_hip')" style="cursor: pointer;">
+      <!-- ========================================================
+           7. PELVIS & HIPS
+           ======================================================== -->
+      <g class="bone-zone ${getRegionClass('pelvis_hip')} ${boneDimClass}" data-region="pelvis_hip" onclick="window.app.toggleSkeletalRegion('pelvis_hip')" style="cursor: pointer;">
         <title>Hips & Pelvis (Tap to select)</title>
         <polygon points="150,229 170,229 164,258 156,258" class="bone-element" />
         <path d="M 150,230 C 136,220 120,226 118,242 C 117,252 124,264 135,266 C 137,263 139,256 142,246 C 145,238 148,234 150,230 Z" class="bone-element" filter="url(#boneDepthShadow)"/>
@@ -821,8 +1307,10 @@ export function generateSkeletonSvg(view = 'anterior', selectedRegionIds = []) {
         <circle cx="188" cy="262" r="3.5" class="bone-beacon ${selectedList.includes('pelvis_hip') ? 'pulse' : ''}" />
       </g>
 
-      <!-- 7. ARMS -->
-      <g class="bone-zone ${getRegionClass('upper_limb')}" data-region="upper_limb" onclick="window.app.toggleSkeletalRegion('upper_limb')" style="cursor: pointer;">
+      <!-- ========================================================
+           8. ARMS & ELBOWS
+           ======================================================== -->
+      <g class="bone-zone ${getRegionClass('upper_limb')} ${boneDimClass}" data-region="upper_limb" onclick="window.app.toggleSkeletalRegion('upper_limb')" style="cursor: pointer;">
         <title>Arm & Elbow (Tap to select)</title>
         <circle cx="103" cy="133" r="5.5" class="bone-element" />
         <path d="M 103,138 C 101,155 97,175 92,194 L 97,195 C 102,175 106,155 107,138 Z" class="bone-element" filter="url(#boneDepthShadow)"/>
@@ -832,8 +1320,10 @@ export function generateSkeletonSvg(view = 'anterior', selectedRegionIds = []) {
         <circle cx="226" cy="198" r="3.5" class="bone-beacon ${selectedList.includes('upper_limb') ? 'pulse' : ''}" />
       </g>
 
-      <!-- 8. HANDS & WRISTS -->
-      <g class="bone-zone ${getRegionClass('hand_wrist')}" data-region="hand_wrist" onclick="window.app.toggleSkeletalRegion('hand_wrist')" style="cursor: pointer;">
+      <!-- ========================================================
+           9. HANDS & WRISTS
+           ======================================================== -->
+      <g class="bone-zone ${getRegionClass('hand_wrist')} ${boneDimClass}" data-region="hand_wrist" onclick="window.app.toggleSkeletalRegion('hand_wrist')" style="cursor: pointer;">
         <title>Wrist & Hand (Tap to select)</title>
         <path d="M 90,200 L 76,260 L 80,261 L 93,200 Z" class="bone-element" />
         <ellipse cx="80" cy="266" rx="6" ry="4" class="bone-element" />
@@ -845,8 +1335,10 @@ export function generateSkeletonSvg(view = 'anterior', selectedRegionIds = []) {
         <circle cx="242" cy="275" r="3.5" class="bone-beacon ${selectedList.includes('hand_wrist') ? 'pulse' : ''}" />
       </g>
 
-      <!-- 9. THIGHS -->
-      <g class="bone-zone ${getRegionClass('thigh_femur')}" data-region="thigh_femur" onclick="window.app.toggleSkeletalRegion('thigh_femur')" style="cursor: pointer;">
+      <!-- ========================================================
+           10. THIGHS & FEMUR
+           ======================================================== -->
+      <g class="bone-zone ${getRegionClass('thigh_femur')} ${boneDimClass}" data-region="thigh_femur" onclick="window.app.toggleSkeletalRegion('thigh_femur')" style="cursor: pointer;">
         <title>Thighs (Tap to select)</title>
         <circle cx="127" cy="265" r="6" class="bone-element" />
         <path d="M 124,275 C 127,310 131,345 133,375 L 139,375 C 137,345 133,310 130,275 Z" class="bone-element" filter="url(#boneDepthShadow)"/>
@@ -856,8 +1348,10 @@ export function generateSkeletonSvg(view = 'anterior', selectedRegionIds = []) {
         <circle cx="188" cy="325" r="3.5" class="bone-beacon ${selectedList.includes('thigh_femur') ? 'pulse' : ''}" />
       </g>
 
-      <!-- 10. KNEES -->
-      <g class="bone-zone ${getRegionClass('knee')}" data-region="knee" onclick="window.app.toggleSkeletalRegion('knee')" style="cursor: pointer;">
+      <!-- ========================================================
+           11. KNEES & PATELLA
+           ======================================================== -->
+      <g class="bone-zone ${getRegionClass('knee')} ${boneDimClass}" data-region="knee" onclick="window.app.toggleSkeletalRegion('knee')" style="cursor: pointer;">
         <title>Knees (Tap to select)</title>
         <rect x="127" y="386" width="18" height="6" rx="2" class="bone-element" filter="url(#boneDepthShadow)"/>
         ${!isPosterior ? `
@@ -875,8 +1369,10 @@ export function generateSkeletonSvg(view = 'anterior', selectedRegionIds = []) {
         <circle cx="184" cy="384" r="3.5" class="bone-beacon ${selectedList.includes('knee') ? 'pulse' : ''}" />
       </g>
 
-      <!-- 11. SHIN & CALF -->
-      <g class="bone-zone ${getRegionClass('leg_tibia')}" data-region="leg_tibia" onclick="window.app.toggleSkeletalRegion('leg_tibia')" style="cursor: pointer;">
+      <!-- ========================================================
+           12. SHIN & CALF (TIBIA / FIBULA)
+           ======================================================== -->
+      <g class="bone-zone ${getRegionClass('leg_tibia')} ${boneDimClass}" data-region="leg_tibia" onclick="window.app.toggleSkeletalRegion('leg_tibia')" style="cursor: pointer;">
         <title>Shin & Calf (Tap to select)</title>
         <path d="M 132,392 C 133,425 131,460 128,495 L 134,495 C 137,460 139,425 138,392 Z" class="bone-element" filter="url(#boneDepthShadow)"/>
         <path d="M 188,392 C 187,425 189,460 192,495 L 186,495 C 183,460 181,425 182,392 Z" class="bone-element" filter="url(#boneDepthShadow)"/>
@@ -884,8 +1380,10 @@ export function generateSkeletonSvg(view = 'anterior', selectedRegionIds = []) {
         <circle cx="189" cy="445" r="3.5" class="bone-beacon ${selectedList.includes('leg_tibia') ? 'pulse' : ''}" />
       </g>
 
-      <!-- 12. ANKLE & FOOT -->
-      <g class="bone-zone ${getRegionClass('ankle_foot')}" data-region="ankle_foot" onclick="window.app.toggleSkeletalRegion('ankle_foot')" style="cursor: pointer;">
+      <!-- ========================================================
+           13. ANKLE & FOOT
+           ======================================================== -->
+      <g class="bone-zone ${getRegionClass('ankle_foot')} ${boneDimClass}" data-region="ankle_foot" onclick="window.app.toggleSkeletalRegion('ankle_foot')" style="cursor: pointer;">
         <title>Ankle & Foot (Tap to select)</title>
         <ellipse cx="127" cy="508" rx="6.5" ry="5" class="bone-element" filter="url(#boneDepthShadow)"/>
         <path d="M 124,512 L 118,542 M 126,512 L 123,545 M 128,512 L 127,547 M 130,512 L 131,545" stroke="currentColor" stroke-width="2" class="bone-element-path" stroke-linecap="round"/>
@@ -900,12 +1398,13 @@ export function generateSkeletonSvg(view = 'anterior', selectedRegionIds = []) {
 
 /**
  * Main Render Function for the 3D Skeletal Map & Multi-Region Case-Taking
- * Features Simplified, Patient-Friendly Everyday Language
+ * Features Simplified, Patient-Friendly Everyday Language, Visceral Organ Mapping, and Layer Isolation
  * @param {any} app
  * @param {any} i18n
  */
 export function renderSkeletalBodyMap(app, i18n) {
   const currentView = app.patient.skeletalView || 'anterior';
+  const currentLayer = app.patient.bodyMapLayer || 'all';
   const selectedIds = app.patient.skeletalRegions || (app.patient.skeletalRegion ? [app.patient.skeletalRegion] : []);
   const activeFocusId = app.patient.skeletalRegion || selectedIds[0] || null;
   const activeRegion = activeFocusId ? SKELETAL_REGIONS[activeFocusId] : null;
@@ -918,28 +1417,56 @@ export function renderSkeletalBodyMap(app, i18n) {
           <div style="display: flex; align-items: center; gap: 8px;">
             <span class="hud-live-tag">3D BODY MAP</span>
             <h4 style="font-size: 1.02rem; font-weight: 800; color: var(--text-primary); margin: 0;">
-              Where does it hurt?
+              Where does it hurt? (कहाँ दर्द या तकलीफ है?)
             </h4>
           </div>
           <p style="font-size: 0.78rem; color: var(--text-muted); margin: 3px 0 0 0;">
-            Tap one or more body parts on the 3D body below to tell us where you feel discomfort
+            Tap organs (Heart, Liver, Kidneys) or joints/bones on the 3D body map below to describe your symptoms
           </p>
         </div>
 
-        <!-- View Projection Switcher -->
-        <div class="skeleton-view-controls">
-          <button 
-            type="button"
-            class="view-switch-btn ${currentView === 'anterior' ? 'active' : ''}" 
-            onclick="window.app.setSkeletalView('anterior')">
-            <span>👤 Front View</span>
-          </button>
-          <button 
-            type="button"
-            class="view-switch-btn ${currentView === 'posterior' ? 'active' : ''}" 
-            onclick="window.app.setSkeletalView('posterior')">
-            <span>🔄 Back (Spine) View</span>
-          </button>
+        <!-- Layer and Projection Controls -->
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+          <!-- Layer Switcher -->
+          <div class="skeleton-layer-controls">
+            <button 
+              type="button"
+              class="layer-switch-btn ${currentLayer === 'all' ? 'active' : ''}" 
+              onclick="window.app.setBodyMapLayer('all')"
+              title="View all anatomy (Bones & Internal Organs)">
+              <span>🧬 Full Anatomy</span>
+            </button>
+            <button 
+              type="button"
+              class="layer-switch-btn ${currentLayer === 'organs' ? 'active' : ''}" 
+              onclick="window.app.setBodyMapLayer('organs')"
+              title="Focus on Heart, Liver, Kidneys, Stomach & Lungs">
+              <span>🫀 Internal Organs</span>
+            </button>
+            <button 
+              type="button"
+              class="layer-switch-btn ${currentLayer === 'skeleton' ? 'active' : ''}" 
+              onclick="window.app.setBodyMapLayer('skeleton')"
+              title="Focus on Bones, Spine & Joints">
+              <span>🦴 Skeleton Only</span>
+            </button>
+          </div>
+
+          <!-- View Projection Switcher -->
+          <div class="skeleton-view-controls">
+            <button 
+              type="button"
+              class="view-switch-btn ${currentView === 'anterior' ? 'active' : ''}" 
+              onclick="window.app.setSkeletalView('anterior')">
+              <span>👤 Front View</span>
+            </button>
+            <button 
+              type="button"
+              class="view-switch-btn ${currentView === 'posterior' ? 'active' : ''}" 
+              onclick="window.app.setSkeletalView('posterior')">
+              <span>🔄 Back (Spine & Kidneys)</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -948,6 +1475,9 @@ export function renderSkeletalBodyMap(app, i18n) {
         <div class="legend-indicators">
           <span class="legend-item"><span class="legend-dot active-dot"></span> Selected Area (चुना हुआ भाग)</span>
           <span class="legend-item"><span class="legend-dot default-dot"></span> Tap to choose (चुनने के लिए दबाएं)</span>
+          <span class="legend-item" style="color: #EF4444;"><span class="legend-dot" style="background: #EF4444;"></span> Heart / Dil</span>
+          <span class="legend-item" style="color: #10B981;"><span class="legend-dot" style="background: #10B981;"></span> Kidneys / Gurda</span>
+          <span class="legend-item" style="color: #F59E0B;"><span class="legend-dot" style="background: #F59E0B;"></span> Liver / Yakrit</span>
         </div>
 
         ${selectedIds.length > 0 ? `
@@ -970,20 +1500,53 @@ export function renderSkeletalBodyMap(app, i18n) {
         ` : ''}
       </div>
 
-      <!-- Quick Body Part Selection Chips -->
-      <div class="skeleton-quick-chips">
-        ${Object.values(SKELETAL_REGIONS).map(r => {
-          const isSelected = selectedIds.includes(r.id);
-          return `
-            <button 
-              type="button"
-              class="quick-bone-chip ${isSelected ? 'active' : ''}" 
-              onclick="window.app.toggleSkeletalRegion('${r.id}')">
-              <span>${r.icon} ${r.name.split(' ')[0]}</span>
-              ${isSelected ? `<span class="check-mark">✓</span>` : ''}
-            </button>
-          `;
-        }).join('')}
+      <!-- Categorized Quick Body Part Selection Chips -->
+      <div class="skeleton-chips-wrapper">
+        <!-- Internal Organs Category -->
+        <div class="chips-category-group">
+          <div class="chips-category-title">
+            <span>🫀 INTERNAL ORGANS (आंतरिक अंग)</span>
+            <span class="chips-category-hint">Tap directly if you feel internal chest, abdominal, or flank pain</span>
+          </div>
+          <div class="skeleton-quick-chips organ-chips-rack">
+            ${['heart', 'kidneys', 'liver', 'stomach', 'lungs'].map(id => {
+              const r = SKELETAL_REGIONS[id];
+              if (!r) return '';
+              const isSelected = selectedIds.includes(r.id);
+              return `
+                <button 
+                  type="button"
+                  class="quick-bone-chip organ-chip organ-chip-${r.id} ${isSelected ? 'active' : ''}" 
+                  onclick="window.app.toggleSkeletalRegion('${r.id}')">
+                  <span>${r.icon} ${r.name}</span>
+                  ${isSelected ? `<span class="check-mark">✓</span>` : ''}
+                </button>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <!-- Skeleton & Joints Category -->
+        <div class="chips-category-group">
+          <div class="chips-category-title">
+            <span>🦴 BONES & JOINTS (हड्डी और जोड़)</span>
+            <span class="chips-category-hint">Head, Neck, Spine, Limbs & Joint pains</span>
+          </div>
+          <div class="skeleton-quick-chips">
+            ${Object.values(SKELETAL_REGIONS).filter(r => !['heart', 'kidneys', 'liver', 'stomach', 'lungs'].includes(r.id)).map(r => {
+              const isSelected = selectedIds.includes(r.id);
+              return `
+                <button 
+                  type="button"
+                  class="quick-bone-chip ${isSelected ? 'active' : ''}" 
+                  onclick="window.app.toggleSkeletalRegion('${r.id}')">
+                  <span>${r.icon} ${r.name.split(' ')[0]}</span>
+                  ${isSelected ? `<span class="check-mark">✓</span>` : ''}
+                </button>
+              `;
+            }).join('')}
+          </div>
+        </div>
       </div>
 
       <!-- 3D Holographic Skeleton Viewport -->
@@ -996,23 +1559,29 @@ export function renderSkeletalBodyMap(app, i18n) {
         <div class="hud-telemetry-overlay">
           <div class="telemetry-item">
             <span class="telemetry-lbl">VIEW:</span>
-            <span class="telemetry-val">${currentView === 'anterior' ? 'FRONT VIEW' : 'BACK VIEW'}</span>
+            <span class="telemetry-val">${currentView === 'anterior' ? 'FRONT VIEW' : 'BACK (SPINE & KIDNEYS)'}</span>
+          </div>
+          <div class="telemetry-item">
+            <span class="telemetry-lbl">LAYER:</span>
+            <span class="telemetry-val" style="color: #38BDF8;">
+              ${currentLayer === 'organs' ? '🫀 INTERNAL ORGANS' : (currentLayer === 'skeleton' ? '🦴 SKELETON ONLY' : '🧬 FULL ANATOMY')}
+            </span>
           </div>
           <div class="telemetry-item">
             <span class="telemetry-lbl">SELECTED:</span>
             <span class="telemetry-val ${selectedIds.length > 0 ? 'target-locked' : ''}">
-              ${selectedIds.length > 0 ? `${selectedIds.length} BODY AREA(S)` : 'TAP ANY BODY AREA...'}
+              ${selectedIds.length > 0 ? `${selectedIds.length} AREA(S)` : 'TAP ANY BODY PART...'}
             </span>
           </div>
         </div>
 
         <!-- Render CAD SVG Skeleton -->
         <div class="skeleton-svg-wrapper">
-          ${generateSkeletonSvg(currentView, selectedIds)}
+          ${generateSkeletonSvg(currentView, selectedIds, currentLayer)}
         </div>
 
         <div class="hud-reticle-footer">
-          <span>💡 You can tap multiple body parts at the same time</span>
+          <span>💡 Tap glowing organs or bones directly • For Kidney stones & flank pain, switch to Back View</span>
         </div>
       </div>
 
@@ -1211,17 +1780,26 @@ export function renderSkeletalBodyMap(app, i18n) {
               You can tap multiple places where you feel pain or discomfort (for example: Head, Chest, or Knees).
             </p>
             <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+              <button type="button" class="btn-sample-bone" onclick="window.app.toggleSkeletalRegion('heart')">
+                🫀 Heart & Chest (छाती/दिल)
+              </button>
+              <button type="button" class="btn-sample-bone" onclick="window.app.toggleSkeletalRegion('kidneys')">
+                🩸 Kidneys & Flank (गुर्दे/कमर)
+              </button>
+              <button type="button" class="btn-sample-bone" onclick="window.app.toggleSkeletalRegion('liver')">
+                🩺 Liver (लिवर)
+              </button>
+              <button type="button" class="btn-sample-bone" onclick="window.app.toggleSkeletalRegion('stomach')">
+                🥣 Stomach (पेट/आमाशय)
+              </button>
               <button type="button" class="btn-sample-bone" onclick="window.app.toggleSkeletalRegion('knee')">
                 🦵 Knees (घुटने)
               </button>
               <button type="button" class="btn-sample-bone" onclick="window.app.toggleSkeletalRegion('thoracolumbar_spine')">
-                🧬 Lower Back (कमर)
+                🧬 Lower Back (रीढ़)
               </button>
               <button type="button" class="btn-sample-bone" onclick="window.app.toggleSkeletalRegion('skull')">
                 💀 Head (सिर)
-              </button>
-              <button type="button" class="btn-sample-bone" onclick="window.app.toggleSkeletalRegion('thorax')">
-                🫁 Chest (छाती)
               </button>
             </div>
           </div>

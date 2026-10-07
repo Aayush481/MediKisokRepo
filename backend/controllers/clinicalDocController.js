@@ -747,6 +747,7 @@ TASK:
    - Neurology (Dr. K. S. Oberoi, OPD Cabin 7)
    - ENT (Dr. Priya Nair, OPD Cabin 8)
    - Endocrinology (Dr. R. Iyer, OPD Cabin 9)
+   - Nephrology & Renal Medicine (Dr. Arvind Rathore, OPD Cabin 10)
    - General Medicine (Dr. Sharma, OPD Cabin 3)
    - AYUSH / Integrative (Dr. Ananya Sharma, OPD Cabin 1)
 
@@ -763,7 +764,7 @@ Return strictly valid JSON in this exact structure:
   "lifestyleTips": ["..."],
   "whenToSeeDoctor": "...",
   "assignedSpecialty": "...",
-  "assignedDoctorKey": "cardiology" | "orthopedics" | "pulmonology" | "gastroenterology" | "neurology" | "ent" | "endocrinology" | "general" | "ayush"
+  "assignedDoctorKey": "cardiology" | "orthopedics" | "pulmonology" | "gastroenterology" | "neurology" | "ent" | "endocrinology" | "nephrology_urology" | "general" | "ayush"
 }`;
 
             const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${candidateModel}:generateContent?key=${GEMINI_API_KEY}`;
