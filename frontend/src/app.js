@@ -939,6 +939,68 @@ MediKiosk Enterprise v2.4 • ABDM Compliant First-Mile Triage
     this.render();
   }
 
+  selectQuickAbha(abhaId) {
+    const input = document.getElementById("patientAbhaInput");
+    if (input) input.value = abhaId;
+    this.patient.abhaId = abhaId;
+    this.verifyAbhaRecord(abhaId);
+  }
+
+  setManualGender(gender) {
+    this.patient.gender = gender;
+    document.querySelectorAll(".gender-select-card").forEach(el => {
+      if (el.dataset.gender === gender) {
+        el.classList.add("active");
+      } else {
+        el.classList.remove("active");
+      }
+    });
+    const hidden = document.getElementById("patientGenderInput");
+    if (hidden) hidden.value = gender;
+  }
+
+  setManualSalutation(sal) {
+    this.manualSalutation = sal;
+    document.querySelectorAll(".salutation-chip").forEach(el => {
+      if (el.dataset.sal === sal) {
+        el.classList.add("active");
+      } else {
+        el.classList.remove("active");
+      }
+    });
+  }
+
+  setManualBloodGroup(bg) {
+    this.patient.bloodGroup = bg;
+    document.querySelectorAll(".blood-group-pill").forEach(el => {
+      if (el.dataset.bg === bg) {
+        el.classList.add("active");
+      } else {
+        el.classList.remove("active");
+      }
+    });
+  }
+
+  toggleChiefComplaint(tag) {
+    const input = document.getElementById("patientComplaintInput");
+    if (!input) return;
+    let current = input.value.trim();
+    if (current.includes(tag)) {
+      current = current.replace(new RegExp(`,?\\s*${tag}\\s*`, 'g'), '').trim().replace(/^,/, '').trim();
+    } else {
+      current = current ? `${current}, ${tag}` : tag;
+    }
+    input.value = current;
+    this.patient.chiefComplaint = current;
+    document.querySelectorAll(".symptom-tag-chip").forEach(el => {
+      if (el.dataset.tag && current.includes(el.dataset.tag)) {
+        el.classList.add("active");
+      } else {
+        el.classList.remove("active");
+      }
+    });
+  }
+
   handleAbhaInputChange(e) {
     const input = e.target;
     if (!input) return;
@@ -1335,13 +1397,18 @@ MediKiosk Enterprise v2.4 • ABDM Compliant First-Mile Triage
     }
 
     // Manual registration mode validation
-    const name = document.getElementById("patientNameInput")?.value?.trim() || "";
+    const sal = this.manualSalutation ? `${this.manualSalutation} ` : "";
+    const rawName = document.getElementById("patientNameInput")?.value?.trim() || "";
+    const name = rawName ? (rawName.startsWith("Mr.") || rawName.startsWith("Mrs.") || rawName.startsWith("Ms.") || rawName.startsWith("Dr.") ? rawName : `${sal}${rawName}`) : "";
     const age = document.getElementById("patientAgeInput")?.value?.trim() || "";
-    const gender = document.getElementById("patientGenderInput")?.value || "Female";
+    const gender = this.patient.gender || document.getElementById("patientGenderInput")?.value || "Female";
     const abha = document.getElementById("patientAbhaInput")?.value?.trim() || "";
     const mobile = document.getElementById("patientMobileInput")?.value?.trim() || "";
+    const dob = document.getElementById("patientDobInput")?.value?.trim() || "";
+    const state = document.getElementById("patientStateInput")?.value?.trim() || this.patient.state || "";
+    const complaint = document.getElementById("patientComplaintInput")?.value?.trim() || this.patient.chiefComplaint || "";
 
-    if (!name) {
+    if (!rawName) {
       alert("Please enter the patient's full name to proceed with clinical triage.");
       const input = document.getElementById("patientNameInput");
       if (input) input.focus();
@@ -1353,6 +1420,9 @@ MediKiosk Enterprise v2.4 • ABDM Compliant First-Mile Triage
     this.patient.gender = gender;
     this.patient.abhaId = abha;
     this.patient.mobile = mobile;
+    this.patient.dob = dob;
+    this.patient.state = state;
+    this.patient.chiefComplaint = complaint;
 
     this.goToStep(2);
   }
