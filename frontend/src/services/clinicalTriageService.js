@@ -414,20 +414,16 @@ class ClinicalTriageService {
     // 2. Check for Mild & Home Remedy Eligible conditions
     const mildMatch = this.detectHomeRemedyEligibility(fullText, severity, heartRate, spO2);
     if (mildMatch.eligible) {
-      const matchedDoctor = this.matchDoctor(fullText, isAyushMode);
       return {
         severity: "MILD",
         isHomeRemedyEligible: true,
-        recommendedAction: "HOME_CARE",
+        recommendedAction: "HOME_CARE_ONLY",
         conditionKey: mildMatch.protocol.conditionKey,
-        rationale: "Symptoms are mild, self-limiting, and suitable for verified home remedies and lifestyle care.",
-        triageBadge: "MILD / HOME REMEDY ELIGIBLE",
+        rationale: "Symptoms are mild, self-limiting, and suitable for verified home remedies. Doctor consultation is not required.",
+        triageBadge: "MILD / HOME REMEDY PROTOCOL (NO OPD VISIT NEEDED)",
         badgeColor: "pill-3d-emerald",
         homeRemedyPlan: mildMatch.protocol,
-        assignedDoctor: {
-          ...matchedDoctor,
-          rationale: `Pre-assigned for optional consultation: ${matchedDoctor.specialty}`
-        }
+        assignedDoctor: null // Strictly NO doctor consultation provided when home remedies are suitable
       };
     }
 
@@ -468,28 +464,28 @@ class ClinicalTriageService {
       return { eligible: false, protocol: null };
     }
 
-    // Detect Mild Common Cold
-    if (/\b(running nose|runny nose|sneezing|cheenk|cold|halka nazla|mild congestion|nasal tickle)\b/i.test(text)) {
+    // Detect Mild Common Cold & Rhinitis
+    if (/\b(running nose|runny nose|sneezing|cheenk|cold|halka nazla|nazla|mild congestion|nasal tickle)\b/i.test(text)) {
       return { eligible: true, protocol: HOME_REMEDY_PROTOCOLS.common_cold };
     }
 
-    // Detect Mild Acidity / Indigestion
-    if (/\b(acidity|acid reflux|khatti dakar|mild gas|indigestion|apach|heartburn mild|pet me jalan|bloating mild)\b/i.test(text)) {
+    // Detect Mild Acidity / Indigestion / Gas
+    if (/\b(acidity|acid reflux|khatti dakar|mild gas|gas|indigestion|apach|heartburn mild|heartburn|pet me jalan|bloating mild|bloating)\b/i.test(text)) {
       return { eligible: true, protocol: HOME_REMEDY_PROTOCOLS.mild_acidity };
     }
 
-    // Detect Tension Headache
+    // Detect Tension Headache / Eye Strain
     if (/\b(headache|sar dard|tension headache|eye strain|screen fatigue|tired head|heaviness in head)\b/i.test(text) && !text.includes("migraine severe")) {
       return { eligible: true, protocol: HOME_REMEDY_PROTOCOLS.tension_headache };
     }
 
-    // Detect Mild Dry Cough
-    if (/\b(dry cough|khansi|mild cough|throat tickle|gale me kharash|irritation in throat)\b/i.test(text) && !text.includes("sputum") && !text.includes("phlegm")) {
+    // Detect Mild Dry Cough / Pharyngeal Tickle / Sore Throat
+    if (/\b(dry cough|khansi|mild cough|cough|throat tickle|gale me kharash|irritation in throat|sore throat)\b/i.test(text) && !text.includes("sputum") && !text.includes("phlegm")) {
       return { eligible: true, protocol: HOME_REMEDY_PROTOCOLS.mild_cough };
     }
 
-    // Detect Mild Muscle Soreness / Fatigue
-    if (/\b(muscle soreness|badan dard|mild body ache|fatigue|thakan|tiredness|stiff neck|gym soreness)\b/i.test(text)) {
+    // Detect Mild Muscle Soreness / Fatigue / Body Ache
+    if (/\b(muscle soreness|badan dard|mild body ache|body ache|fatigue|thakan|tiredness|stiff neck|gym soreness)\b/i.test(text)) {
       return { eligible: true, protocol: HOME_REMEDY_PROTOCOLS.muscle_soreness };
     }
 

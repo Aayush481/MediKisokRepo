@@ -89,29 +89,6 @@ export function renderStep3Records(app, i18n) {
             <input type="file" id="realDocUpload" accept="image/*,.pdf" capture="environment" style="display: none;" onchange="window.app.handleFileUpload(event)">
           </div>
 
-          <!-- Quick test sample documents -->
-          <div class="sample-doc-bar">
-            <span class="demo-profile-label">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-              Try Sample Records:
-            </span>
-            <button type="button" class="sample-doc-btn" onclick="window.app.loadSampleDoc('rx')">
-              📄 Prescription Rx
-            </button>
-            <button type="button" class="sample-doc-btn" onclick="window.app.loadSampleDoc('lab')">
-              🔬 Pathology Lab
-            </button>
-            <button type="button" class="sample-doc-btn" onclick="window.app.loadSampleDoc('xray')">
-              🦴 Knee X-Ray
-            </button>
-            <button type="button" class="sample-doc-btn" onclick="window.app.loadSampleDoc('pns_xray')">
-              👃 PNS / Face X-Ray
-            </button>
-            <button type="button" class="sample-doc-btn" onclick="window.app.loadSampleDoc('skull_xray')">
-              🧠 Skull X-Ray
-            </button>
-          </div>
-
           ${patient.documents.length > 0 ? `
             <div style="margin-top: 12px; border-radius: 6px; overflow: hidden; background: #0F172A; max-height: 220px; border: 1px solid var(--border-medium); display: flex; align-items: center; justify-content: center;">
               <img src="${patient.documents[0].previewUrl}" alt="Scanned Document" style="max-height: 220px; width: 100%; object-fit: contain;">

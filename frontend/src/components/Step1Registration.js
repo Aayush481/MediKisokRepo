@@ -1,5 +1,6 @@
-// Patient registration, ABHA check-in, and live digital health card component
+// Patient registration, ABHA check-in, optical card scanner, and live digital health card component
 import { ABDM_REGISTRY, formatAbhaInput } from "../services/abhaService.js";
+import { generateQrCodeSvg } from "../services/qrGenerator.js";
 
 export function renderStep1Registration(app, i18n) {
   const patient = app.patient;
@@ -23,21 +24,36 @@ export function renderStep1Registration(app, i18n) {
  * All details were retrieved from the ABHA card - the user is NEVER asked for details.
  */
 function renderVerifiedAbhaView(app, i18n, patient, details) {
-  const name = details.name || patient.name || "Aarav Sharma";
-  const age = details.age || patient.age || 29;
-  const gender = details.gender || patient.gender || "Male";
-  const mobile = details.mobile || patient.mobile || "+91 98765 43210";
-  const abhaNumber = details.abhaNumber || patient.abhaId || "91-8274-1923-0194";
-  const abhaAddress = details.abhaAddress || (name.toLowerCase().replace(/[^a-z0-9]/g, "") + "@abdm");
-  const yob = details.yob || (2026 - (parseInt(age) || 29));
-  const dob = details.dob || `15/06/${yob}`;
-  const bloodGroup = details.bloodGroup || "O+";
-  const state = details.state || "Delhi (NCT)";
-  const district = details.district || "Central Delhi";
-  const pin = details.pin || "110001";
-  const recordsCount = details.linkedRecordsCount || 3;
+  const name = details.name || patient.name || "Verified Citizen";
+  const age = details.age || patient.age || "";
+  const gender = details.gender || patient.gender || "Not Specified";
+  const mobile = details.mobile || patient.mobile || "Not Linked";
+  const abhaNumber = details.abhaNumber || patient.abhaId || "";
+  const abhaAddress = details.abhaAddress || (name !== "Verified Citizen" ? `${name.toLowerCase().replace(/[^a-z0-9]/g, "")}@abdm` : "");
+  const yob = details.yob || (age ? 2026 - parseInt(age, 10) : "");
+  const dob = details.dob || (yob ? `01/01/${yob}` : "Not Specified");
+  const bloodGroup = details.bloodGroup || "Not Specified";
+  const state = details.state || "Not Specified";
+  const district = details.district || "Not Specified";
+  const pin = details.pin || "------";
+  const recordsCount = details.linkedRecordsCount || 0;
   const avatarInitials = details.avatarInitials || (name.split(" ").map(n => n[0]).join("") || "AB");
-  const avatarColor = details.avatarColor || "#10B981";
+  const avatarColor = details.avatarColor || (gender === "Female" ? "#EC4899" : "#10B981");
+  const photoUrl = details.photoUrl || null;
+
+  // Build authentic ABDM QR payload so the QR code can be scanned by any smartphone or 2D gun
+  const abdmQrPayload = JSON.stringify({
+    hidn: abhaNumber,
+    hid: abhaAddress,
+    name: name,
+    gender: gender === "Male" ? "M" : (gender === "Female" ? "F" : "O"),
+    dob: dob,
+    yob: yob,
+    mobile: mobile.replace(/[^0-9]/g, "").slice(-10),
+    state_name: state,
+    dist_name: district,
+    pincode: pin
+  });
 
   return `
     <div class="registration-layout-grid">
@@ -57,7 +73,7 @@ function renderVerifiedAbhaView(app, i18n, patient, details) {
               Patient Details Retrieved
             </h2>
             <p class="card-subtitle-3d" style="color: var(--green-darkest); font-weight: 600;">
-              ✓ Demographics fetched directly from Government of India ABHA Registry. Zero manual entry needed.
+              ✓ Demographics fetched directly from Government of India ABHA Registry / Card. Zero manual entry needed.
             </p>
           </div>
           <button class="btn-3d btn-3d-secondary" style="padding: 8px 14px; font-size: 0.8rem;" onclick="window.app.speakStep1Prompt()">
@@ -170,14 +186,20 @@ function renderVerifiedAbhaView(app, i18n, patient, details) {
           </div>
 
           <div class="abha-card-body">
-            <!-- Patient Photo Box with Initials / Avatar -->
-            <div class="abha-avatar-box" style="background: ${avatarColor}; color: #fff;">
-              <span style="font-size: 1.5rem; font-weight: 900; letter-spacing: 1px;">
-                ${avatarInitials}
-              </span>
-              <span class="abha-avatar-caption" style="background: rgba(0,0,0,0.3); color: #fff; margin-top: 6px;">
-                ABDM e-KYC
-              </span>
+            <!-- Patient Photo Box with Photo or Initials -->
+            <div class="abha-avatar-box" style="background: ${photoUrl ? '#0F172A' : avatarColor}; color: #fff; overflow: hidden; padding: 0;">
+              ${photoUrl ? `
+                <img src="${photoUrl}" alt="${name}" style="width: 100%; height: 100%; object-fit: cover;">
+              ` : `
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
+                  <span style="font-size: 1.5rem; font-weight: 900; letter-spacing: 1px;">
+                    ${avatarInitials}
+                  </span>
+                  <span class="abha-avatar-caption" style="background: rgba(0,0,0,0.3); color: #fff; margin-top: 6px;">
+                    ABDM e-KYC
+                  </span>
+                </div>
+              `}
             </div>
 
             <!-- Details -->
@@ -207,19 +229,16 @@ function renderVerifiedAbhaView(app, i18n, patient, details) {
             </div>
           </div>
 
-          <div class="abha-card-footer">
-            <div class="abha-footer-left">
-              <div class="abha-qr-thumb">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="3" y="3" width="7" height="7"/>
-                  <rect x="14" y="3" width="7" height="7"/>
-                  <rect x="14" y="14" width="7" height="7"/>
-                  <rect x="3" y="14" width="7" height="7"/>
-                </svg>
+          <!-- Card Footer with Real Scannable ABDM QR Code -->
+          <div class="abha-card-footer" style="padding: 12px 16px;">
+            <div class="abha-footer-left" style="gap: 14px;">
+              <div style="width: 58px; height: 58px; background: #fff; border-radius: 6px; padding: 2px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center;">
+                ${generateQrCodeSvg(abdmQrPayload, 54)}
               </div>
               <div class="abha-footer-meta">
-                <span class="abha-footer-main">Instant Health Exchange QR</span>
-                <span class="abha-footer-sec">Token: ${details.authMethod || 'UIDAI e-KYC'} • Active</span>
+                <span class="abha-footer-main" style="font-size: 0.85rem; font-weight: 700; color: #0F172A;">Instant Health Exchange QR</span>
+                <span class="abha-footer-sec" style="font-size: 0.72rem; color: #475569;">Scannable ABDM Demographic Token • Active</span>
+                <span style="font-size: 0.68rem; color: #16A34A; font-weight: 700;">● Live Verified Gateway</span>
               </div>
             </div>
             <span class="pill-3d pill-3d-emerald" style="font-size: 0.65rem;">
@@ -265,7 +284,7 @@ function renderUnverifiedIntakeView(app, i18n, patient, abhaMode, validationErro
             <h2 class="card-title-3d">${i18n.t("reg_title")}</h2>
             <p class="card-subtitle-3d">
               ${abhaMode === 'abha' 
-                ? 'Enter your 14-digit ABHA ID or scan your card for instant zero-typing e-KYC check-in.' 
+                ? 'Scan your physical/mobile ABHA card or enter your 14-digit ID for instant zero-typing e-KYC check-in.' 
                 : 'Enter your details manually for walk-in OPD registration without ABHA.'}
             </p>
           </div>
@@ -294,13 +313,57 @@ function renderUnverifiedIntakeView(app, i18n, patient, abhaMode, validationErro
         ${abhaMode === 'abha' ? `
           <!-- ABHA Intake Form -->
           <div style="display: flex; flex-direction: column; gap: 16px; margin-top: 1.2rem;">
+            
+            <!-- Real Optical Card Scanning Tiles -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <!-- Action 1: Camera Optical Scanner -->
+              <div class="sync-action-tile" style="margin: 0; padding: 14px;" onclick="window.app.openAbhaCameraScanner()">
+                <div class="sync-action-icon" style="background: var(--green-subtle); border-color: var(--green-border);">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.2">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                    <circle cx="12" cy="13" r="4"/>
+                  </svg>
+                </div>
+                <div class="sync-action-content">
+                  <strong class="sync-action-title">Live Camera Scanner</strong>
+                  <span class="sync-action-desc">Point physical card or mobile QR to kiosk camera</span>
+                </div>
+                <span class="sync-action-arrow">📷</span>
+              </div>
+
+              <!-- Action 2: Upload Card File / Photo -->
+              <div class="sync-action-tile" style="margin: 0; padding: 14px;" onclick="document.getElementById('abhaCardFileInput').click()">
+                <div class="sync-action-icon" style="background: #EFF6FF; border-color: #BFDBFE;">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                  </svg>
+                </div>
+                <div class="sync-action-content">
+                  <strong class="sync-action-title">Upload ABHA Card</strong>
+                  <span class="sync-action-desc">Photo, screenshot, or PDF of your ABHA card</span>
+                </div>
+                <span class="sync-action-arrow">📁</span>
+              </div>
+            </div>
+
+            <!-- Hidden File Input for Card Upload -->
+            <input 
+              type="file" 
+              id="abhaCardFileInput" 
+              accept="image/*,application/pdf" 
+              style="display: none;" 
+              onchange="window.app.handleAbhaCardUpload(event)"
+            >
+
             <!-- 14-Digit ABHA Input -->
-            <div>
+            <div style="background: #F8FAFC; border: 1px solid var(--grey-300); border-radius: 8px; padding: 14px 16px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                 <label class="input-label-3d" style="margin-bottom: 0;">
                   <span style="display: inline-flex; align-items: center; gap: 6px;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" stroke-width="2.2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                    Enter 14-Digit ABHA ID or PHR Address
+                    Or Enter 14-Digit ABHA ID / PHR Address
                   </span>
                 </label>
                 <span id="abhaDigitsCounter" style="font-size: 0.68rem; font-family: var(--font-mono); color: var(--grey-500);">
@@ -349,48 +412,9 @@ function renderUnverifiedIntakeView(app, i18n, patient, abhaMode, validationErro
               ` : `
                 <span class="input-hint-3d" style="display: flex; align-items: center; gap: 6px; margin-top: 6px;">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-                  Once verified, your Name, Age, Gender, and Mobile will be fetched automatically.
+                  Scanning card or verifying ID fetches genuine demographics directly into your medical intake.
                 </span>
               `}
-            </div>
-
-            <!-- Alternative 1: Optical QR Scan Card -->
-            <div class="sync-action-tile" style="margin-top: 4px;" onclick="window.app.simulateAbhaQrScan()">
-              <div class="sync-action-icon" style="background: var(--green-subtle); border-color: var(--green-border);">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-              </div>
-              <div class="sync-action-content">
-                <strong class="sync-action-title">Scan Physical / Mobile ABHA QR Code</strong>
-                <span class="sync-action-desc">Point your physical card or Ayushman Bharat App QR to the scanner</span>
-              </div>
-              <span class="sync-action-arrow">📷</span>
-            </div>
-
-            <!-- Alternative 2: 1-Click Demo ABDM Sandbox Accounts -->
-            <div style="background: #FAFAFA; border: 1px dashed var(--grey-300); border-radius: 8px; padding: 12px 14px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <span style="font-size: 0.7rem; font-weight: 800; font-family: var(--font-mono); color: var(--grey-700); text-transform: uppercase;">
-                  ⚡ Quick Demo Tokens (1-Click Test)
-                </span>
-                <span class="pill-3d pill-3d-blue" style="font-size: 0.6rem;">NHA Sandbox</span>
-              </div>
-              <div style="display: flex; flex-wrap: wrap; gap: 6px;">
-                <button type="button" class="abha-token-chip" onclick="window.app.verifyAbhaRecord('91-8274-1923-0194')">
-                  🪪 Aarav Sharma (29, M)
-                </button>
-                <button type="button" class="abha-token-chip" onclick="window.app.verifyAbhaRecord('91-7210-4491-8023')">
-                  🪪 Sunita Sharma (36, F)
-                </button>
-                <button type="button" class="abha-token-chip" onclick="window.app.verifyAbhaRecord('91-4820-9182-3741')">
-                  🪪 Ramesh Kumar (48, M)
-                </button>
-                <button type="button" class="abha-token-chip" onclick="window.app.verifyAbhaRecord('91-3829-1029-4481')">
-                  🪪 Vikram Aditya (41, M)
-                </button>
-                <button type="button" class="abha-token-chip abha-token-invalid" onclick="window.app.verifyAbhaRecord('12345')">
-                  ❌ Test Invalid ID (12345)
-                </button>
-              </div>
             </div>
 
             <!-- DPDP Act Notice -->
@@ -488,7 +512,7 @@ function renderUnverifiedIntakeView(app, i18n, patient, abhaMode, validationErro
               <div>
                 <strong style="font-size: 0.78rem; color: var(--text-primary); display: block;">Zero Manual Typing (e-KYC)</strong>
                 <span style="font-size: 0.7rem; color: var(--text-muted); line-height: 1.35; display: block;">
-                  Name, age, gender, and contact details are fetched instantly from your ABHA record.
+                  Name, age, gender, and contact details are fetched instantly from your ABHA record or card scan.
                 </span>
               </div>
             </div>

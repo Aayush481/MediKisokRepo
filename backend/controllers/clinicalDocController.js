@@ -738,7 +738,7 @@ Evaluate this patient's clinical presentation:
 
 TASK:
 1. Is this condition NORMAL/MILD and safe for home remedies (e.g. mild common cold, mild tension headache, mild acidity/gas, mild muscle soreness, minor throat tickle with severity <= 4)?
-2. If YES (isHomeRemedyEligible: true): Provide 3 specific, verified home remedies (herbal teas, warm gargles, cold milk, rest), lifestyle advice, and red flag warnings for when to see a doctor. Also suggest the backup doctor specialty if they still want a consultation.
+2. If YES (isHomeRemedyEligible: true): NO doctor consultation is required. Set "assignedDoctorKey": null and "recommendedAction": "HOME_CARE_ONLY". Provide 3 specific, verified home remedies (herbal teas, warm gargles, cold milk, rest), lifestyle advice, and red flag warnings for when to see a doctor.
 3. If NO (isHomeRemedyEligible: false): State why doctor consultation is required (e.g. suspected fracture, persistent high fever, chest pain, uncontrolled diabetes, abdominal colic) and assign the appropriate hospital doctor specialty from:
    - Cardiology (Dr. V. K. Malhotra, OPD Cabin 4)
    - Orthopedics (Dr. B. Sen, OPD Cabin 2)
@@ -757,14 +757,14 @@ Return strictly valid JSON in this exact structure:
   "isHomeRemedyEligible": boolean,
   "conditionTitle": "string",
   "rationale": "string",
-  "recommendedAction": "HOME_CARE" | "DOCUMENT_UPLOAD_AND_DOCTOR_CONSULT",
+  "recommendedAction": "HOME_CARE_ONLY" | "DOCUMENT_UPLOAD_AND_DOCTOR_CONSULT",
   "homeRemedies": [
     { "name": "...", "instruction": "...", "mechanism": "..." }
   ],
   "lifestyleTips": ["..."],
   "whenToSeeDoctor": "...",
   "assignedSpecialty": "...",
-  "assignedDoctorKey": "cardiology" | "orthopedics" | "pulmonology" | "gastroenterology" | "neurology" | "ent" | "endocrinology" | "nephrology_urology" | "general" | "ayush"
+  "assignedDoctorKey": "cardiology" | "orthopedics" | "pulmonology" | "gastroenterology" | "neurology" | "ent" | "endocrinology" | "nephrology_urology" | "general" | "ayush" | null
 }`;
 
             const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${candidateModel}:generateContent?key=${GEMINI_API_KEY}`;
@@ -783,31 +783,32 @@ Return strictly valid JSON in this exact structure:
               const genText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
               if (genText) {
                 const parsed = JSON.parse(genText);
-                const docKey = parsed.assignedDoctorKey || "general";
-                const baseDoc = HOSPITAL_DOCTORS?.[docKey] || clinicalTriageService.matchDoctor(chiefComplaint);
+                const isHomeCare = Boolean(parsed.isHomeRemedyEligible);
+                const docKey = isHomeCare ? null : (parsed.assignedDoctorKey || "general");
+                const baseDoc = docKey ? (HOSPITAL_DOCTORS?.[docKey] || clinicalTriageService.matchDoctor(chiefComplaint)) : null;
 
                 return res.json({
                   status: "success",
                   source: "gemini_ai",
                   triageResult: {
-                    severity: parsed.severity || "MODERATE",
-                    isHomeRemedyEligible: Boolean(parsed.isHomeRemedyEligible),
-                    recommendedAction: parsed.recommendedAction || (parsed.isHomeRemedyEligible ? "HOME_CARE" : "DOCUMENT_UPLOAD_AND_DOCTOR_CONSULT"),
-                    conditionKey: parsed.isHomeRemedyEligible ? "ai_home_care" : "clinical_consult",
+                    severity: parsed.severity || (isHomeCare ? "MILD" : "MODERATE"),
+                    isHomeRemedyEligible: isHomeCare,
+                    recommendedAction: isHomeCare ? "HOME_CARE_ONLY" : (parsed.recommendedAction || "DOCUMENT_UPLOAD_AND_DOCTOR_CONSULT"),
+                    conditionKey: isHomeCare ? "ai_home_care" : "clinical_consult",
                     rationale: parsed.rationale || "AI Clinical Assessment completed.",
-                    triageBadge: parsed.isHomeRemedyEligible ? "MILD / HOME REMEDY ELIGIBLE" : "CLINICAL CONSULTATION REQUIRED",
-                    badgeColor: parsed.isHomeRemedyEligible ? "pill-3d-emerald" : "pill-3d-blue",
-                    homeRemedyPlan: parsed.isHomeRemedyEligible ? {
+                    triageBadge: isHomeCare ? "MILD / HOME REMEDY PROTOCOL (NO OPD VISIT NEEDED)" : "CLINICAL CONSULTATION REQUIRED",
+                    badgeColor: isHomeCare ? "pill-3d-emerald" : "pill-3d-blue",
+                    homeRemedyPlan: isHomeCare ? {
                       title: parsed.conditionTitle || "Self-Care Guidance",
                       conditionSummary: parsed.rationale,
                       remedies: parsed.homeRemedies || [],
                       lifestyleTips: parsed.lifestyleTips || [],
                       whenToSeeDoctor: parsed.whenToSeeDoctor || "If symptoms persist beyond 48 hours."
                     } : null,
-                    assignedDoctor: {
+                    assignedDoctor: isHomeCare ? null : (baseDoc ? {
                       ...baseDoc,
                       rationale: parsed.rationale || `Assigned ${baseDoc.specialty}`
-                    }
+                    } : null)
                   }
                 });
               }

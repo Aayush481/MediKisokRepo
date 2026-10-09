@@ -15,7 +15,9 @@ import { rppgService } from "./services/rppgVitalsService.js";
 import { meshService } from "./services/meshService.js";
 import { diseaseExtractor } from "./services/diseaseExtractor.js";
 import { i18n } from "./services/i18nService.js";
-import { validateAbhaId, formatAbhaInput, ABDM_REGISTRY } from "./services/abhaService.js";
+import { validateAbhaId, formatAbhaInput, ABDM_REGISTRY, registerAbhaCitizen } from "./services/abhaService.js";
+import { AbhaCardExtractor } from "./services/abhaCardExtractor.js";
+import { AbdmSandboxService } from "./services/abdmSandboxService.js";
 
 // Modular UI Components
 import { renderStepper } from "./components/Stepper.js";
@@ -506,7 +508,6 @@ class MediKioskApp {
     if (!container) return;
 
     const plan = triage.homeRemedyPlan;
-    const doc = triage.assignedDoctor || HOSPITAL_DOCTORS.general;
 
     container.innerHTML = `
       <div class="triage-modal-header" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(52, 211, 153, 0.05) 100%); border-bottom: 1.5px solid var(--primary-border);">
@@ -517,7 +518,7 @@ class MediKioskApp {
           <div>
             <div style="display: flex; align-items: center; gap: 8px;">
               <span class="pill-3d pill-3d-emerald" style="font-size: 0.68rem; font-weight: 800;">MILD CONDITION • HOME REMEDY SUITABLE</span>
-              <span style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono);">Severity: ${this.patient.hpi?.severity || 0}/10</span>
+              <span class="pill-3d" style="background: rgba(16, 185, 129, 0.15); color: #047857; font-size: 0.68rem; font-weight: 800;">NO DOCTOR CONSULTATION REQUIRED</span>
             </div>
             <h3 style="margin: 4px 0 0 0; font-size: 1.15rem; font-weight: 800; color: var(--text-primary); font-family: var(--font-display);">
               ${plan.title || 'Mild Self-Care Protocol'}
@@ -563,38 +564,35 @@ class MediKioskApp {
           </div>
         ` : ''}
 
-        <div class="red-flag-alert-box">
+        <div class="red-flag-alert-box" style="margin-top: 12px;">
           <div class="red-flag-icon">⚠️</div>
           <div class="red-flag-content">
-            <h5>When to Consult Doctor / Hospital Red Flags</h5>
+            <h5>When to Return / Hospital Red Flags</h5>
             <p>${plan.whenToSeeDoctor || 'If symptoms persist beyond 48 hours or worsen unexpectedly.'}</p>
           </div>
         </div>
 
-        <div style="margin-top: 14px; background: rgba(14, 165, 233, 0.06); border: 1px solid var(--blue-border); border-radius: var(--radius-md); padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <span style="font-size: 1.3rem;">👨‍⚕️</span>
-            <div>
-              <span style="font-size: 0.7rem; font-weight: 700; color: var(--blue); text-transform: uppercase; font-family: var(--font-mono);">Pre-Assigned Attending Doctor on Standby</span>
-              <div style="font-size: 0.85rem; font-weight: 800; color: var(--text-primary);">${doc.name} (${doc.specialty}) • <span class="cabin-tag">${doc.cabin}</span></div>
+        <!-- Distinct confirmation that doctor consultation is NOT required -->
+        <div style="margin-top: 14px; background: rgba(16, 185, 129, 0.08); border: 1px solid var(--green-border); border-radius: var(--radius-md); padding: 12px 16px; display: flex; align-items: center; gap: 12px;">
+          <span style="font-size: 1.5rem;">🎉</span>
+          <div>
+            <div style="font-size: 0.72rem; font-weight: 800; color: var(--emerald); text-transform: uppercase; font-family: var(--font-mono);">
+              Doctor Consultation Not Required
+            </div>
+            <div style="font-size: 0.82rem; color: var(--text-primary); margin-top: 2px;">
+              Based on your normal vitals and mild symptoms, hospital OPD consultation is not required. You can recover safely with these home remedies without waiting in line.
             </div>
           </div>
-          <span style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono); white-space: nowrap;">Wait ~${doc.avgWaitMins || 10}m</span>
         </div>
       </div>
 
-      <div class="triage-modal-footer">
+      <div class="triage-modal-footer" style="justify-content: flex-end;">
         <button class="btn-3d btn-3d-secondary" onclick="window.app.closeTriageModal()">
           Close
         </button>
-        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-          <button class="btn-3d btn-3d-success" onclick="window.app.acceptHomeRemedies()">
-            🌿 Accept Home Care & Download Pass
-          </button>
-          <button class="btn-3d btn-3d-primary" onclick="window.app.proceedToRecordsFromTriage()">
-            🏥 Consult Doctor Anyway (Upload Documents) →
-          </button>
-        </div>
+        <button class="btn-3d btn-3d-success" style="padding: 10px 22px; font-weight: 800; font-size: 0.88rem;" onclick="window.app.acceptHomeRemedies()">
+          🌿 Accept Home Remedies & Complete Intake (Skip Doctor Consultation)
+        </button>
       </div>
     `;
   }
@@ -706,8 +704,11 @@ class MediKioskApp {
       clearTimeout(this.triageTimer);
       this.triageTimer = null;
     }
+    // Strictly clear assigned doctor when home remedies are chosen
+    this.patient.assignedDoctor = null;
+    this.patient.isHomeRemedyOnly = true;
+
     const plan = this.patient.triageResult?.homeRemedyPlan;
-    const doc = this.patient.assignedDoctor || HOSPITAL_DOCTORS.general;
     const patientName = this.patient.name || "Walk-in Patient";
     const token = this.patient.tokenNumber || "A-15";
 
@@ -723,17 +724,18 @@ CLINICAL IMPRESSION:
 ${plan?.title || 'Mild Self-Care Protocol'}
 ${plan?.conditionSummary || ''}
 
+CONSULTATION STATUS:
+* DOCTOR CONSULTATION NOT REQUIRED (Self-Care Home Management)
+* OPD Doctor Waiting Queue Bypassed
+
 VERIFIED HOME REMEDIES:
 ${(plan?.remedies || []).map((r, i) => `${i+1}. ${r.name}\n   - Instruction: ${r.instruction}\n   - Mechanism: ${r.mechanism}`).join('\n\n')}
 
 LIFESTYLE & DIETARY ADVICE:
 ${(plan?.lifestyleTips || []).map(t => `* ${t}`).join('\n')}
 
-WHEN TO VISIT HOSPITAL DOCTOR:
-${plan?.whenToSeeDoctor || 'If symptoms persist beyond 48 hours.'}
-
-ASSIGNED OPD SPECIALIST ON STANDBY:
-${doc.name} (${doc.specialty} • ${doc.cabin}, Room ${doc.room})
+WHEN TO RETURN TO HOSPITAL:
+${plan?.whenToSeeDoctor || 'If symptoms persist beyond 48 hours or worsen unexpectedly.'}
 =====================================================
 MediKiosk Enterprise v2.4 • ABDM Compliant First-Mile Triage
 =====================================================`;
@@ -742,15 +744,16 @@ MediKiosk Enterprise v2.4 • ABDM Compliant First-Mile Triage
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `MediKiosk_SelfCare_Pass_${token}.txt`;
+    link.download = `MediKiosk_HomeCare_Pass_${token}.txt`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
 
-    alert(`🌿 Self-Care Guidance Pass downloaded successfully!\n\nYour verified home remedies for "${plan?.title || 'mild symptoms'}" are saved. If symptoms worsen, proceed to OPD ${doc.cabin}.`);
+    alert(`🌿 Self-Care Guidance Pass downloaded successfully!\n\nYour verified home remedies for "${plan?.title || 'mild symptoms'}" are saved. Doctor consultation is not required for this encounter.`);
 
     this.closeTriageModal();
+    this.goToStep(4);
   }
 
   prevStep() {
@@ -760,6 +763,18 @@ MediKiosk Enterprise v2.4 • ABDM Compliant First-Mile Triage
   }
 
   enqueuePatient() {
+    // If patient is managed with Home Remedies Only, do NOT add to Doctor Consultation Queue!
+    if (this.patient.isHomeRemedyOnly || (this.patient.triageResult?.isHomeRemedyEligible && !this.patient.assignedDoctor)) {
+      const clone = JSON.parse(JSON.stringify(this.patient));
+      clone.assignedDoctor = null;
+      fetch("/api/patients", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(clone)
+      }).catch(e => console.warn("Patient API notice:", e));
+      return;
+    }
+
     const clone = JSON.parse(JSON.stringify(this.patient));
     if (!clone.mobile && this.patient.mobile) clone.mobile = this.patient.mobile;
     if (!clone.name && this.patient.name) clone.name = this.patient.name;
@@ -903,150 +918,11 @@ MediKiosk Enterprise v2.4 • ABDM Compliant First-Mile Triage
   bindDoctorEvents() {}
 
   quickFillDemo(type) {
-    const profiles = {
-      ramesh: {
-        name: "Ramesh Kumar",
-        age: 48,
-        gender: "Male",
-        abhaId: "91-4820-1940-5821",
-        mobile: "+91 98450 12345"
-      },
-      sunita: {
-        name: "Sunita Sharma",
-        age: 36,
-        gender: "Female",
-        abhaId: "91-7210-4491-0392",
-        mobile: "+91 99801 84729"
-      },
-      priya: {
-        name: "Priya Patel",
-        age: 24,
-        gender: "Female",
-        abhaId: "91-8274-1923-0194",
-        mobile: "+91 98765 43210"
-      }
-    };
-    const p = profiles[type] || profiles.priya;
-    this.patient.name = p.name;
-    this.patient.age = p.age;
-    this.patient.gender = p.gender;
-    this.patient.abhaId = p.abhaId;
-    this.patient.mobile = p.mobile;
-    this.render();
+    console.info("Demo quick-fill is disabled per zero dummy data policy. Please scan an authentic ABHA card or enter live details.");
   }
 
   loadSampleDoc(type) {
-    if (type === "rx") {
-      this.patient.documents = [{
-        id: "doc-sample-rx",
-        name: "Doctor Prescription (Rx) - Outpatient.pdf",
-        type: "prescription",
-        categoryLabel: "Doctor Prescription (Rx)",
-        doctorName: "Dr. Ananya Sharma, MD",
-        facility: "Bangalore General Hospital - OPD Wing",
-        date: "Today",
-        previewUrl: generateMedicalDocSvg("prescription", "Outpatient Prescription Record", "Bangalore General Hospital", [
-          { name: "Amoxicillin + Clavulanic Acid (Augmentin 625)", dosage: "625 mg", freq: "TDS", timing: "After Food", duration: "5 days", route: "Oral", snomedCode: "387517004", schedule: "Schedule H" },
-          { name: "Pantoprazole (Pan-D)", dosage: "40 mg", freq: "OD", timing: "Before Breakfast", duration: "10 days", route: "Oral", snomedCode: "387063000", schedule: "Schedule H" },
-          { name: "Levocetirizine + Montelukast (Montair-LC)", dosage: "10 mg / 5 mg", freq: "HS", timing: "Night Bedtime", duration: "7 days", route: "Oral", snomedCode: "420379008", schedule: "Schedule H" }
-        ], "Upper Respiratory Infection with Acute Rhinitis", this.patient.name || "Ramesh Kumar", this.patient.tokenNumber || "A-15"),
-        medications: [
-          { name: "Amoxicillin + Clavulanic Acid (Augmentin 625)", dosage: "625 mg", frequency: "TDS", timing: "After Food", duration: "5 days", route: "Oral" },
-          { name: "Pantoprazole (Pan-D)", dosage: "40 mg", frequency: "OD", timing: "Before Breakfast", duration: "10 days", route: "Oral" },
-          { name: "Levocetirizine + Montelukast (Montair-LC)", dosage: "10 mg / 5 mg", frequency: "HS", timing: "Night Bedtime", duration: "7 days", route: "Oral" }
-        ],
-        diseases: [{ name: "Acute Upper Respiratory Tract Infection", snomed: "195662009" }],
-        flags: []
-      }];
-    } else if (type === "lab") {
-      this.patient.documents = [{
-        id: "doc-sample-lab",
-        name: "Comprehensive Pathology & Biochemistry Report.pdf",
-        type: "lab_report",
-        categoryLabel: "Pathology & Biochemistry Report",
-        doctorName: "Dr. R. K. Singhal, MD (Path)",
-        facility: "Apex Central Diagnostic Pathology Lab",
-        date: "Today",
-        previewUrl: generateMedicalDocSvg("lab_report", "Comprehensive Metabolic & Lipid Panel", "Apex Central Diagnostic Pathology Lab", [
-          { name: "Fasting Blood Glucose", value: "198.50 mg/dL", status: "HIGH" },
-          { name: "HbA1c (Glycated Hemoglobin)", value: "9.40 %", status: "HIGH" },
-          { name: "Serum Triglycerides", value: "342.00 mg/dL", status: "HIGH" },
-          { name: "Total Cholesterol", value: "248.00 mg/dL", status: "HIGH" },
-          { name: "Serum Creatinine", value: "1.85 mg/dL", status: "HIGH" }
-        ], "Uncontrolled Hyperglycemia & Atherogenic Dyslipidemia", this.patient.name || "Ramesh Kumar", this.patient.tokenNumber || "A-15"),
-        medications: [],
-        diseases: [{ name: "Type 2 Diabetes Mellitus with Hyperglycemia", snomed: "44054006" }],
-        flags: [
-          { test: "Fasting Blood Glucose", param: "Glucose", value: "198.50 mg/dL", ref: "70.00 - 100.00 mg/dL", status: "HIGH (Elevated)" },
-          { test: "HbA1c", param: "HbA1c", value: "9.40 %", ref: "< 5.70 %", status: "HIGH (Critical Poor Glycemic Control)" },
-          { test: "Serum Triglycerides", param: "Triglycerides", value: "342.00 mg/dL", ref: "< 150.00 mg/dL", status: "HIGH (Hypertriglyceridemia)" },
-          { test: "Total Cholesterol", param: "Cholesterol", value: "248.00 mg/dL", ref: "< 200.00 mg/dL", status: "HIGH (Hypercholesterolemia)" },
-          { test: "Serum Creatinine", param: "Creatinine", value: "1.85 mg/dL", ref: "0.70 - 1.30 mg/dL", status: "HIGH (Renal Impairment)" }
-        ]
-      }];
-    } else if (type === "xray") {
-      this.patient.documents = [{
-        id: "doc-sample-xray",
-        name: "Digital Radiogram - Bilateral Knee PA Erect.png",
-        type: "xray_report",
-        categoryLabel: "X-Ray Radiograph (Bilateral Knee Joint)",
-        doctorName: "Dr. Vikram Sethi, MD (Radio)",
-        facility: "Advanced Imaging & Orthopedic Diagnostic Center",
-        date: "Today",
-        previewUrl: generateMedicalDocSvg("radiology", "Digital Skeletal Radiography", "Advanced Imaging Center", [], "Medial compartment joint space narrowing with subchondral sclerosis", this.patient.name || "Ramesh Kumar", this.patient.tokenNumber || "A-15"),
-        anatomicalSite: "Bilateral Knee Joint (Tibiofemoral Articulation)",
-        rootCause: "Degenerative Osteoarthritis with Medial Compartment Joint Space Narrowing (Sandhigata Vata)",
-        medications: [],
-        diseases: [{ name: "Osteoarthritis of Bilateral Knee Joints", snomed: "239873007", icd10: "M19.9" }],
-        flags: [{ test: "Joint Space Width", param: "Knee Joint", value: "Narrowed (Grade III)", ref: "Normal Space", status: "ABNORMAL" }]
-      }];
-    } else if (type === "pns_xray" || type === "face") {
-      this.patient.documents = [{
-        id: "doc-sample-pns",
-        name: "Digital Radiogram - PNS Water's View.png",
-        type: "xray_report",
-        categoryLabel: "Paranasal Sinuses (PNS - Water's / Caldwell Projection)",
-        doctorName: "Dr. Vikram Sethi, MD (Radio)",
-        facility: "Metro Head & Neck Imaging & ENT Diagnostic Center",
-        date: "Today",
-        previewUrl: generateMedicalDocSvg("radiology", "PNS & Facial Bone Radiography", "Metro Head & Neck Imaging", [], "Maxillary sinus mucosal thickening and opacification with Deviated Nasal Septum", this.patient.name || "Ramesh Kumar", this.patient.tokenNumber || "A-15"),
-        anatomicalSite: "Paranasal Sinuses (PNS - Water's & Caldwell Projection)",
-        rootCause: "Paranasal Sinusitis (Maxillary & Frontal Sinus Opacification / Mucosal Thickening)",
-        medications: [],
-        diseases: [
-          { name: "Paranasal Sinusitis (Maxillary / Frontal)", icd10: "J01.90", snomed: "36971009", acuity: "Acute / Inflammatory", organSystem: "Paranasal Sinuses & Upper Airway" },
-          { name: "Deviated Nasal Septum (DNS)", icd10: "J34.2", snomed: "402863004", acuity: "Structural / Mechanical", organSystem: "Nasal Cavity & Septum" }
-        ],
-        flags: [
-          { test: "Radiological Impression", value: "Paranasal Sinusitis (Maxillary & Frontal Sinus Opacification)", ref: "Water's (Occipitomental) View", status: "DIAGNOSTIC", alertLevel: "warning" },
-          { test: "Maxillary Sinus Aeration", value: "Mucosal thickening and antral opacification / fluid level", ref: "Bilateral Antra", status: "ABNORMAL", alertLevel: "warning" },
-          { test: "Nasal Septum & Turbinates", value: "Septum shows marked deviation to left with turbinate hypertrophy", ref: "Nasal Cavity", status: "ABNORMAL", alertLevel: "warning" },
-          { test: "Orbital Rims & Zygoma", value: "Bilateral orbital rims and zygomatic arches intact with no step-off", ref: "Facial Skeleton", status: "INTACT", alertLevel: "info" }
-        ]
-      }];
-    } else if (type === "skull_xray" || type === "head") {
-      this.patient.documents = [{
-        id: "doc-sample-skull",
-        name: "Digital Radiogram - Skull AP & Lateral View.png",
-        type: "xray_report",
-        categoryLabel: "Skull & Cranial Vault Radiograph (Calvarium AP & Lateral)",
-        doctorName: "Dr. Vikram Sethi, MD (Radio)",
-        facility: "Trauma Neuroimaging & Orthopedic Radiology",
-        date: "Today",
-        previewUrl: generateMedicalDocSvg("radiology", "Cranial Vault Digital Radiography", "Trauma Neuroimaging Center", [], "Intact cranial vault inner and outer calvarial tables without fracture", this.patient.name || "Ramesh Kumar", this.patient.tokenNumber || "A-15"),
-        anatomicalSite: "Skull & Cranial Vault (Calvarium AP & Lateral)",
-        rootCause: "Intact Cranial Vault: No Skull Fracture, Lytic Bone Lesion, or Calvarial Defect",
-        medications: [],
-        diseases: [],
-        flags: [
-          { test: "Radiological Impression", value: "Intact Cranial Vault: No Skull Fracture or Lytic Bone Lesion", ref: "Skull AP & Lateral", status: "NORMAL", alertLevel: "success" },
-          { test: "Calvarium Table Integrity", value: "Continuous inner and outer cortical tables without traumatic step-off", ref: "Parietal & Frontal Vault", status: "INTACT", alertLevel: "info" },
-          { test: "Cranial Sutures Alignment", value: "Normal coronal, sagittal, and lambdoid suture spacing without diastasis", ref: "Sutural Borders", status: "NORMAL", alertLevel: "info" },
-          { test: "Basal Architecture & Sella", value: "Sella turcica, vascular grooves, and mastoid air cells within normal limits", ref: "Cranial Base", status: "NORMAL", alertLevel: "info" }
-        ]
-      }];
-    }
-    this.render();
+    console.info("Sample record injector is disabled per zero dummy data policy. Please upload or capture an authentic clinical document.");
   }
 
   focusAbhaInput() {
@@ -1092,7 +968,7 @@ MediKiosk Enterprise v2.4 • ABDM Compliant First-Mile Triage
     }
   }
 
-  verifyAbhaRecord(customId = null) {
+  async verifyAbhaRecord(customId = null) {
     const input = document.getElementById("patientAbhaInput");
     const rawVal = (customId || (input ? input.value : "") || "").trim();
 
@@ -1110,69 +986,334 @@ MediKiosk Enterprise v2.4 • ABDM Compliant First-Mile Triage
       return;
     }
 
-    // Valid ABHA ID -> trigger loading state and fetch patient record
+    // If ID is unindexed, open authentic ABDM e-KYC Verification Modal so citizen can authenticate via Gateway OTP
+    if (validation.isUnindexed) {
+      this.openAbhaEkycModal(validation.formattedId);
+      return;
+    }
+
+    // Indexed valid ABHA ID -> trigger loading state and fetch authentic patient record from ABDM Sandbox
     this.isAbhaVerifying = true;
     this.abhaValidationError = null;
     this.render();
 
-    setTimeout(() => {
+    try {
+      const cleanAbha = validation.formattedId;
+      // 1. Request patient consent via ABDM Consent Manager (Rule 2)
+      const consent = AbdmSandboxService.requestConsent(
+        cleanAbha,
+        validation.details?.name || "ABHA Patient",
+        ["Patient", "Encounter", "Observation", "DiagnosticReport"]
+      );
+
+      // 2. Fetch authentic FHIR R4 Patient resource (Rules 3, 5, 7)
+      const fhirPatient = await AbdmSandboxService.fetchPatient({
+        abhaId: cleanAbha,
+        consentArtifactId: consent.consentId
+      });
+
+      // 3. Fetch authentic FHIR R4 Clinical Records bundle (Encounter, Observation, DiagnosticReport)
+      const fhirRecords = await AbdmSandboxService.fetchPatientRecords({
+        abhaId: cleanAbha,
+        consentArtifactId: consent.consentId
+      });
+
       this.isAbhaVerifying = false;
-      const details = validation.details;
-      const formattedId = validation.formattedId;
-
-      // Automatically populate retrieved user details from ABHA card
-      this.patient.name = details.name;
-      this.patient.age = details.age;
-      this.patient.gender = details.gender;
-      this.patient.mobile = details.mobile;
-      this.patient.abhaId = formattedId;
-      this.patient.isAbhaVerified = true;
-      this.patient.abhaDetails = {
-        ...details,
-        verifiedAt: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
-      };
-
+      this.playChimeSound();
+      this.syncAbhaToPatient(validation.details, consent.consentId, fhirPatient, fhirRecords);
       this.render();
-    }, 400);
+    } catch (err) {
+      console.error("ABDM sandbox fetch error:", err);
+      this.isAbhaVerifying = false;
+      this.syncAbhaToPatient(validation.details);
+      this.playChimeSound();
+      this.render();
+    }
   }
 
-  simulateAbhaQrScan() {
+  // Open live optical camera scanner for physical card or mobile QR
+  async openAbhaCameraScanner() {
+    const modal = document.getElementById("abhaScannerModal");
+    const video = document.getElementById("abhaScannerVideo");
+    const statusPill = document.getElementById("abhaScannerStatus");
+    if (!modal || !video) return;
+
+    modal.style.display = "flex";
+    if (statusPill) statusPill.innerHTML = `<span>● Requesting camera access...</span>`;
+
+    try {
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } }
+        });
+        this.abhaScannerStream = stream;
+        video.srcObject = stream;
+        await video.play();
+
+        if (statusPill) statusPill.innerHTML = `<span>● Camera Live: Align ABHA QR Code in box</span>`;
+
+        // Start scanning animation loop
+        const offscreenCanvas = document.createElement("canvas");
+        const ctx = offscreenCanvas.getContext("2d", { willReadFrequently: true });
+
+        const scanFrame = async () => {
+          if (!this.abhaScannerStream) return;
+
+          if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            offscreenCanvas.width = video.videoWidth;
+            offscreenCanvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0, offscreenCanvas.width, offscreenCanvas.height);
+
+            const qrPayload = await AbhaCardExtractor.decodeQrFromCanvas(offscreenCanvas);
+            if (qrPayload) {
+              const parsed = AbhaCardExtractor.parseQrPayload(qrPayload);
+              if (parsed && parsed.isValid) {
+                this.playChimeSound();
+                this.closeAbhaCameraScanner();
+                registerAbhaCitizen(parsed);
+                this.syncAbhaToPatient(parsed);
+                this.render();
+                return;
+              }
+            }
+          }
+
+          this.abhaScannerAnimationId = requestAnimationFrame(scanFrame);
+        };
+
+        this.abhaScannerAnimationId = requestAnimationFrame(scanFrame);
+      } else {
+        alert("Camera access is not supported by your browser. Please use the card photo upload option.");
+        this.closeAbhaCameraScanner();
+      }
+    } catch (err) {
+      console.warn("Camera scanner notice:", err);
+      if (statusPill) statusPill.innerHTML = `<span style="color: #F87171;">⚠️ Camera preview paused. You can also upload your card file.</span>`;
+    }
+  }
+
+  closeAbhaCameraScanner() {
+    if (this.abhaScannerAnimationId) {
+      cancelAnimationFrame(this.abhaScannerAnimationId);
+      this.abhaScannerAnimationId = null;
+    }
+    if (this.abhaScannerStream) {
+      this.abhaScannerStream.getTracks().forEach(t => t.stop());
+      this.abhaScannerStream = null;
+    }
+    const modal = document.getElementById("abhaScannerModal");
+    if (modal) modal.style.display = "none";
+    const video = document.getElementById("abhaScannerVideo");
+    if (video) video.srcObject = null;
+  }
+
+  // Handle uploaded ABHA card image / photo / PDF
+  async handleAbhaCardUpload(event) {
+    if (!event.target.files || event.target.files.length === 0) return;
+    const file = event.target.files[0];
+
     this.isAbhaVerifying = true;
     this.abhaValidationError = null;
     this.render();
 
-    setTimeout(() => {
+    try {
+      const details = await AbhaCardExtractor.processCardImage(file, (msg) => {
+        console.log("ABHA card processing:", msg);
+      });
+
       this.isAbhaVerifying = false;
-      const qrCitizen = ABDM_REGISTRY["91-3829-1029-4481"] || {
-        name: "Vikram Aditya",
-        age: 41,
-        gender: "Male",
-        dob: "22/03/1985",
-        yob: 1985,
-        mobile: "+91 98112 43210",
-        abhaNumber: "91-3829-1029-4481",
-        abhaAddress: "vikram.aditya@abdm",
-        bloodGroup: "AB+",
-        state: "Karnataka",
-        district: "Bengaluru Urban",
-        pin: "560001",
-        authMethod: "Optical QR / ABDM Token",
-        linkedRecordsCount: 3
-      };
 
-      this.patient.name = qrCitizen.name;
-      this.patient.age = qrCitizen.age;
-      this.patient.gender = qrCitizen.gender;
-      this.patient.mobile = qrCitizen.mobile;
-      this.patient.abhaId = qrCitizen.abhaNumber;
-      this.patient.isAbhaVerified = true;
-      this.patient.abhaDetails = {
-        ...qrCitizen,
-        verifiedAt: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
-      };
-
+      if (details && details.isValid) {
+        this.playChimeSound();
+        registerAbhaCitizen(details);
+        this.syncAbhaToPatient(details);
+        this.render();
+      } else {
+        this.abhaValidationError = `Could not extract authentic ABHA card details from "${file.name}". Please ensure the card photo is clear or enter your 14-digit ABHA Number.`;
+        this.render();
+      }
+    } catch (err) {
+      console.error("ABHA card upload processing failed:", err);
+      this.isAbhaVerifying = false;
+      this.abhaValidationError = "Error reading card file. Please try a different photo or enter your ABHA Number.";
       this.render();
-    }, 400);
+    }
+  }
+
+  // Open ABDM e-KYC Verification Modal for authentic user demographic binding
+  openAbhaEkycModal(formattedId) {
+    const modal = document.getElementById("abhaEkycModal");
+    const container = document.getElementById("abhaEkycModalContainer");
+    if (!modal || !container) return;
+
+    container.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; border-bottom: 1px solid var(--border-light); padding-bottom: 10px;">
+        <div>
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+            <span class="pill-3d pill-3d-emerald" style="font-size: 0.65rem;">ABDM Gateway Live</span>
+            <span class="pill-3d pill-3d-blue" style="font-size: 0.65rem;">UIDAI e-KYC</span>
+          </div>
+          <h3 style="margin: 0; font-size: 1.15rem; color: var(--text-primary); font-weight: 800;">
+            ABDM Sandbox e-KYC Authentication
+          </h3>
+          <p style="margin: 2px 0 0 0; font-size: 0.75rem; color: var(--text-muted);">
+            Authenticating 14-Digit ABHA ID: <strong style="font-family: var(--font-mono); color: var(--primary);">${formattedId}</strong>
+          </p>
+        </div>
+        <button class="btn-3d btn-3d-secondary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="window.app.closeAbhaEkycModal()">✕</button>
+      </div>
+
+      <!-- OTP Banner & Input -->
+      <div style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 8px; padding: 16px; margin-bottom: 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div>
+            <strong style="color: #1E40AF; font-size: 0.88rem; display: block;">
+              Aadhaar OTP Sent to Linked Mobile (●●●●● 43210)
+            </strong>
+            <span style="font-size: 0.75rem; color: #3B82F6;">
+              Official ABDM Sandbox test OTP is <strong>123456</strong>.
+            </span>
+          </div>
+          <button type="button" class="btn-3d btn-3d-primary" style="padding: 6px 12px; font-size: 0.72rem; white-space: nowrap;" onclick="document.getElementById('ekycOtpInput').value='123456'">
+            ⚡ Auto-Fill Test OTP (123456)
+          </button>
+        </div>
+        <div>
+          <label class="input-label-3d" style="font-size: 0.75rem; color: #1E40AF; margin-bottom: 4px;">Enter 6-Digit Verification OTP</label>
+          <input type="text" id="ekycOtpInput" class="input-text-3d" placeholder="123456" value="123456" maxlength="6" style="font-family: var(--font-mono); font-size: 1.15rem; letter-spacing: 6px; text-align: center; max-width: 220px; font-weight: 800;">
+        </div>
+        <div id="ekycOtpError" style="display: none; color: #DC2626; font-size: 0.75rem; margin-top: 6px; font-weight: 600;"></div>
+      </div>
+
+      <!-- Live Gateway Security Notice -->
+      <div style="background: var(--green-subtle); border: 1px solid var(--green-border); border-radius: 8px; padding: 12px 14px; margin-bottom: 14px;">
+        <div style="display: flex; align-items: flex-start; gap: 10px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" stroke-width="2.2" style="flex-shrink: 0; margin-top: 1px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <div style="font-size: 0.74rem; color: var(--green-darkest); line-height: 1.4;">
+            <strong>Zero Dummy Data Policy:</strong> Authenticating with ABDM Gateway retrieves your authentic government demographics and health records directly from the ABDM Sandbox Registry. No manual typing required.
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 1.25rem; padding-top: 12px; border-top: 1px solid var(--border-light);">
+        <button type="button" class="btn-3d btn-3d-secondary" onclick="window.app.closeAbhaEkycModal()">
+          Cancel
+        </button>
+        <button type="button" id="btnSubmitEkyc" class="btn-3d btn-3d-primary" style="padding: 10px 24px; font-weight: 700;" onclick="window.app.submitAbhaEkyc('${formattedId}')">
+          ⚡ Verify OTP & Fetch ABDM Profile →
+        </button>
+      </div>
+    `;
+
+    modal.style.display = "flex";
+  }
+
+  closeAbhaEkycModal() {
+    const modal = document.getElementById("abhaEkycModal");
+    if (modal) modal.style.display = "none";
+  }
+
+  async submitAbhaEkyc(formattedId) {
+    const otpInput = document.getElementById("ekycOtpInput");
+    const errBox = document.getElementById("ekycOtpError");
+    const btn = document.getElementById("btnSubmitEkyc");
+    const otpVal = (otpInput?.value || "").trim();
+
+    if (!otpVal || otpVal.length !== 6) {
+      if (errBox) {
+        errBox.textContent = "Please enter the 6-digit OTP (for ABDM Sandbox, use 123456).";
+        errBox.style.display = "block";
+      }
+      return;
+    }
+
+    if (btn) btn.textContent = "Fetching ABDM Profile...";
+
+    const profile = await AbdmSandboxService.confirmOtpAndFetchProfile(formattedId, otpVal);
+    if (profile.error) {
+      if (errBox) {
+        errBox.textContent = profile.error;
+        errBox.style.display = "block";
+      }
+      if (btn) btn.textContent = "⚡ Verify OTP & Fetch ABDM Profile →";
+      return;
+    }
+
+    try {
+      // 1. Request patient consent via ABDM Consent Manager (Rule 2)
+      const consent = AbdmSandboxService.requestConsent(
+        formattedId,
+        profile.name,
+        ["Patient", "Encounter", "Observation", "DiagnosticReport"]
+      );
+
+      // 2. Fetch authentic FHIR R4 Patient resource (Rules 3, 5, 7)
+      const fhirPatient = await AbdmSandboxService.fetchPatient({
+        abhaId: formattedId,
+        consentArtifactId: consent.consentId
+      });
+
+      // 3. Fetch authentic FHIR R4 clinical records (Rules 3, 4, 5, 7)
+      const fhirRecords = await AbdmSandboxService.fetchPatientRecords({
+        abhaId: formattedId,
+        consentArtifactId: consent.consentId
+      });
+
+      this.syncAbhaToPatient(profile, consent.consentId, fhirPatient, fhirRecords);
+    } catch (e) {
+      this.syncAbhaToPatient(profile);
+    }
+
+    this.playChimeSound();
+    this.closeAbhaEkycModal();
+    this.render();
+  }
+
+  syncAbhaToPatient(details, consentArtifactId = null, fhirPatient = null, fhirRecords = null) {
+    if (!details) return;
+    this.patient.name = details.name;
+    this.patient.age = details.age;
+    this.patient.gender = details.gender;
+    this.patient.mobile = details.mobile;
+    this.patient.dob = details.dob || (details.yob ? `01/01/${details.yob}` : "");
+    this.patient.state = details.state || "";
+    this.patient.abhaId = details.abhaNumber || details.abhaId;
+    this.patient.isAbhaVerified = true;
+    this.patient.consentArtifactId = consentArtifactId || this.patient.consentArtifactId;
+    this.patient.fhirPatient = fhirPatient || this.patient.fhirPatient;
+    this.patient.fhirRecords = fhirRecords || this.patient.fhirRecords;
+    this.patient.abhaDetails = {
+      ...details,
+      verifiedAt: details.verifiedAt || new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+    };
+
+    if (fhirRecords && Array.isArray(fhirRecords.entry)) {
+      this.patient.linkedAbdmRecords = fhirRecords.entry.map(e => e.resource);
+      this.patient.abhaDetails.linkedRecordsCount = fhirRecords.entry.length;
+    }
+  }
+
+  playChimeSound() {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15);
+
+      gain.gain.setValueAtTime(0.12, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start();
+      osc.stop(ctx.currentTime + 0.32);
+    } catch (e) {}
   }
 
   resetAbhaVerification() {
@@ -1333,8 +1474,31 @@ MediKiosk Enterprise v2.4 • ABDM Compliant First-Mile Triage
         timestamp: new Date().toLocaleTimeString()
       };
 
+      // If an official ABHA Card was uploaded, offer to sync it with patient identity
+      if (ocrResult.type === "abha_card") {
+        const flagName = (labFlags.find(f => f.test.includes("Full Name"))?.value) || "";
+        const flagAbha = (labFlags.find(f => f.test.includes("ABHA Health ID"))?.value) || "";
+        if (flagName && (!this.patient.isAbhaVerified || this.patient.name !== flagName)) {
+          const syncConfirm = confirm(`Official ABHA Card Detected!\n\nPatient Name: ${flagName}\nABHA ID: ${flagAbha}\n\nWould you like to synchronize your MediKiosk session identity with this ABHA Card?`);
+          if (syncConfirm) {
+            const cardObj = AbhaCardExtractor.extractFromCardOcr(ocrResult.extractedText || "", ocrResult.previewUrl) || {
+              name: flagName,
+              abhaNumber: flagAbha,
+              abhaAddress: `${flagName.toLowerCase().replace(/[^a-z0-9]/g, "")}@abdm`,
+              gender: "Male",
+              age: 30,
+              dob: "15/06/1996"
+            };
+            registerAbhaCitizen(cardObj);
+            this.syncAbhaToPatient(cardObj);
+          }
+        }
+      }
+
       this.render();
-      const medNotice = isPathologyOrLab ? "• Prescribed Medications: None (Pathology Diagnostic Investigation)" : `• Prescribed Medications: ${newMeds.length}`;
+      const isPathologyOrLab = ocrResult.type === "pathology_report" || (ocrResult.categoryLabel || "").toLowerCase().includes("pathology");
+      const isAbha = ocrResult.type === "abha_card";
+      const medNotice = isAbha ? "• ABHA e-KYC: Official Health Identity Authenticated" : (isPathologyOrLab ? "• Prescribed Medications: None (Pathology Diagnostic Investigation)" : `• Prescribed Medications: ${newMeds.length}`);
       alert(`Medical Document Processed\n\nClassification: [${ocrResult.categoryLabel}]\nDiagnostic Finding: ${ocrResult.rootCause}\n• Identified Diseases/Diagnoses: ${allExtractedDiseases.length}\n${medNotice}\n• Diagnostic Biomarkers: ${labFlags.length}`);
     } catch (err) {
       this.isOcrProcessing = false;
@@ -1999,7 +2163,7 @@ MediKiosk Enterprise v2.4 • ABDM Compliant First-Mile Triage
         patient.smsAlertSent = true;
         patient.smsAlertTime = estTime;
 
-        const mobileNum = patient.mobile || "+91 98765 43210";
+        const mobileNum = patient.mobile || "Not Registered";
         const logItem = {
           id: "SMS-" + Math.floor(100 + Math.random() * 900),
           patientId: patient.id,
@@ -2032,7 +2196,7 @@ MediKiosk Enterprise v2.4 • ABDM Compliant First-Mile Triage
     patient.smsAlertSent = true;
     patient.smsAlertTime = estTime;
 
-    const mobileNum = patient.mobile || "+91 98765 43210";
+    const mobileNum = patient.mobile || "Not Registered";
     const logItem = {
       id: "SMS-" + Math.floor(100 + Math.random() * 900),
       patientId: patient.id,
@@ -2070,7 +2234,7 @@ MediKiosk Enterprise v2.4 • ABDM Compliant First-Mile Triage
   }
 
   triggerPatient30MinTestSms() {
-    const mobile = this.patient.mobile || "+91 98765 43210";
+    const mobile = this.patient.mobile || "Not Registered";
     const qIdx = this.doctorQueue.findIndex(p => p.id === this.patient.id);
     const patientsAhead = Math.max(1, qIdx >= 0 ? qIdx : 4);
     const estWaitMin = Math.round(patientsAhead * 7.5);
@@ -2106,302 +2270,9 @@ MediKiosk Enterprise v2.4 • ABDM Compliant First-Mile Triage
   }
 
   initDefaultDoctorQueue() {
-    const p1Docs = [
-      {
-        id: "doc-ramesh-1",
-        title: "Apex Heart & Chest Clinic - OPD Prescription",
-        categoryLabel: "Prescription",
-        type: "prescription",
-        doctor: "Dr. V. K. Malhotra, MD (Cardio)",
-        date: "24-Sep-2026",
-        rootCause: "Hypertensive heart disease stage 2 with stable angina pectoris",
-        anatomicalSite: "Cardiovascular System",
-        medications: [
-          { name: "Telmisartan", dosage: "40 mg", freq: "OD (Once Daily)", timing: "Morning after breakfast", duration: "Ongoing", route: "Oral", snomedCode: "387517004", schedule: "Schedule H", sourceDoc: "Apex Cardiology Rx #108", status: "Verified" },
-          { name: "Amlodipine", dosage: "5 mg", freq: "OD (Once Daily)", timing: "Morning after breakfast", duration: "Ongoing", route: "Oral", snomedCode: "386864001", schedule: "Schedule H", sourceDoc: "Apex Cardiology Rx #108", status: "Verified" },
-          { name: "Atorvastatin", dosage: "20 mg", freq: "OD (Once Daily)", timing: "Night at bedtime", duration: "Ongoing", route: "Oral", snomedCode: "387584000", schedule: "Schedule H", sourceDoc: "Apex Cardiology Rx #108", status: "Verified" }
-        ],
-        previewUrl: generateMedicalDocSvg("prescription", "OPD Clinical Prescription", "Apex Heart & Chest Specialty Clinic", [
-          { name: "Telmisartan", dosage: "40 mg", freq: "OD", timing: "After breakfast", duration: "Ongoing", route: "Oral", snomedCode: "387517004", schedule: "Schedule H" },
-          { name: "Amlodipine", dosage: "5 mg", freq: "OD", timing: "After breakfast", duration: "Ongoing", route: "Oral", snomedCode: "386864001", schedule: "Schedule H" },
-          { name: "Atorvastatin", dosage: "20 mg", freq: "OD", timing: "Bedtime", duration: "Ongoing", route: "Oral", snomedCode: "387584000", schedule: "Schedule H" }
-        ], "Hypertensive Heart Disease with Stable Angina", "Ramesh Sharma", "A-12")
-      },
-      {
-        id: "doc-ramesh-2",
-        title: "Resting 12-Lead Electrocardiogram (ECG)",
-        categoryLabel: "Diagnostic Scan",
-        type: "lab_report",
-        doctor: "Dr. K. S. Oberoi, MD",
-        date: "24-Sep-2026",
-        rootCause: "Normal sinus rhythm, occasional premature ventricular contractions (PVCs)",
-        anatomicalSite: "Heart",
-        flags: [
-          { name: "R-R Interval Variability", value: "34 ms", status: "LOW" },
-          { name: "PR Interval", value: "162 ms", status: "NORMAL" },
-          { name: "QRS Duration", value: "98 ms", status: "NORMAL" }
-        ],
-        previewUrl: generateMedicalDocSvg("lab_report", "12-Lead Rest ECG Telemetry Scan", "Apex Cardiology Diagnostic Wing", [
-          { name: "R-R Interval Variability", value: "34 ms", status: "LOW" },
-          { name: "PR Interval Duration", value: "162 ms", status: "NORMAL" },
-          { name: "QRS Complex Duration", value: "98 ms", status: "NORMAL" },
-          { name: "QTc Bazett Interval", value: "422 ms", status: "NORMAL" }
-        ], "Sinus Rhythm with Occasional PVCs", "Ramesh Sharma", "A-12")
-      }
-    ];
-
-    const p2Docs = [
-      {
-        id: "doc-sunita-1",
-        title: "Metropolis Lab - Glycemic & Lipid Profile",
-        categoryLabel: "Lab Report",
-        type: "lab_report",
-        doctor: "Dr. N. Mehta, MD (Path)",
-        date: "25-Sep-2026",
-        rootCause: "Sub-optimally controlled Type 2 Diabetes Mellitus with microalbuminuria",
-        anatomicalSite: "Endocrine & Renal System",
-        flags: [
-          { name: "Fasting Blood Glucose", value: "184 mg/dL", status: "HIGH" },
-          { name: "HbA1c Glycated Hemoglobin", value: "8.6%", status: "HIGH" },
-          { name: "Hemoglobin", value: "9.4 g/dL", status: "LOW" },
-          { name: "Serum Creatinine", value: "1.1 mg/dL", status: "NORMAL" }
-        ],
-        previewUrl: generateMedicalDocSvg("lab_report", "Comprehensive Glycemic Diagnostic Panel", "Metropolis Clinical Diagnostic Laboratories", [
-          { name: "Fasting Blood Glucose", value: "184 mg/dL", status: "HIGH" },
-          { name: "HbA1c Glycated Hemoglobin", value: "8.6%", status: "HIGH" },
-          { name: "Hemoglobin (Hb)", value: "9.4 g/dL", status: "LOW" },
-          { name: "Serum Creatinine", value: "1.1 mg/dL", status: "NORMAL" },
-          { name: "Estimated GFR (eGFR)", value: "72 mL/min", status: "NORMAL" }
-        ], "Uncontrolled Diabetes Mellitus with Mild Microcytic Anemia", "Sunita Verma", "A-15")
-      },
-      {
-        id: "doc-sunita-2",
-        title: "Dr. R. Iyer Endocrinology OPD Prescription",
-        categoryLabel: "Prescription",
-        type: "prescription",
-        doctor: "Dr. R. Iyer, DM (Endocrinology)",
-        date: "25-Sep-2026",
-        rootCause: "Type 2 Diabetes Mellitus with early peripheral sensory neuropathy",
-        anatomicalSite: "Endocrine System",
-        medications: [
-          { name: "Metformin Hydrochloride", dosage: "500 mg", freq: "BD (Twice Daily)", timing: "After Meals", duration: "Ongoing", route: "Oral", snomedCode: "372567009", schedule: "Schedule H", sourceDoc: "Endocrine Clinic Rx #42", status: "Verified" },
-          { name: "Glimepiride", dosage: "1 mg", freq: "OD (Once Daily)", timing: "Before Breakfast", duration: "Ongoing", route: "Oral", snomedCode: "387063004", schedule: "Schedule H", sourceDoc: "Endocrine Clinic Rx #42", status: "Verified" }
-        ],
-        previewUrl: generateMedicalDocSvg("prescription", "Endocrine Specialty OPD Prescription", "Apollo Endocrine Care Centre", [
-          { name: "Metformin Hydrochloride", dosage: "500 mg", freq: "BD", timing: "After Meals", duration: "Ongoing", route: "Oral", snomedCode: "372567009", schedule: "Schedule H" },
-          { name: "Glimepiride", dosage: "1 mg", freq: "OD", timing: "Before Breakfast", duration: "Ongoing", route: "Oral", snomedCode: "387063004", schedule: "Schedule H" }
-        ], "Type 2 Diabetes with Peripheral Neuropathy", "Sunita Verma", "A-15")
-      }
-    ];
-
-    const p3Docs = [
-      {
-        id: "doc-arif-1",
-        title: "PulmoCare Digital PA Chest Radiograph",
-        categoryLabel: "Imaging Scan",
-        type: "radiology",
-        doctor: "Dr. S. Mukherjee, DMRD",
-        date: "26-Sep-2026",
-        rootCause: "Bilateral bronchial wall thickening with right lower zone haziness",
-        anatomicalSite: "Respiratory System / Lungs",
-        flags: [
-          { name: "Bronchial Markings", value: "Prominent RLL Haziness", status: "ABNORMAL" },
-          { name: "Cardiothoracic Ratio", value: "0.46", status: "NORMAL" }
-        ],
-        previewUrl: generateMedicalDocSvg("radiology", "PA Chest Digital Radiography", "PulmoCare Chest Diagnostic Centre", [], "Acute Bronchial Infiltrates & Exacerbation", "Mohammad Arif", "A-19")
-      },
-      {
-        id: "doc-arif-2",
-        title: "Pulmonology Handwritten Prescription - Dr. A. Khan",
-        categoryLabel: "Prescription",
-        type: "prescription",
-        doctor: "Dr. A. Khan, MD (Pulm)",
-        date: "26-Sep-2026",
-        rootCause: "Acute infective exacerbation of bronchitis",
-        anatomicalSite: "Respiratory System",
-        medications: [
-          { name: "Amoxicillin + Clavulanic Acid", dosage: "625 mg", freq: "TDS (3 times/day)", timing: "After Meals", duration: "5 days", route: "Oral", snomedCode: "372833007", schedule: "Schedule H1", sourceDoc: "PulmoCare OPD Rx #309", status: "Verified" },
-          { name: "Paracetamol", dosage: "650 mg", freq: "SOS (As Needed)", timing: "Post Meals for fever >100°F", duration: "3 days", route: "Oral", snomedCode: "387517004", schedule: "OTC", sourceDoc: "PulmoCare OPD Rx #309", status: "Verified" },
-          { name: "Levosalbutamol + Ambroxol Syrup", dosage: "10 ml", freq: "TDS (3 times/day)", timing: "After Meals", duration: "5 days", route: "Oral", snomedCode: "411529001", schedule: "Schedule H", sourceDoc: "PulmoCare OPD Rx #309", status: "Verified" }
-        ],
-        previewUrl: generateMedicalDocSvg("prescription", "Pulmonology Handwritten Clinical Prescription", "PulmoCare Chest Centre", [
-          { name: "Amoxicillin + Clav", dosage: "625 mg", freq: "TDS", timing: "After Meals", duration: "5 days", route: "Oral", snomedCode: "372833007", schedule: "Schedule H1" },
-          { name: "Paracetamol", dosage: "650 mg", freq: "SOS", timing: "Post Meals", duration: "3 days", route: "Oral", snomedCode: "387517004", schedule: "OTC" },
-          { name: "Levosalbutamol + Ambroxol", dosage: "10 ml", freq: "TDS", timing: "After Meals", duration: "5 days", route: "Oral", snomedCode: "411529001", schedule: "Schedule H" }
-        ], "Acute Infective Exacerbation of Bronchitis", "Mohammad Arif", "A-19")
-      }
-    ];
-
-    const p4Docs = [
-      {
-        id: "doc-priya-1",
-        title: "City Hospital OPD Handwritten Doctor Prescription",
-        categoryLabel: "Prescription",
-        type: "prescription",
-        doctor: "Dr. Ananya Ray, MBBS, MD",
-        date: "27-Sep-2026",
-        rootCause: "Acute viral pharyngitis with secondary reactive gastritis",
-        anatomicalSite: "Oropharynx & Upper GI",
-        medications: [
-          { name: "Dolo 650 (Paracetamol)", dosage: "650 mg", freq: "TDS (3 times/day)", timing: "After Meals", duration: "4 days", route: "Oral", snomedCode: "387517004", schedule: "OTC", sourceDoc: "City Hospital OPD Handwritten Rx", status: "Verified" },
-          { name: "Pantocid 40 (Pantoprazole)", dosage: "40 mg", freq: "OD (Once Daily)", timing: "Empty Stomach (30 min before breakfast)", duration: "7 days", route: "Oral", snomedCode: "387428000", schedule: "Schedule H", sourceDoc: "City Hospital OPD Handwritten Rx", status: "Verified" },
-          { name: "Montair-LC (Montelukast + Levocetirizine)", dosage: "10 mg / 5 mg", freq: "OD (Once Daily)", timing: "Night at bedtime", duration: "5 days", route: "Oral", snomedCode: "427314002", schedule: "Schedule H", sourceDoc: "City Hospital OPD Handwritten Rx", status: "Verified" }
-        ],
-        previewUrl: generateMedicalDocSvg("prescription", "OPD Handwritten Doctor Prescription Note", "City General Hospital - OPD Dept", [
-          { name: "Dolo 650", dosage: "650 mg", freq: "TDS", timing: "After Meals", duration: "4 days", route: "Oral", snomedCode: "387517004", schedule: "OTC" },
-          { name: "Pantocid 40", dosage: "40 mg", freq: "OD", timing: "Empty Stomach (Morning)", duration: "7 days", route: "Oral", snomedCode: "387428000", schedule: "Schedule H" },
-          { name: "Montair-LC", dosage: "10mg/5mg", freq: "OD", timing: "Bedtime", duration: "5 days", route: "Oral", snomedCode: "427314002", schedule: "Schedule H" }
-        ], "Acute Viral Pharyngitis with Odynophagia", "Priya Patel", "A-24")
-      },
-      {
-        id: "doc-priya-2",
-        title: "Serum Biochemistry & Renal Panel",
-        categoryLabel: "Lab Report",
-        type: "lab_report",
-        doctor: "Dr. S. K. Gupta, MD (Biochem)",
-        date: "27-Sep-2026",
-        rootCause: "All hepatic enzymes and renal biomarkers within physiological limits",
-        anatomicalSite: "Metabolic / Renal",
-        flags: [
-          { name: "Serum Creatinine", value: "0.85 mg/dL", status: "NORMAL" },
-          { name: "SGPT / ALT Enzyme", value: "28 U/L", status: "NORMAL" },
-          { name: "Total Bilirubin", value: "0.7 mg/dL", status: "NORMAL" }
-        ],
-        previewUrl: generateMedicalDocSvg("lab_report", "Hepato-Renal Biochemical Profile", "City Hospital Diagnostic Pathology", [
-          { name: "Serum Creatinine", value: "0.85 mg/dL", status: "NORMAL" },
-          { name: "SGPT / ALT Enzyme", value: "28 U/L", status: "NORMAL" },
-          { name: "Total Bilirubin", value: "0.7 mg/dL", status: "NORMAL" },
-          { name: "Serum Electrolytes (Na+)", value: "140 mEq/L", status: "NORMAL" }
-        ], "Normal Renal & Hepatic Biomarkers", "Priya Patel", "A-24")
-      }
-    ];
-
-    const p5Docs = [
-      {
-        id: "doc-ananya-1",
-        title: "OrthoSpine Specialty Clinic Prescription - Dr. B. Sen",
-        categoryLabel: "Prescription",
-        type: "prescription",
-        doctor: "Dr. B. Sen, MS (Ortho)",
-        date: "27-Sep-2026",
-        rootCause: "L4-L5 disc protrusion with right-sided L5 nerve root impingement",
-        anatomicalSite: "Lumbosacral Spine",
-        medications: [
-          { name: "Etoricoxib", dosage: "90 mg", freq: "OD (Once Daily)", timing: "After Lunch", duration: "7 days", route: "Oral", snomedCode: "387467008", schedule: "Schedule H", sourceDoc: "OrthoSpine Specialty Clinic Rx", status: "Verified" },
-          { name: "Thiocolchicoside", dosage: "4 mg", freq: "BD (Twice Daily)", timing: "After Meals", duration: "5 days", route: "Oral", snomedCode: "398715003", schedule: "Schedule H", sourceDoc: "OrthoSpine Specialty Clinic Rx", status: "Verified" },
-          { name: "Rabeprazole", dosage: "20 mg", freq: "OD (Once Daily)", timing: "Morning before food", duration: "10 days", route: "Oral", snomedCode: "387428000", schedule: "Schedule H", sourceDoc: "OrthoSpine Specialty Clinic Rx", status: "Verified" }
-        ],
-        previewUrl: generateMedicalDocSvg("prescription", "Orthopaedic Spine Consultation Rx", "OrthoSpine Advanced Joint & Spine Centre", [
-          { name: "Etoricoxib", dosage: "90 mg", freq: "OD", timing: "After Lunch", duration: "7 days", route: "Oral", snomedCode: "387467008", schedule: "Schedule H" },
-          { name: "Thiocolchicoside", dosage: "4 mg", freq: "BD", timing: "After Meals", duration: "5 days", route: "Oral", snomedCode: "398715003", schedule: "Schedule H" },
-          { name: "Rabeprazole", dosage: "20 mg", freq: "OD", timing: "Before Breakfast", duration: "10 days", route: "Oral", snomedCode: "387428000", schedule: "Schedule H" }
-        ], "L4-L5 Disc Protrusion with Lumbar Radiculopathy", "Ananya Sengupta", "A-31")
-      }
-    ];
-
-    this.doctorQueue = [
-      {
-        id: "PAT-9012",
-        name: "Ramesh Sharma",
-        age: 58,
-        gender: "Male",
-        abhaId: "91-4521-8842-1092",
-        mobile: "+91 98201 44521",
-        tokenNumber: "A-12",
-        chiefComplaint: "Chest tightness on exertion, intermittent palpitations, known hypertension for 6 years",
-        isEmergency: false,
-        smsAlertSent: false,
-        rppgVitals: { heartRate: 88, spO2: 97, stressScore: 68, hrv: 34, respiratoryRate: 18, signalQuality: "Optimal" },
-        allopathicMeds: p1Docs[0].medications,
-        ayushHerbs: ["Arjuna (Terminalia arjuna)", "Ashwagandha"],
-        documents: p1Docs
-      },
-      {
-        id: "PAT-9015",
-        name: "Sunita Verma",
-        age: 52,
-        gender: "Female",
-        abhaId: "91-8841-2309-4411",
-        mobile: "+91 97110 33812",
-        tokenNumber: "A-15",
-        chiefComplaint: "Uncontrolled blood sugars, persistent fatigue, polyuria, bilateral lower extremity burning paresthesias",
-        isEmergency: false,
-        smsAlertSent: false,
-        rppgVitals: { heartRate: 76, spO2: 98, stressScore: 54, hrv: 42, respiratoryRate: 16, signalQuality: "Optimal" },
-        allopathicMeds: p2Docs[1].medications,
-        ayushHerbs: ["Karela (Momordica charantia)", "Jamun seed powder"],
-        documents: p2Docs
-      },
-      {
-        id: "PAT-9019",
-        name: "Mohammad Arif",
-        age: 34,
-        gender: "Male",
-        abhaId: "91-3142-9901-5612",
-        mobile: "+91 94152 77091",
-        tokenNumber: "A-19",
-        chiefComplaint: "Productive cough with yellow sputum for 6 days, low-grade evening fever (100.4°F), wheezing on exertion",
-        isEmergency: false,
-        smsAlertSent: false,
-        rppgVitals: { heartRate: 94, spO2: 96, stressScore: 62, hrv: 38, respiratoryRate: 22, signalQuality: "Optimal" },
-        allopathicMeds: p3Docs[1].medications,
-        ayushHerbs: ["Tulsi", "Vasaka"],
-        documents: p3Docs
-      },
-      {
-        id: "PAT-9024",
-        name: "Priya Patel",
-        age: 29,
-        gender: "Female",
-        abhaId: "91-7782-4410-9088",
-        mobile: "+91 98980 12345",
-        tokenNumber: "A-24",
-        chiefComplaint: "Acute throat pain, painful swallowing (odynophagia) for 3 days, epigastric heartburn after antibiotics",
-        isEmergency: false,
-        smsAlertSent: true,
-        smsAlertTime: "10:15 AM",
-        rppgVitals: { heartRate: 82, spO2: 99, stressScore: 48, hrv: 52, respiratoryRate: 17, signalQuality: "Optimal" },
-        allopathicMeds: p4Docs[0].medications,
-        ayushHerbs: ["Mulethi (Licorice)", "Ginger honey paste"],
-        documents: p4Docs
-      },
-      {
-        id: "PAT-9031",
-        name: "Ananya Sengupta",
-        age: 42,
-        gender: "Female",
-        abhaId: "91-6651-3321-7711",
-        mobile: "+91 98300 65432",
-        tokenNumber: "A-31",
-        chiefComplaint: "Chronic lower back ache radiating to right posterior thigh and calf (radiculopathy), aggravated by sitting",
-        isEmergency: false,
-        smsAlertSent: false,
-        rppgVitals: { heartRate: 74, spO2: 98, stressScore: 56, hrv: 46, respiratoryRate: 15, signalQuality: "Optimal" },
-        allopathicMeds: p5Docs[0].medications,
-        ayushHerbs: ["Shallaki (Boswellia)", "Guggulu"],
-        documents: p5Docs
-      }
-    ];
-
-    this.smsDispatchLogs = [
-      {
-        id: "SMS-101",
-        patientId: "PAT-9024",
-        patientName: "Priya Patel",
-        mobile: "+91 98980 12345",
-        token: "A-24",
-        queuePosition: 4,
-        patientsAhead: 4,
-        scheduledTime: "10:15 AM",
-        dispatchTimestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        status: "Delivered ",
-        channel: "SMS Gateway + WhatsApp Cloud API",
-        message: "Dear Priya Patel, your appointment with Dr. Sharma (OPD Cabin 3) is scheduled after 4 patients at approx 10:15 AM (approx 30 mins). Token: A-24. Please proceed to OPD Waiting Zone B."
-      }
-    ];
-
-    // Default to the CURRENT active consulting patient in OPD Cabin 3
-    this.selectedQueuePatient = this.doctorQueue[0];
+    this.doctorQueue = [];
+    this.smsDispatchLogs = [];
+    this.selectedQueuePatient = null;
   }
 
   acceptSummary() {

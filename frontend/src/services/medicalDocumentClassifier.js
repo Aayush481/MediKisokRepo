@@ -78,9 +78,15 @@ class MedicalDocumentClassifier {
       (/\b(hospital\s*course|condition\s*at\s*discharge|discharge\s*advice|discharge\s*medications|ipd\s*(?:no|number)|uhid\b)\b/i.test(text) ? 1 : 0);
     const hasDischargeSignal = hasDischargeHeader && hasDischargeFields >= 2;
 
+    // Special: ABHA Smart Card / ABDM Digital Health ID Signal
+    const hasAbhaSignal = /\b(ayushman\s*bharat|national\s*health\s*authority|abha\s*(?:card|number|id|address|smart\s*card)?|abdm|ndhm|health\s*id|phr\s*address)\b/i.test(text) ||
+      /\b([1-9]\d)[-\s]?(\d{4})[-\s]?(\d{4})[-\s]?(\d{4})\b/.test(text) ||
+      /\b[a-zA-Z0-9._]{3,30}@(abdm|sbx|ndhm)\b/i.test(text);
+
     // 5. Explicit Non-Medical Rejection with Strict Verification Overrides
     if (isExplicitNonMedical) {
-      const hasVerifiedOverride = (hasExtractedPrescriptions && validDrugs.length >= 1 && (hasRxHeader || validDrugs.length >= 1)) ||
+      const hasVerifiedOverride = hasAbhaSignal ||
+        (hasExtractedPrescriptions && validDrugs.length >= 1 && (hasRxHeader || validDrugs.length >= 1)) ||
         (hasExtractedLabData && (labFlagCount >= 1 || labNormalCount >= 1)) ||
         visual.hasEcgGrid ||
         (visual.isMonochromeRadiograph && !visual.isColorfulPhoto);
@@ -233,7 +239,26 @@ class MedicalDocumentClassifier {
       };
     }
 
-    // G. Ambiguous Upload Evaluation Gate (Faint text, partial tokens, or low OCR resolution)
+    // G. Official ABHA Smart Card / ABDM Digital Health ID
+    if (!classification && hasAbhaSignal) {
+      classification = {
+        isValidMedical: true,
+        isAmbiguous: false,
+        needsManualReview: false,
+        type: "abha_card",
+        categoryLabel: "ABHA Smart Card (Ayushman Bharat Digital Health ID)",
+        icon: "",
+        badgeColor: "pill-3d pill-3d-emerald",
+        confidenceScore: 0.998,
+        confidence: "99.8%",
+        qualityWarning: null,
+        ambiguityReason: null,
+        rootCause: "Government of India ABHA Health ID Record (National Health Authority)",
+        anatomicalSite: "Citizen Digital Health Account (ABDM Gateway)"
+      };
+    }
+
+    // H. Ambiguous Upload Evaluation Gate (Faint text, partial tokens, or low OCR resolution)
     const hasWeakClinicalHint = /\b(dr\b|doctor|rx\b|tab\b|cap\b|patient|hospital|clinic|report|test|scan|medical|dept|opd|investigation)\b/i.test(text);
     const hasPartialFragment = (rawOcrText || "").trim().length > 0 && (rawOcrText || "").trim().length < 80;
 

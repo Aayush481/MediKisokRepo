@@ -3,6 +3,7 @@ import { FaceDetectorController } from '../controllers/faceDetectorController.js
 import { ClinicalDocController } from '../controllers/clinicalDocController.js';
 import { PatientController } from '../controllers/patientController.js';
 import { FHIRController } from '../controllers/fhirController.js';
+import { AbdmController } from '../controllers/abdmController.js';
 
 const router = express.Router();
 
@@ -17,7 +18,8 @@ router.get('/health', (req, res) => {
       expressServer: 'active',
       pythonFaceDetector: 'ready',
       geminiVisionAI: 'active',
-      patientStore: 'connected'
+      patientStore: 'connected',
+      abdmSandboxGateway: 'active'
     }
   });
 });
@@ -38,5 +40,14 @@ router.post('/patients', PatientController.savePatient);
 
 // ABDM HL7 FHIR R4 Bundle
 router.post('/fhir-bundle', FHIRController.generateBundle);
+
+// ABDM Sandbox Gateway APIs (Rules 1-8)
+router.post('/abdm/validate-abha', AbdmController.validateAbha);
+router.post('/abdm/init-auth', AbdmController.initAuth);
+router.post('/abdm/confirm-auth', AbdmController.confirmAuth);
+router.post('/abdm/request-consent', AbdmController.requestConsent);
+router.post('/abdm/fetch-patient', AbdmController.fetchPatient);
+router.post('/abdm/fetch-records', AbdmController.fetchPatientRecords);
+router.get('/abdm/audit-logs', AbdmController.getAuditLogs);
 
 export default router;

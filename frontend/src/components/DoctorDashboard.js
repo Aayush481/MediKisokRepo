@@ -70,7 +70,13 @@ export function renderDoctorDashboard(app, i18n) {
 
         <!-- Queue list -->
         <div id="queueList" style="display: flex; flex-direction: column; gap: 8px;">
-          ${app.doctorQueue.map((item, idx) => {
+          ${app.doctorQueue.length === 0 ? `
+            <div style="text-align: center; padding: 2rem 1rem; background: var(--bg-surface-inset); border: 1px dashed var(--border-medium); border-radius: 6px; color: var(--text-muted);">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom: 6px; opacity: 0.6;"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 2px;">OPD Queue is Empty</div>
+              <div style="font-size: 0.72rem;">Patients completing intake at the kiosk will be assigned and queued here live.</div>
+            </div>
+          ` : app.doctorQueue.map((item, idx) => {
             const patientsAhead = idx;
             const waitMinutes = Math.round(patientsAhead * 7.5);
             const estTime = item.smsAlertTime || (waitMinutes === 0 ? t("doc_now", "Now") : new Date(Date.now() + waitMinutes * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));

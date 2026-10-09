@@ -12,6 +12,7 @@ import { labParser } from "./labParser.js";
 import { xrayAnalyzer } from "./xrayAnalyzer.js";
 import { PDFHelper } from "./pdfHelper.js";
 import { diseaseExtractor } from "./diseaseExtractor.js";
+import { AbhaCardExtractor } from "./abhaCardExtractor.js";
 
 class OCREngine {
   constructor() {
@@ -112,6 +113,7 @@ class OCREngine {
         (classification.type === "xray_report") ||
         (classification.type === "ecg_report") ||
         (classification.type === "discharge_summary") ||
+        (classification.type === "abha_card") ||
         (classification.type === "medical_record" && (prescriptionParser.parsePrescriptionText(rawText).length > 0 || diseaseExtractor.extractDiseases(rawText).length > 0));
 
       if (classification.isValidMedical && hasClinicalEntities) {
@@ -125,11 +127,11 @@ class OCREngine {
       const geminiResult = await geminiVisionService.analyzeDocument(file, onProgress, rawText, previewDataUrl);
       if (geminiResult) {
         if (!geminiResult.isValidMedical) {
-          // If gemini thought it was non-medical, check if local classifier has verified drugs or lab flags or scans
+          // If gemini thought it was non-medical, check if local classifier has verified drugs or lab flags or scans or ABHA card
           const localCheck = await documentClassifier.classifyAndValidate(previewDataUrl, rawText, file.name);
           const hasVerifiedDrugs = (prescriptionParser.parsePrescriptionText(rawText || file.name) || []).some(d => d.validated);
           const hasVerifiedLabs = (labParser.parseLabReportText(rawText) || {}).flags?.length > 0;
-          if (localCheck.isValidMedical && (hasVerifiedDrugs || hasVerifiedLabs || localCheck.type === "xray_report" || localCheck.type === "ecg_report")) {
+          if (localCheck.isValidMedical && (hasVerifiedDrugs || hasVerifiedLabs || localCheck.type === "xray_report" || localCheck.type === "ecg_report" || localCheck.type === "abha_card")) {
             return this.buildStructuredClinicalResult(localCheck, rawText, previewDataUrl, file.name, isPdf);
           }
           return {
@@ -236,6 +238,25 @@ class OCREngine {
         status: classification.rootCause.includes("STEMI") ? "STAT CARDIAC ALERT" : "DIAGNOSTIC FINDING",
         alertLevel: classification.rootCause.includes("STEMI") ? "danger" : "warning"
       });
+    } else if (classification.type === "abha_card") {
+      const abhaData = AbhaCardExtractor.extractFromCardOcr(ocrText, previewDataUrl);
+      if (abhaData) {
+        if (abhaData.abhaNumber) {
+          labFlags.push({ test: "ABHA Health ID Number", value: abhaData.abhaNumber, ref: "ABDM 14-Digit Format", status: "VERIFIED", alertLevel: "success" });
+        }
+        if (abhaData.abhaAddress) {
+          labFlags.push({ test: "ABHA Address (PHR Handle)", value: abhaData.abhaAddress, ref: "NHA Health Exchange", status: "ACTIVE", alertLevel: "info" });
+        }
+        if (abhaData.name) {
+          labFlags.push({ test: "Citizen Full Name", value: abhaData.name, ref: "UIDAI / ABDM Demographic", status: "e-KYC MATCH", alertLevel: "success" });
+        }
+        if (abhaData.gender || abhaData.dob) {
+          labFlags.push({ test: "Gender & Date of Birth", value: `${abhaData.gender || ''} • ${abhaData.dob || ''} ${abhaData.age ? `(Age ${abhaData.age})` : ''}`.trim(), ref: "Verified Demographic", status: "VALID", alertLevel: "info" });
+        }
+        if (abhaData.mobile) {
+          labFlags.push({ test: "Registered Mobile", value: abhaData.mobile, ref: "Linked Authentication", status: "ACTIVE", alertLevel: "info" });
+        }
+      }
     }
 
     // 3. Diseases & Diagnoses

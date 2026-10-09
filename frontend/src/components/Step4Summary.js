@@ -45,19 +45,20 @@ export function renderStep4Summary(app, i18n) {
   const qPosition = qIdx >= 0 ? qIdx + 1 : app.doctorQueue.length;
   const patientsAhead = Math.max(0, qPosition - 1);
   const estWaitMin = patientsAhead === 0 ? 5 : Math.round(patientsAhead * 7.5);
-  const token = patient.tokenNumber || 'A-15';
+  const token = patient.tokenNumber || 'A-01';
   const regUhid = patient.id || `MED-${Date.now().toString().slice(-5)}`;
   const nowStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ' • ' + new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
-  const vitals = patient.rppgVitals || { heartRate: "72", spO2: "98", respiratoryRate: "16", hrv: "48", stressScore: "Normal" };
+  const vitals = patient.rppgVitals || null;
   const docCount = (patient.documents || []).length;
   const medCount = (patient.allopathicMeds || []).length + (patient.documents || []).flatMap(d => d.medications || []).length;
   const flagCount = (patient.documents || []).flatMap(d => d.flags || []).length;
 
-  const assignedDoc = patient.assignedDoctor;
-  const deptName = assignedDoc ? assignedDoc.specialty : i18n.t("default_dept");
-  const cabinName = assignedDoc ? assignedDoc.cabin : "Cabin 04";
-  const doctorName = assignedDoc ? `${assignedDoc.name} (${assignedDoc.qualification || 'MD'})` : "Dr. Sharma (MD)";
+  const isHomeCare = Boolean(patient.isHomeRemedyOnly || (patient.triageResult?.isHomeRemedyEligible && !patient.assignedDoctor));
+  const assignedDoc = isHomeCare ? null : patient.assignedDoctor;
+  const deptName = isHomeCare ? "🌿 Home Care Protocol (Self-Care)" : (assignedDoc ? assignedDoc.specialty : i18n.t("default_dept"));
+  const cabinName = isHomeCare ? "Self-Care" : (assignedDoc ? assignedDoc.cabin : "OPD Cabin");
+  const doctorName = isHomeCare ? "No Doctor Consultation Required" : (assignedDoc ? `${assignedDoc.name} (${assignedDoc.qualification || 'MD'})` : "Consulting Physician");
 
   return `
     <div>
@@ -66,14 +67,14 @@ export function renderStep4Summary(app, i18n) {
         <div style="display: inline-flex; align-items: center; gap: 6px; background: var(--green-subtle); border: 1px solid var(--green-border); border-radius: 20px; padding: 4px 14px; margin-bottom: 8px;">
           <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--primary);"></span>
           <span style="font-size: 0.74rem; font-family: var(--font-mono); font-weight: 700; color: var(--green-darkest); text-transform: uppercase;">
-            Triage Encounter Complete • Token Assigned
+            ${isHomeCare ? 'Triage Complete • Home Self-Care Protocol Active' : 'Triage Encounter Complete • Token Assigned'}
           </span>
         </div>
         <h2 style="font-size: 1.6rem; font-weight: 800; color: var(--text-primary); letter-spacing: -0.01em;">
-          ${i18n.t("summary_congrats")}
+          ${isHomeCare ? 'Home Remedies Care Plan Ready' : i18n.t("summary_congrats")}
         </h2>
         <p style="font-size: 0.84rem; color: var(--text-muted); margin-top: 4px;">
-          ${i18n.t("summary_subtitle")}
+          ${isHomeCare ? 'Your condition is suitable for home care. No doctor consultation is needed.' : i18n.t("summary_subtitle")}
         </p>
       </div>
 
@@ -85,15 +86,19 @@ export function renderStep4Summary(app, i18n) {
             <!-- Clinic header band -->
             <div class="ticket-header-band">
               <div class="ticket-clinic-info">
-                <div class="ticket-clinic-emblem" style="background: var(--primary-gradient); color: #FFFFFF; font-weight: 800; font-family: var(--font-mono);">OPD</div>
+                <div class="ticket-clinic-emblem" style="background: var(--primary-gradient); color: #FFFFFF; font-weight: 800; font-family: var(--font-mono);">${isHomeCare ? 'CARE' : 'OPD'}</div>
                 <div>
                   <div class="ticket-clinic-title">MediKiosk Outpatient Department</div>
-                  <div class="ticket-clinic-subtitle">ABDM First-Mile Triage & Digital Queue Pass</div>
+                  <div class="ticket-clinic-subtitle">${isHomeCare ? 'AI Home Self-Care Pass (No Doctor Consultation Needed)' : 'ABDM First-Mile Triage & Digital Queue Pass'}</div>
                 </div>
               </div>
               <div class="ticket-status-chip">
-                <span class="ticket-status-dot"></span>
-                <span>Live Queue</span>
+                ${isHomeCare ? `
+                  <span class="pill-3d pill-3d-emerald" style="font-size: 0.68rem; font-weight: 800;">Home Care Discharged</span>
+                ` : `
+                  <span class="ticket-status-dot"></span>
+                  <span>Live Queue</span>
+                `}
               </div>
             </div>
 
@@ -101,14 +106,14 @@ export function renderStep4Summary(app, i18n) {
               <!-- Hero token number -->
               <div class="ticket-token-hero">
                 <div>
-                  <div class="token-label-text">${i18n.t("opd_token_header")}</div>
+                  <div class="token-label-text">${isHomeCare ? 'Self-Care Pass' : i18n.t("opd_token_header")}</div>
                   <div class="token-number-hero" style="color: var(--primary);">${token}</div>
                   <div class="token-dept-badge">
                     <span>${deptName}</span>
                   </div>
                 </div>
                 <div class="token-cabin-pill">
-                  <div class="token-cabin-label">Attending Desk</div>
+                  <div class="token-cabin-label">${isHomeCare ? 'Attending Status' : 'Attending Desk'}</div>
                   <div class="token-cabin-value">${cabinName}</div>
                   <div style="font-size: 0.72rem; color: var(--grey-600); margin-top: 2px;">${doctorName}</div>
                 </div>
@@ -133,7 +138,7 @@ export function renderStep4Summary(app, i18n) {
                 </div>
                 <div class="ticket-meta-item">
                   <span class="ticket-meta-label">Registered Mobile</span>
-                  <span class="ticket-meta-value">${patient.mobile || '+91 98765 43210'}</span>
+                  <span class="ticket-meta-value">${patient.mobile || 'Not Registered'}</span>
                 </div>
                 <div class="ticket-meta-item">
                   <span class="ticket-meta-label">Issued Date & Time</span>
@@ -141,37 +146,46 @@ export function renderStep4Summary(app, i18n) {
                 </div>
               </div>
 
-              <!-- Live queue stepper -->
-              <div class="ticket-queue-section">
-                <div class="ticket-queue-header">
-                  <span class="ticket-queue-title">${i18n.t("est_wait_label")}</span>
-                  <span class="ticket-wait-pill">~${estWaitMin} Mins (${patientsAhead} Ahead)</span>
-                </div>
-                <div class="ticket-queue-stepper">
-                  <div class="queue-step-node active-now" title="Currently inside doctor cabin">1</div>
-                  <div class="queue-step-node">2</div>
-                  <div class="queue-step-node">3</div>
-                  <div class="queue-step-node patient-target" title="Your turn">4</div>
-                </div>
-                <div class="queue-step-caption">
-                  <span>Now Serving at ${cabinName}</span>
-                  <span style="color: var(--primary); font-weight: 700; font-family: var(--font-mono);">Your Position (${token})</span>
-                </div>
-              </div>
-
-              <!-- Automated SMS notice -->
-              <div class="ticket-sms-box">
-                <div class="ticket-sms-icon">SMS</div>
-                <div class="ticket-sms-content">
-                  <div class="ticket-sms-title">Automated SMS Notification</div>
-                  <p class="ticket-sms-desc">
-                    An automated SMS alert will be dispatched to <strong>${patient.mobile || '+91 98765 43210'}</strong> exactly 30 minutes before your consultation call.
+              <!-- Live queue stepper or Home Care Bypassed Notice -->
+              ${isHomeCare ? `
+                <div style="background: rgba(16, 185, 129, 0.08); border: 1.5px solid var(--green-border); border-radius: 6px; padding: 12px 14px; text-align: center; margin: 12px 0;">
+                  <strong style="color: var(--primary); font-size: 0.85rem; font-family: var(--font-mono); display: block; letter-spacing: 0.03em;">🌿 OPD DOCTOR QUEUE BYPASSED</strong>
+                  <p style="font-size: 0.74rem; color: var(--text-secondary); margin: 3px 0 0 0;">
+                    Condition resolved via verified home remedies protocol. No waiting in hospital doctor queue required.
                   </p>
                 </div>
-                <span class="pill-3d pill-3d-blue" style="font-size: 0.68rem; align-self: center; white-space: nowrap;">
-                  ${patient.smsAlertSent ? 'Alert Sent' : 'Scheduled'}
-                </span>
-              </div>
+              ` : `
+                <div class="ticket-queue-section">
+                  <div class="ticket-queue-header">
+                    <span class="ticket-queue-title">${i18n.t("est_wait_label")}</span>
+                    <span class="ticket-wait-pill">~${estWaitMin} Mins (${patientsAhead} Ahead)</span>
+                  </div>
+                  <div class="ticket-queue-stepper">
+                    <div class="queue-step-node active-now" title="Currently inside doctor cabin">1</div>
+                    <div class="queue-step-node">2</div>
+                    <div class="queue-step-node">3</div>
+                    <div class="queue-step-node patient-target" title="Your turn">4</div>
+                  </div>
+                  <div class="queue-step-caption">
+                    <span>Now Serving at ${cabinName}</span>
+                    <span style="color: var(--primary); font-weight: 700; font-family: var(--font-mono);">Your Position (${token})</span>
+                  </div>
+                </div>
+
+                <!-- Automated SMS notice -->
+                <div class="ticket-sms-box">
+                  <div class="ticket-sms-icon">SMS</div>
+                  <div class="ticket-sms-content">
+                    <div class="ticket-sms-title">Automated SMS Notification</div>
+                    <p class="ticket-sms-desc">
+                      An automated SMS alert will be dispatched to <strong>${patient.mobile || 'Registered Mobile'}</strong> exactly 30 minutes before your consultation call.
+                    </p>
+                  </div>
+                  <span class="pill-3d pill-3d-blue" style="font-size: 0.68rem; align-self: center; white-space: nowrap;">
+                    ${patient.smsAlertSent ? 'Alert Sent' : 'Scheduled'}
+                  </span>
+                </div>
+              `}
 
               <!-- Barcode graphic -->
               <div class="ticket-barcode-wrap">
@@ -208,24 +222,30 @@ export function renderStep4Summary(app, i18n) {
               <span style="font-size: 0.68rem; font-family: var(--font-mono); font-weight: 700; color: var(--grey-600); text-transform: uppercase;">
                 Optical Vitals Telemetry (rPPG)
               </span>
-              <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 6px;">
-                <div style="background: var(--grey-50); border: 1px solid var(--grey-300); border-radius: 6px; padding: 6px; text-align: center;">
-                  <span style="font-size: 0.62rem; color: var(--grey-500); font-family: var(--font-mono); display: block;">Heart Rate</span>
-                  <strong style="font-size: 0.95rem; font-family: var(--font-mono); color: var(--text-primary);">${vitals.heartRate} <small style="font-size: 0.6rem; color: var(--green-dark);">bpm</small></strong>
+              ${vitals ? `
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 6px;">
+                  <div style="background: var(--grey-50); border: 1px solid var(--grey-300); border-radius: 6px; padding: 6px; text-align: center;">
+                    <span style="font-size: 0.62rem; color: var(--grey-500); font-family: var(--font-mono); display: block;">Heart Rate</span>
+                    <strong style="font-size: 0.95rem; font-family: var(--font-mono); color: var(--text-primary);">${vitals.heartRate || '--'} <small style="font-size: 0.6rem; color: var(--green-dark);">bpm</small></strong>
+                  </div>
+                  <div style="background: var(--grey-50); border: 1px solid var(--grey-300); border-radius: 6px; padding: 6px; text-align: center;">
+                    <span style="font-size: 0.62rem; color: var(--grey-500); font-family: var(--font-mono); display: block;">SpO2</span>
+                    <strong style="font-size: 0.95rem; font-family: var(--font-mono); color: var(--text-primary);">${vitals.spO2 || '--'} <small style="font-size: 0.6rem; color: var(--green-dark);">%</small></strong>
+                  </div>
+                  <div style="background: var(--grey-50); border: 1px solid var(--grey-300); border-radius: 6px; padding: 6px; text-align: center;">
+                    <span style="font-size: 0.62rem; color: var(--grey-500); font-family: var(--font-mono); display: block;">Resp Rate</span>
+                    <strong style="font-size: 0.95rem; font-family: var(--font-mono); color: var(--text-primary);">${vitals.respiratoryRate || '--'} <small style="font-size: 0.6rem; color: var(--green-dark);">rpm</small></strong>
+                  </div>
+                  <div style="background: var(--grey-50); border: 1px solid var(--grey-300); border-radius: 6px; padding: 6px; text-align: center;">
+                    <span style="font-size: 0.62rem; color: var(--grey-500); font-family: var(--font-mono); display: block;">HRV</span>
+                    <strong style="font-size: 0.95rem; font-family: var(--font-mono); color: var(--text-primary);">${vitals.hrv || '--'} <small style="font-size: 0.6rem; color: var(--green-dark);">ms</small></strong>
+                  </div>
                 </div>
-                <div style="background: var(--grey-50); border: 1px solid var(--grey-300); border-radius: 6px; padding: 6px; text-align: center;">
-                  <span style="font-size: 0.62rem; color: var(--grey-500); font-family: var(--font-mono); display: block;">SpO2</span>
-                  <strong style="font-size: 0.95rem; font-family: var(--font-mono); color: var(--text-primary);">${vitals.spO2} <small style="font-size: 0.6rem; color: var(--green-dark);">%</small></strong>
+              ` : `
+                <div style="background: var(--grey-50); border: 1px dashed var(--grey-300); border-radius: 6px; padding: 8px; text-align: center; margin-top: 6px;">
+                  <span style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono);">Optical Vitals Telemetry (rPPG) scan skipped or pending</span>
                 </div>
-                <div style="background: var(--grey-50); border: 1px solid var(--grey-300); border-radius: 6px; padding: 6px; text-align: center;">
-                  <span style="font-size: 0.62rem; color: var(--grey-500); font-family: var(--font-mono); display: block;">Resp Rate</span>
-                  <strong style="font-size: 0.95rem; font-family: var(--font-mono); color: var(--text-primary);">${vitals.respiratoryRate || '16'} <small style="font-size: 0.6rem; color: var(--green-dark);">rpm</small></strong>
-                </div>
-                <div style="background: var(--grey-50); border: 1px solid var(--grey-300); border-radius: 6px; padding: 6px; text-align: center;">
-                  <span style="font-size: 0.62rem; color: var(--grey-500); font-family: var(--font-mono); display: block;">HRV</span>
-                  <strong style="font-size: 0.95rem; font-family: var(--font-mono); color: var(--text-primary);">${vitals.hrv || '48'} <small style="font-size: 0.6rem; color: var(--green-dark);">ms</small></strong>
-                </div>
-              </div>
+              `}
             </div>
 
             <!-- Documents & Diagnoses Snapshot -->
@@ -245,10 +265,13 @@ export function renderStep4Summary(app, i18n) {
             <div style="background: var(--green-subtle); border: 1px solid var(--green-border); border-radius: 6px; padding: 10px 14px;">
               <strong style="font-size: 0.78rem; color: var(--green-darkest); font-family: var(--font-mono); text-transform: uppercase; display: flex; align-items: center; gap: 5px;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
-                Patient Consultation Instructions
+                ${isHomeCare ? 'Home Care Discharge Instructions' : 'Patient Consultation Instructions'}
               </strong>
               <p style="font-size: 0.76rem; color: var(--text-secondary); margin: 4px 0 0 0; line-height: 1.4;">
-                Please proceed to <strong>${assignedDoc?.wing || 'First Floor'}, ${cabinName} (${deptName})</strong>. The attending nurse will verify your token <strong>${token}</strong> when called on the corridor display.
+                ${isHomeCare 
+                  ? 'Doctor consultation is not required for this visit. Please follow the verified home remedies protocol below. If symptoms persist or worsen beyond 48 hours, return to the hospital.' 
+                  : `Please proceed to <strong>${assignedDoc?.wing || 'First Floor'}, ${cabinName} (${deptName})</strong>. The attending nurse will verify your token <strong>${token}</strong> when called on the corridor display.`
+                }
               </p>
             </div>
 
