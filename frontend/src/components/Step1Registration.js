@@ -22,8 +22,7 @@ export function renderStep1Registration(app, i18n) {
 
 /**
  * Rendered when ABHA ID is authenticated.
- * Unified, single-column Government of India Digital ABHA Card + Verified Demographics Pass.
- * Zero manual typing was required from the patient.
+ * Minimalist, human-centered single-column Government of India Digital ABHA Card + Demographics View.
  */
 function renderVerifiedAbhaView(app, i18n, patient, details) {
   const name = details.name || patient.name || "Verified Citizen";
@@ -43,7 +42,7 @@ function renderVerifiedAbhaView(app, i18n, patient, details) {
   const avatarColor = details.avatarColor || (gender === "Female" ? "#EC4899" : "#10B981");
   const photoUrl = details.photoUrl || null;
 
-  // Build authentic ABDM QR payload so the QR code can be scanned by any smartphone or 2D gun
+  // Build authentic ABDM QR payload for interoperable clinical exchange
   const abdmQrPayload = JSON.stringify({
     hidn: abhaNumber,
     hid: abhaAddress,
@@ -58,29 +57,22 @@ function renderVerifiedAbhaView(app, i18n, patient, details) {
   });
 
   return `
-    <div class="registration-main-card verified-glow-animation">
-      <!-- Tricolor Flag Band Accent -->
+    <div class="registration-main-card">
+      <!-- Official Tricolor Header Line -->
       <div class="abha-tricolor-bar"></div>
 
-      <!-- Verified Header -->
+      <!-- Card Header -->
       <div class="reg-card-header">
         <div class="reg-header-meta">
-          <div class="reg-badges-row">
-            <span class="reg-status-badge badge-green">
-              <span class="pulse-dot"></span> ✓ ABDM e-KYC Authenticated
-            </span>
-            <span class="reg-status-badge badge-blue">
-              Token #${patient.tokenNumber || 'A-15'}
-            </span>
-            <span class="reg-status-badge badge-neutral">
-              DPDP Act 2023 Compliant
-            </span>
+          <div class="reg-status-badge badge-green">
+            <span class="pulse-dot"></span>
+            <span>ABDM e-KYC Verified • Token #${patient.tokenNumber || 'A-15'}</span>
           </div>
           <h2 class="reg-main-title">
-            Patient Demographics Verified
+            Patient Records Verified
           </h2>
           <p class="reg-main-subtitle">
-            Identity & clinical history fetched directly from Government of India National Health Authority.
+            Demographic information fetched securely from the National Health Authority.
           </p>
         </div>
         <button class="btn-3d btn-3d-secondary reg-audio-btn" onclick="window.app.speakStep1Prompt()">
@@ -88,9 +80,9 @@ function renderVerifiedAbhaView(app, i18n, patient, details) {
         </button>
       </div>
 
-      <!-- Integrated Digital ABHA Card -->
+      <!-- Verified Identity Content -->
       <div class="verified-pass-container">
-        <!-- Pass Identity Bar -->
+        <!-- Citizen Identity Bar -->
         <div class="verified-pass-identity-row">
           <div class="pass-avatar-wrapper" style="background: ${photoUrl ? '#0F172A' : avatarColor};">
             ${photoUrl ? `
@@ -98,13 +90,12 @@ function renderVerifiedAbhaView(app, i18n, patient, details) {
             ` : `
               <span class="pass-avatar-text">${avatarInitials}</span>
             `}
-            <span class="pass-avatar-badge">e-KYC</span>
           </div>
 
           <div class="pass-identity-info">
             <div class="pass-patient-name-row">
               <h3 class="pass-patient-name">${name}</h3>
-              <span class="verified-check-pill">✓ Verified</span>
+              <span class="verified-check-pill">✓ e-KYC</span>
             </div>
             <div class="pass-meta-row">
               <span class="pass-abha-id">ABHA: <strong>${abhaNumber}</strong></span>
@@ -113,31 +104,31 @@ function renderVerifiedAbhaView(app, i18n, patient, details) {
             </div>
             <div class="pass-auth-note">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-              <span>Authenticated via ${details.authMethod || 'Aadhaar e-KYC (ABDM Gateway)'}</span>
+              <span>Aadhaar e-KYC Authenticated (Gateway Sync)</span>
             </div>
           </div>
 
-          <!-- Integrated Scannable ABDM QR Code -->
+          <!-- Integrated Scannable QR Code -->
           <div class="pass-qr-box">
             <div class="pass-qr-svg">
               ${generateQrCodeSvg(abdmQrPayload, 62)}
             </div>
-            <span class="pass-qr-label">ABDM Token QR</span>
+            <span class="pass-qr-label">ABDM Token</span>
           </div>
         </div>
 
-        <!-- Demographic Details Grid (Clean 6-Tile Layout) -->
+        <!-- 6-Tile Demographics Grid -->
         <div class="verified-tiles-grid">
           <div class="verified-tile">
-            <span class="tile-label">Age & Date of Birth</span>
-            <span class="tile-value">${age} Years <small>(${dob})</small></span>
+            <span class="tile-label">Age & DOB</span>
+            <span class="tile-value">${age} Yrs <small>(${dob})</small></span>
           </div>
           <div class="verified-tile">
             <span class="tile-label">Gender</span>
             <span class="tile-value">${gender}</span>
           </div>
           <div class="verified-tile">
-            <span class="tile-label">Linked Mobile</span>
+            <span class="tile-label">Mobile</span>
             <span class="tile-value font-mono">${mobile}</span>
           </div>
           <div class="verified-tile">
@@ -147,22 +138,22 @@ function renderVerifiedAbhaView(app, i18n, patient, details) {
             </span>
           </div>
           <div class="verified-tile">
-            <span class="tile-label">State & District</span>
-            <span class="tile-value">${district}, ${state} <small>(${pin})</small></span>
+            <span class="tile-label">Location</span>
+            <span class="tile-value">${district}, ${state}</span>
           </div>
           <div class="verified-tile">
-            <span class="tile-label">Linked Records (PHR)</span>
+            <span class="tile-label">Linked Records</span>
             <span class="tile-value records-synced">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-              ${recordsCount} Records Available
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              ${recordsCount} Available
             </span>
           </div>
         </div>
 
-        <!-- DPDP Act Consent Banner -->
+        <!-- Compliance Note -->
         <div class="verified-compliance-banner">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          <span>DPDP Act 2023 Consent Active. Patient records linked ephemerally for Consultation Token <strong>${patient.tokenNumber || 'A-15'}</strong>. Zero biometric retention.</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span>DPDP Act 2023 Consent Active. Health records linked ephemerally for Consultation Token <strong>${patient.tokenNumber || 'A-15'}</strong>.</span>
         </div>
       </div>
 
@@ -181,10 +172,7 @@ function renderVerifiedAbhaView(app, i18n, patient, details) {
 
 /**
  * Rendered when ABHA ID is not yet verified.
- * High-end Single Column Layout:
- * - Segmented Toggle: [⚡ Have ABHA ID] | [✍️ Don't Have ABHA ID (Walk-In)]
- * - Mode A: ABHA Input Console with instant fetch, quick sandbox citizen test chips, optical scan links
- * - Mode B: Direct Walk-In intake form asking for Name, Gender, Age, Mobile, Blood Group, State, Symptoms
+ * High-clarity, minimalist single-column intake console.
  */
 function renderUnverifiedIntakeView(app, i18n, patient, abhaMode, validationError, isVerifying) {
   const currentGender = patient.gender || "Female";
@@ -198,22 +186,15 @@ function renderUnverifiedIntakeView(app, i18n, patient, abhaMode, validationErro
       <!-- Card Header -->
       <div class="reg-card-header">
         <div class="reg-header-meta">
-          <div class="reg-badges-row">
-            <span class="reg-status-badge badge-green">
-              <span class="pulse-dot"></span> ABDM Gateway Live
-            </span>
-            <span class="reg-status-badge badge-blue">
-              NHA Certified M1-M3
-            </span>
-            <span class="reg-status-badge badge-neutral">
-              DPDP Act 2023 Compliant
-            </span>
+          <div class="reg-status-badge badge-green">
+            <span class="pulse-dot"></span>
+            <span>Live ABDM Gateway • DPDP Compliant</span>
           </div>
           <h2 class="reg-main-title">
             ${i18n.t("reg_title")}
           </h2>
           <p class="reg-main-subtitle">
-            Authenticate with ABHA ID to automatically retrieve patient records, or register manually for walk-in OPD.
+            Enter an ABHA ID for instant profile fetch, or register manually for a walk-in OPD token.
           </p>
         </div>
         <button class="btn-3d btn-3d-secondary reg-audio-btn" onclick="window.app.speakStep1Prompt()">
@@ -249,11 +230,11 @@ function renderUnverifiedIntakeView(app, i18n, patient, abhaMode, validationErro
              ======================================================== -->
         ${abhaMode === 'abha' ? `
           <div class="abha-lookup-section">
-            <!-- Search & Fetch Box -->
+            <!-- Hero Search Console -->
             <div class="abha-search-console">
               <div class="console-label-row">
                 <label class="console-label" for="patientAbhaInput">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
                   Enter 14-Digit ABHA ID or PHR Address
                 </label>
                 <span id="abhaDigitsCounter" class="console-counter">
@@ -285,20 +266,20 @@ function renderUnverifiedIntakeView(app, i18n, patient, abhaMode, validationErro
                 >
                   ${isVerifying ? `
                     <svg class="spin-animation" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10"/></svg>
-                    <span>Fetching ABDM...</span>
+                    <span>Fetching...</span>
                   ` : `
-                    <span>⚡ Fetch ABHA Details →</span>
+                    <span>Fetch Details →</span>
                   `}
                 </button>
               </div>
 
-              <!-- Validation Error Box -->
+              <!-- Validation Error Alert -->
               ${validationError ? `
                 <div class="abha-validation-error-box input-shake">
                   <div class="error-box-inner">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2.4"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2.4"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                     <div>
-                      <strong class="error-title">ABHA Lookup Notice</strong>
+                      <strong class="error-title">ABHA Verification Notice</strong>
                       <span class="error-desc">${validationError}</span>
                     </div>
                   </div>
@@ -306,44 +287,44 @@ function renderUnverifiedIntakeView(app, i18n, patient, abhaMode, validationErro
               ` : `
                 <div class="console-hint-text">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-                  Entering an ABHA ID retrieves verified name, age, gender, DOB and past clinical history instantly with zero typing.
+                  Verified demographics and past clinical records are retrieved automatically with zero typing required.
                 </div>
               `}
 
               <!-- Quick-Fill Sandbox Test Profiles -->
               <div class="sandbox-quick-chips-bar">
-                <span class="sandbox-chips-label">⚡ One-Click ABDM Sandbox Test Profiles:</span>
+                <span class="sandbox-chips-label">⚡ One-Click ABDM Sandbox Profiles:</span>
                 <div class="sandbox-chips-grid">
                   <button type="button" class="sandbox-citizen-chip" onclick="window.app.selectQuickAbha('91-8274-1923-0194')">
-                    <span>👤 <strong>Ravi Kumar</strong> (91-8274-1923-0194)</span>
+                    <span>👤 Ravi Kumar</span>
                     <span class="chip-state-tag">Delhi</span>
                   </button>
                   <button type="button" class="sandbox-citizen-chip" onclick="window.app.selectQuickAbha('91-7210-4491-8023')">
-                    <span>👤 <strong>Sunita Verma</strong> (91-7210-4491-8023)</span>
+                    <span>👤 Sunita Verma</span>
                     <span class="chip-state-tag">Bengaluru</span>
                   </button>
                   <button type="button" class="sandbox-citizen-chip" onclick="window.app.selectQuickAbha('91-5829-1029-4481')">
-                    <span>👤 <strong>Dr. Kavita</strong> (91-5829-1029-4481)</span>
+                    <span>👤 Dr. Kavita</span>
                     <span class="chip-state-tag">Mumbai</span>
                   </button>
                   <button type="button" class="sandbox-citizen-chip" onclick="window.app.selectQuickAbha('91-9124-4412-0941')">
-                    <span>👤 <strong>Sneha R.</strong> (91-9124-4412-0941)</span>
+                    <span>👤 Sneha R.</span>
                     <span class="chip-state-tag">Noida</span>
                   </button>
                 </div>
               </div>
             </div>
 
-            <!-- Optical Utilities & Alternative Registration Bar -->
+            <!-- Utilities Bar -->
             <div class="utility-options-bar">
               <div class="utility-actions-group">
                 <button type="button" class="utility-action-btn" onclick="window.app.openAbhaCameraScanner()">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                  <span>📷 Scan Physical Card</span>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                  <span>Scan Physical Card</span>
                 </button>
                 <button type="button" class="utility-action-btn" onclick="document.getElementById('abhaCardFileInput').click()">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                  <span>📁 Upload Card File</span>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  <span>Upload Card Image / PDF</span>
                 </button>
               </div>
 
@@ -374,7 +355,7 @@ function renderUnverifiedIntakeView(app, i18n, patient, abhaMode, validationErro
               <div class="notice-icon">📋</div>
               <div class="notice-text">
                 <strong>Walk-In Registration Mode</strong>
-                <span>No ABHA ID provided. Please enter patient information below to generate an OPD queue pass.</span>
+                <span>No ABHA ID provided. Please enter the patient's basic details to issue an OPD queue pass.</span>
               </div>
               <button type="button" class="switch-to-abha-btn" onclick="window.app.setAbhaMode('abha')">
                 ⚡ Have ABHA? Auto-Fill
