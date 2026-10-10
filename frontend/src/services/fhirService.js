@@ -25,9 +25,9 @@ class FHIRService {
     };
   }
 
-  createConditionResource(patientId, chiefComplaint) {
+  createConditionResource(patientId, chiefComplaint, bodySite = null) {
     const term = TERMINOLOGY_MAP[chiefComplaint] || { snomed: "404684003", icd11: "MD81" };
-    return {
+    const cond = {
       resourceType: "Condition",
       id: `cond-${Date.now().toString().slice(-4)}`,
       clinicalStatus: { coding: [{ system: "http://terminology.hl7.org/CodeSystem/condition-clinical", code: "active" }] },
@@ -42,6 +42,17 @@ class FHIRService {
       },
       subject: { reference: `Patient/pat-${patientId}` }
     };
+
+    if (bodySite && bodySite.code) {
+      cond.bodySite = [
+        {
+          coding: [{ system: "http://snomed.info/sct", code: bodySite.code, display: bodySite.display }],
+          text: bodySite.display
+        }
+      ];
+    }
+
+    return cond;
   }
 
   createObservationResource(patientId, code, display, value, unit = "", system = "http://loinc.org") {
@@ -72,14 +83,71 @@ class FHIRService {
     return obs;
   }
 
+  createQuestionnaireResponse(patientId, intakeData) {
+    if (!intakeData) return null;
+    const items = Object.entries(intakeData.answers || {}).map(([linkId, answerVal]) => ({
+      linkId,
+      text: linkId.replace(/_/g, " "),
+      answer: [{
+        valueString: Array.isArray(answerVal) ? answerVal.join(", ") : String(answerVal)
+      }]
+    }));
+
+    return {
+      resourceType: "QuestionnaireResponse",
+      id: `qr-${Date.now().toString().slice(-4)}`,
+      status: "completed",
+      questionnaire: `urn:medikiosk:qb:${intakeData.questionBankVersion || 'v2.1'}`,
+      subject: { reference: `Patient/pat-${patientId}` },
+      authored: intakeData.timestamp || new Date().toISOString(),
+      item: items
+    };
+  }
+
+  createTriageObservation(patientId, triageResult) {
+    if (!triageResult) return null;
+    return {
+      resourceType: "Observation",
+      id: `triage-${Date.now().toString().slice(-4)}`,
+      status: "final",
+      category: [{ coding: [{ system: "http://terminology.hl7.org/CodeSystem/observation-category", code: "survey", display: "Survey" }] }],
+      code: {
+        coding: [{ system: "http://loinc.org", code: "75323-6", display: "Condition urgency" }],
+        text: "Clinical Intake Triage Urgency"
+      },
+      subject: { reference: `Patient/pat-${patientId}` },
+      valueCodeableConcept: {
+        coding: [{
+          system: "https://medikiosk.abdm.gov.in/triage-tiers",
+          code: triageResult.urgencyTier || "ROUTINE_PRIORITY_3",
+          display: triageResult.tierDetails?.label || "Routine Consultation"
+        }],
+        text: triageResult.tierDetails?.action || "Routine OPD Care"
+      },
+      note: (triageResult.triggeredRules || []).map(r => ({ text: `[${r.ruleId}] ${r.reason}` }))
+    };
+  }
+
   generateFHIRBundle(patientData) {
+    const intake = patientData.anatomicalIntake || patientData.intakeSummary || null;
+    const bodySite = intake?.snomedBodyStructure || null;
+
     const patientResource = this.createPatientResource(patientData);
-    const conditionResource = this.createConditionResource(patientData.id, patientData.chiefComplaint);
+    const conditionResource = this.createConditionResource(patientData.id, patientData.chiefComplaint, bodySite);
     
     const entries = [
       { fullUrl: `urn:uuid:${patientResource.id}`, resource: patientResource },
       { fullUrl: `urn:uuid:${conditionResource.id}`, resource: conditionResource }
     ];
+
+    // Add 3D Anatomical Intake QuestionnaireResponse & Triage Observation if available
+    if (intake) {
+      const qrResource = this.createQuestionnaireResponse(patientData.id, intake);
+      if (qrResource) entries.push({ fullUrl: `urn:uuid:${qrResource.id}`, resource: qrResource });
+
+      const triageObs = this.createTriageObservation(patientData.id, intake.triageResult);
+      if (triageObs) entries.push({ fullUrl: `urn:uuid:${triageObs.id}`, resource: triageObs });
+    }
 
     // Add Contactless Optical rPPG Vitals Observations
     if (patientData.rppgVitals) {

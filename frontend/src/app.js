@@ -18,6 +18,14 @@ import { clinicalGraphService } from "./services/clinicalKnowledgeGraph.js";
 import { meshService } from "./services/meshService.js";
 import { diseaseExtractor } from "./services/diseaseExtractor.js";
 import { i18n } from "./services/i18nService.js";
+import { AbhaLookupModal } from "./components/AbhaLookupModal.js";
+import { ANATOMY_REGISTRY, ANATOMY_SYSTEMS } from "./data/anatomyRegistry.js";
+import { anatomyRegistryService } from "./services/anatomyRegistryService.js";
+import { BodyMap2D } from "./components/BodyMap2D.js";
+import { SymptomQuestionEngine } from "./components/SymptomQuestionEngine.js";
+import { EmergencyAlertModal } from "./components/EmergencyAlertModal.js";
+import { notificationClientService } from "./services/notificationClientService.js";
+import { PhoneSimulatorModal } from "./components/PhoneSimulatorModal.js";
 
 function generateMedicalDocSvg(type, title, facility, items = [], rootCause = "", patientName = "Priya Patel", token = "A-24") {
   const isRx = type === "prescription";
@@ -149,6 +157,11 @@ class MediKioskApp {
     this.isSmsLogModalOpen = false;
     this.ayushAnswers = {};
 
+    // 3D Anatomical Body Map & Clinical Intake State
+    this.bodyMap2DInstance = null;
+    this.questionEngineInstance = null;
+    this.isVitalsBayCollapsed = false;
+
     this.initDefaultDoctorQueue();
     this.checkAndTrigger30MinAlerts();
 
@@ -167,6 +180,9 @@ class MediKioskApp {
       age: "",
       gender: "Female",
       abhaId: "",
+      abhaAddress: "",
+      isAbhaVerified: false,
+      verifiedProfile: null,
       mobile: "",
       chiefComplaint: "",
       hpi: {
@@ -186,18 +202,45 @@ class MediKioskApp {
       diseases: [],
       documents: [],
       rppgVitals: null,
+      anatomicalIntake: null,
       isEmergency: false,
       tokenNumber: "A-" + Math.floor(10 + Math.random() * 89)
     };
   }
 
   init() {
+    this.abhaModal = new AbhaLookupModal({
+      onSuccess: (profile) => this.onAbhaProfileLinked(profile)
+    });
+    this.phoneSimulator = new PhoneSimulatorModal(this);
     this.currentLanguage = i18n.getLanguage() || "hi";
     speechService.setLanguage(this.currentLanguage);
     const langSelect = document.getElementById("langSelect");
     if (langSelect) langSelect.value = this.currentLanguage;
     this.updateStaticHeaderTranslations();
     this.bindGlobalEvents();
+    this.render();
+  }
+
+  openAbhaLookupModal() {
+    const currentInput = document.getElementById("patientAbhaInput")?.value || this.patient.abhaId || "";
+    if (this.abhaModal) {
+      this.abhaModal.open(currentInput);
+    }
+  }
+
+  onAbhaProfileLinked(profile) {
+    if (!profile) return;
+    this.patient.isAbhaVerified = true;
+    this.patient.verifiedProfile = profile;
+    this.patient.name = profile.name || this.patient.name;
+    this.patient.gender = profile.gender || this.patient.gender;
+    if (profile.age) this.patient.age = profile.age;
+    if (profile.abhaAddress) this.patient.abhaAddress = profile.abhaAddress;
+    this.patient.abhaId = profile.abhaAddress || profile.abhaNumber || this.patient.abhaId;
+    if (profile.mobile) this.patient.mobile = profile.mobile;
+    if (profile.address) this.patient.address = profile.address;
+
     this.render();
   }
 
@@ -251,6 +294,11 @@ class MediKioskApp {
     this.patient.chiefComplaint = textarea.value;
   }
 
+  toggleVitalsBayCollapse() {
+    this.isVitalsBayCollapsed = !this.isVitalsBayCollapsed;
+    this.render();
+  }
+
   setMode(mode) {
     this.currentMode = mode;
     document.querySelectorAll(".mode-btn").forEach(btn => {
@@ -277,14 +325,24 @@ class MediKioskApp {
   goToStep(step) {
     if (this.currentStep === 2 && step !== 2) {
       this.stopCamera();
+      this.destroyBodyMapModule();
     }
     this.currentStep = step;
     this.render();
     if (step === 2) {
       setTimeout(() => {
-        this.initCamera();
-        this.drawLiveOscilloscope();
-      }, 100);
+        try {
+          this.initBodyMapModule();
+        } catch (mapErr) {
+          console.error("[MediKiosk] Body map init error:", mapErr);
+        }
+        try {
+          this.initCamera();
+          this.drawLiveOscilloscope();
+        } catch (camErr) {
+          console.warn("[MediKiosk] Camera init warning (optional hardware):", camErr);
+        }
+      }, 50);
     }
   }
 
@@ -313,12 +371,35 @@ class MediKioskApp {
     if (!clone.name && this.patient.name) clone.name = this.patient.name;
 
     const existingIdx = this.doctorQueue.findIndex(p => p.id === clone.id);
+    let qPosition = 0;
     if (existingIdx >= 0) {
       this.doctorQueue[existingIdx] = clone;
+      qPosition = existingIdx + 1;
     } else {
       // Append newly created walk-in patient at the END of the live OPD queue
       this.doctorQueue.push(clone);
+      qPosition = this.doctorQueue.length;
     }
+
+    const membersNext = Math.max(0, qPosition - 1);
+    const waitMinutes = membersNext === 0 ? 5 : Math.round(membersNext * 7.5);
+    const estTime = new Date(Date.now() + Math.max(5, waitMinutes) * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    // Send real-time registration SMS to registered number
+    notificationClientService.sendRealTimeSms({
+      mobile: clone.mobile || "+91 98765 43210",
+      patientId: clone.id,
+      patientName: clone.name || "Walk-in Patient",
+      tokenNumber: clone.tokenNumber || "TK-101",
+      membersNext,
+      appointmentTime: estTime,
+      waitMinutes,
+      doctorName: "Dr. Sharma",
+      cabinNumber: "Cabin 3",
+      department: "General Medicine",
+      alertType: "registration"
+    });
+
     this.checkAndTrigger30MinAlerts();
 
     // Save to MERN backend API
@@ -338,7 +419,7 @@ class MediKioskApp {
       this.bindDoctorEvents();
     } else {
       container.innerHTML = `
-        <!-- 3D Kiosk Hardware Stepper -->
+        <!-- 2D Kiosk Hardware Stepper -->
         <div class="kiosk-stepper">
           <div class="step-node ${this.currentStep === 1 ? 'active' : ''} ${this.currentStep > 1 ? 'completed' : ''}" onclick="window.app.goToStep(1)">
             <div class="step-number">${this.currentStep > 1 ? '✓' : '1'}</div>
@@ -350,8 +431,8 @@ class MediKioskApp {
           <div class="step-node ${this.currentStep === 2 ? 'active' : ''} ${this.currentStep > 2 ? 'completed' : ''}" onclick="window.app.goToStep(2)">
             <div class="step-number">${this.currentStep > 2 ? '✓' : '2'}</div>
             <div>
-              <div class="step-label">${i18n.t("step2_title")}</div>
-              <div class="step-subtext">${i18n.t("step2_sub")}</div>
+              <div class="step-label">🦴 2D Skeleton & Intake</div>
+              <div class="step-subtext">Interactive Skeleton, Organs & Joints</div>
             </div>
           </div>
           <div class="step-node ${this.currentStep === 3 ? 'active' : ''} ${this.currentStep > 3 ? 'completed' : ''}" onclick="window.app.goToStep(3)">
@@ -374,6 +455,13 @@ class MediKioskApp {
         ${this.renderCurrentStepContent()}
       `;
       this.bindKioskEvents();
+
+      // Lifecycle hook: If Step 2 is active, ALWAYS mount BodyMap2D immediately into the fresh DOM
+      if (this.currentStep === 2) {
+        setTimeout(() => {
+          this.initBodyMapModule();
+        }, 15);
+      }
     }
   }
 
@@ -423,8 +511,23 @@ class MediKioskApp {
           </div>
 
           <div>
-            <label class="input-label-3d">${i18n.t("abha_label")}</label>
-            <input type="text" id="patientAbhaInput" class="input-text-3d" placeholder="${i18n.t("abha_ph")}" value="${this.patient.abhaId}">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <label class="input-label-3d" style="margin: 0;">${i18n.t("abha_label")}</label>
+              <button type="button" class="btn-3d btn-3d-secondary" style="font-size: 0.74rem; padding: 4px 10px; color: var(--emerald-dark); border-color: var(--emerald-border); background: var(--emerald-light);" onclick="window.app.openAbhaLookupModal()">
+                🔍 ABDM Patient Lookup (OTP)
+              </button>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <input type="text" id="patientAbhaInput" class="input-text-3d" placeholder="${i18n.t("abha_ph")}" value="${this.patient.abhaId}" style="flex: 1;">
+              <button type="button" class="btn-3d btn-3d-primary" style="font-size: 0.78rem; padding: 6px 12px; white-space: nowrap;" onclick="window.app.openAbhaLookupModal()">
+                Verify ABHA
+              </button>
+            </div>
+            ${this.patient.isAbhaVerified ? `
+              <div style="margin-top: 6px; display: flex; align-items: center; gap: 6px; font-size: 0.76rem; color: var(--emerald-dark); font-weight: 700; background: var(--emerald-light); padding: 4px 8px; border-radius: 6px; border: 1px solid var(--emerald-border);">
+                <span>✓</span> ABDM Verified Patient Profile Linked (${this.patient.abhaAddress || this.patient.abhaId})
+              </div>
+            ` : ''}
           </div>
 
           <div>
@@ -432,17 +535,20 @@ class MediKioskApp {
             <input type="tel" id="patientMobileInput" class="input-text-3d" placeholder="${i18n.t("mobile_ph")}" value="${this.patient.mobile}">
           </div>
 
-          <div style="background: rgba(13, 148, 136, 0.12); border: 1px solid rgba(13, 148, 136, 0.4); border-radius: 12px; padding: 12px 14px; display: flex; align-items: flex-start; gap: 10px; margin-top: 6px;">
+          <div style="background: var(--emerald-light); border: 1px solid var(--emerald-border); border-radius: 12px; padding: 12px 14px; display: flex; align-items: flex-start; gap: 10px; margin-top: 6px;">
             <span style="font-size: 1.2rem;">🔒</span>
             <div>
-              <strong style="font-size: 0.82rem; color: #5EEAD4;">${i18n.t("dpdp_title")}</strong>
+              <strong style="font-size: 0.82rem; color: var(--emerald-deep);">${i18n.t("dpdp_title")}</strong>
               <p style="font-size: 0.76rem; color: var(--text-muted); margin-top: 2px;">
                 ${i18n.t("dpdp_desc")}
               </p>
             </div>
           </div>
 
-          <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; flex-wrap: wrap; gap: 8px;">
+            <button type="button" class="btn-3d btn-3d-secondary" style="padding: 12px 20px; color: #0284C7; border-color: rgba(2, 132, 199, 0.4); font-weight: 700;" onclick="window.app.goToStep(2)">
+              🦴 Launch 2D Skeleton & Anatomy Map →
+            </button>
             <button class="btn-3d btn-3d-primary" style="padding: 14px 32px;" onclick="window.app.saveStep1AndNext()">
               ${i18n.t("btn_proceed_vitals")}
             </button>
@@ -459,7 +565,6 @@ class MediKioskApp {
     const vitals = this.patient.rppgVitals || {
       heartRate: "--",
       hrv: "--",
-      spO2: "--",
       respiratoryRate: "--",
       stressScore: "--",
       signalQuality: "Awaiting Face Alignment"
@@ -469,43 +574,82 @@ class MediKioskApp {
     const checks = this.faceLockState.checks || {};
 
     return `
-      <!-- Vitals Hardware Bay -->
-      <div class="vitals-hardware-bay">
-        <div class="bay-header">
-          <div>
-            <h3 style="font-family: var(--font-display); font-size: 1.15rem; font-weight: 800; color: #FFFFFF;">
-              ${i18n.t("vitals_title")}
-            </h3>
-            <p style="font-size: 0.78rem; color: var(--text-muted);">
-              ${i18n.t("vitals_subtitle")}
-            </p>
-          </div>
-
-          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <!-- Scan Duration Switcher -->
-            <div style="background: var(--bg-surface-inset); padding: 3px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); display: flex; gap: 2px;">
-              <button class="mode-btn ${this.scanDuration === 30000 ? 'active' : ''}" style="padding: 4px 10px; font-size: 0.74rem;" onclick="window.app.setScanDuration(30000)">
-                ${i18n.t("rapid_scan_btn")}
-              </button>
-              <button class="mode-btn ${this.scanDuration === 60000 ? 'active' : ''}" style="padding: 4px 10px; font-size: 0.74rem;" onclick="window.app.setScanDuration(60000)">
-                ${i18n.t("diagnostic_scan_btn")}
+      ${this.isVitalsBayCollapsed ? `
+        <!-- Collapsed Compact Vitals Telemetry Strip -->
+        <div class="vitals-hardware-bay vitals-hardware-bay-collapsed" style="padding: 10px 18px; margin-bottom: 1.25rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 1.3rem;">📷</span>
+              <div>
+                <strong style="color: var(--text-primary); font-size: 0.9rem;">${i18n.t("vitals_title")}</strong>
+                <span style="font-size: 0.74rem; color: var(--text-muted); display: block;">
+                  ${this.patient.rppgVitals ? '✓ Calibrated Diagnostic Telemetry' : 'Contactless Optical Scanner (Optional)'}
+                </span>
+              </div>
+            </div>
+            
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <span class="pill-3d ${vitals.heartRate !== '--' ? 'pill-3d-emerald' : 'pill-3d-subtle'}" style="font-size: 0.74rem; padding: 4px 10px;">
+                🫀 <strong>${vitals.heartRate}</strong> BPM
+              </span>
+              <span class="pill-3d ${vitals.stressScore !== '--' && vitals.stressScore !== undefined ? 'pill-3d-emerald' : 'pill-3d-subtle'}" style="font-size: 0.74rem; padding: 4px 10px;">
+                ⚡ <strong>${vitals.stressScore !== undefined ? vitals.stressScore : '--'}</strong>/100 Stress
+              </span>
+              <span class="pill-3d ${vitals.hrv !== '--' ? 'pill-3d-emerald' : 'pill-3d-subtle'}" style="font-size: 0.74rem; padding: 4px 10px;">
+                〰 <strong>${vitals.hrv}</strong> ms HRV
+              </span>
+              <span class="pill-3d ${vitals.respiratoryRate !== '--' ? 'pill-3d-emerald' : 'pill-3d-subtle'}" style="font-size: 0.74rem; padding: 4px 10px;">
+                🫁 <strong>${vitals.respiratoryRate}</strong> RPM
+              </span>
+              <button class="btn-3d btn-3d-secondary" style="padding: 5px 12px; font-size: 0.74rem;" onclick="window.app.toggleVitalsBayCollapse()">
+                ⌄ Expand Camera Scanner
               </button>
             </div>
-
-            <button class="btn-3d ${this.isAyushMode ? 'btn-3d-success' : 'btn-3d-secondary'}" style="padding: 6px 12px; font-size: 0.76rem;" onclick="window.app.toggleAyushMode()">
-              🌿 ${this.isAyushMode ? 'AYUSH Active' : i18n.t("ayush_mode_btn")}
-            </button>
           </div>
         </div>
+      ` : `
+        <!-- Vitals Hardware Bay -->
+        <div class="vitals-hardware-bay">
+          <div class="bay-header">
+            <div>
+              <h3 style="font-family: var(--font-display); font-size: 1.15rem; font-weight: 800; color: var(--text-primary);">
+                ${i18n.t("vitals_title")}
+              </h3>
+              <p style="font-size: 0.78rem; color: var(--text-muted);">
+                ${i18n.t("vitals_subtitle")}
+              </p>
+            </div>
 
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <!-- Scan Duration Switcher -->
+              <div style="background: var(--bg-surface-subtle); padding: 3px; border-radius: 10px; border: 1px solid var(--border-light); display: flex; gap: 2px;">
+                <button class="mode-btn ${this.scanDuration === 30000 ? 'active' : ''}" style="padding: 4px 10px; font-size: 0.74rem;" onclick="window.app.setScanDuration(30000)">
+                  ${i18n.t("rapid_scan_btn")}
+                </button>
+                <button class="mode-btn ${this.scanDuration === 60000 ? 'active' : ''}" style="padding: 4px 10px; font-size: 0.74rem;" onclick="window.app.setScanDuration(60000)">
+                  ${i18n.t("diagnostic_scan_btn")}
+                </button>
+              </div>
+
+              <button class="btn-3d ${this.isAyushMode ? 'btn-3d-success' : 'btn-3d-secondary'}" style="padding: 6px 12px; font-size: 0.76rem;" onclick="window.app.toggleAyushMode()">
+                🌿 ${this.isAyushMode ? 'AYUSH Active' : i18n.t("ayush_mode_btn")}
+              </button>
+
+              <button class="btn-3d btn-3d-secondary" style="padding: 6px 10px; font-size: 0.74rem;" onclick="window.app.toggleVitalsBayCollapse()" title="Minimize camera bay to give full height to Body Map">
+                ⌃ Minimize Bay
+              </button>
+            </div>
+          </div>`}
+
+        ${!this.isVitalsBayCollapsed ? `
         <div style="display: grid; grid-template-columns: 240px 1fr; gap: 1.25rem; align-items: stretch;">
           <!-- Camera View / Verified Card -->
           <div>
             ${this.patient.rppgVitals ? `
-              <div style="height: 200px; border-radius: 14px; background: linear-gradient(135deg, rgba(6, 78, 59, 0.4) 0%, rgba(15, 23, 42, 0.85) 100%); border: 2px solid #10B981; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 1rem; box-shadow: 0 0 20px rgba(16, 185, 129, 0.25);">
-                <div style="font-size: 2.5rem; line-height: 1; margin-bottom: 6px;">✓</div>
-                <strong style="color: #6EE7B7; font-size: 0.95rem;">${i18n.t("vitals_calibrated")}</strong>
-                <p style="font-size: 0.74rem; color: #A7F3D0; margin-top: 2px;">${i18n.t("vitals_calibrated_sub")}</p>
+              <div style="height: 200px; border-radius: 14px; background: var(--green-surface); border: 2px solid var(--emerald); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 1rem; box-shadow: 0 2px 8px rgba(5, 150, 105, 0.15);">
+                <div style="font-size: 2.5rem; line-height: 1; margin-bottom: 6px; color: var(--emerald);">✓</div>
+                <strong style="color: var(--emerald-dark); font-size: 0.95rem;">${i18n.t("vitals_calibrated")}</strong>
+                <p style="font-size: 0.74rem; color: var(--emerald-deep); margin-top: 2px;">${i18n.t("vitals_calibrated_sub")}</p>
                 <span class="pill-3d pill-3d-emerald" style="margin-top: 8px;">
                   ${this.patient.rppgVitals.durationSeconds || 30}s • ${i18n.t("verified_badge")}
                 </span>
@@ -551,7 +695,7 @@ class MediKioskApp {
           <div style="display: flex; flex-direction: column; justify-content: space-between;">
             <div>
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                <span style="font-size: 0.78rem; color: #38BDF8; font-weight: 700;">
+                <span style="font-size: 0.78rem; color: var(--emerald-dark); font-weight: 700;">
                   ${this.scanDuration >= 60000 ? i18n.t("diagnostic_scan_btn") : i18n.t("rapid_scan_btn")}:
                 </span>
                 ${this.patient.rppgVitals ? `
@@ -566,13 +710,13 @@ class MediKioskApp {
               </div>
 
               ${this.isRppgScanning ? `
-                <div style="background: rgba(2, 6, 23, 0.9); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 10px; padding: 8px 12px; margin-bottom: 10px;">
-                  <div style="display: flex; justify-content: space-between; font-size: 0.76rem; color: #38BDF8; font-weight: 600;">
+                <div style="background: #0F172A; border: 1px solid #334155; border-radius: 10px; padding: 8px 12px; margin-bottom: 10px;">
+                  <div style="display: flex; justify-content: space-between; font-size: 0.76rem; color: #34D399; font-weight: 600;">
                     <span id="rppgCountdownText">${this.rppgElapsedSec || '0.0'}s / ${(this.scanDuration/1000).toFixed(1)}s (Hold Still)</span>
                     <strong id="rppgProgressText">${this.rppgProgress}%</strong>
                   </div>
-                  <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; margin-top: 5px;">
-                    <div id="rppgProgressBar" style="width: ${this.rppgProgress}%; height: 100%; background: linear-gradient(90deg, #38BDF8, #10B981); transition: width 0.1s linear;"></div>
+                  <div style="width: 100%; height: 6px; background: #1E293B; border-radius: 3px; overflow: hidden; margin-top: 5px;">
+                    <div id="rppgProgressBar" style="width: ${this.rppgProgress}%; height: 100%; background: var(--emerald); transition: width 0.1s linear;"></div>
                   </div>
                 </div>
               ` : ''}
@@ -593,50 +737,56 @@ class MediKioskApp {
                 <div class="telemetry-card ${vitals.heartRate > 100 ? 'highlight' : ''}">
                   <div class="telemetry-value">${vitals.heartRate}<span class="telemetry-unit">${i18n.t("telemetry_hr_unit")}</span></div>
                   <div class="telemetry-label">${i18n.t("telemetry_hr")}</div>
-                  <div class="telemetry-status">${vitals.heartRate > 100 ? '⚠️ High Rate' : (vitals.heartRate !== '--' ? i18n.t("status_resting") : '--')}</div>
-                </div>
-
-                <div class="telemetry-card ${vitals.spO2 < 95 && vitals.spO2 !== '--' ? 'highlight' : ''}">
-                  <div class="telemetry-value">${vitals.spO2}<span class="telemetry-unit">${i18n.t("telemetry_spo2_unit")}</span></div>
-                  <div class="telemetry-label">${i18n.t("telemetry_spo2")}</div>
-                  <div class="telemetry-status" style="color: ${vitals.spO2 < 95 ? '#F87171' : '#34D399'};">
-                    ${vitals.spO2 !== '--' ? i18n.t("status_optimal") : '--'}
+                  <div class="telemetry-status" style="font-size: 0.68rem; line-height: 1.2;">
+                    ${this.isRppgScanning 
+                      ? '● Sampling 30 FPS...' 
+                      : (vitals.heartRate !== '--' 
+                          ? (vitals.heartRate > 100 ? '⚠️ High (>100)' : '✓ Verified Normal') 
+                          : 'Awaiting scan (60-100)')}
                   </div>
                 </div>
 
                 <div class="telemetry-card ${vitals.stressScore > 70 ? 'highlight' : ''}">
                   <div class="telemetry-value">${vitals.stressScore !== undefined ? vitals.stressScore : '--'}<span class="telemetry-unit">${i18n.t("telemetry_stress_unit")}</span></div>
                   <div class="telemetry-label">${i18n.t("telemetry_stress")}</div>
-                  <div class="telemetry-status" style="color: #C084FC;">
-                    ${vitals.stressScore !== '--' && vitals.stressScore !== undefined ? i18n.t("status_relaxed") : '--'}
+                  <div class="telemetry-status" style="font-size: 0.68rem; line-height: 1.2; color: var(--text-secondary);">
+                    ${this.isRppgScanning 
+                      ? '● Computing spectral power...' 
+                      : (vitals.stressScore !== '--' && vitals.stressScore !== undefined 
+                          ? (vitals.stressScore > 70 ? '⚡ High Stress' : '✓ Normal / Balanced') 
+                          : 'Awaiting baseline')}
                   </div>
                 </div>
 
                 <div class="telemetry-card">
                   <div class="telemetry-value">${vitals.hrv}<span class="telemetry-unit">${i18n.t("telemetry_hrv_unit")}</span></div>
                   <div class="telemetry-label">${i18n.t("telemetry_hrv")}</div>
-                  <div class="telemetry-status">
-                    ${vitals.hrv !== '--' ? 'Steady' : '--'}
+                  <div class="telemetry-status" style="font-size: 0.68rem; line-height: 1.2;">
+                    ${this.isRppgScanning 
+                      ? '● Tracking R-R intervals...' 
+                      : (vitals.hrv !== '--' ? '✓ Steady Baseline' : 'Requires 15s stable wave')}
                   </div>
                 </div>
 
                 <div class="telemetry-card">
                   <div class="telemetry-value">${vitals.respiratoryRate}<span class="telemetry-unit">${i18n.t("telemetry_resp_unit")}</span></div>
                   <div class="telemetry-label">${i18n.t("telemetry_resp")}</div>
-                  <div class="telemetry-status">
-                    ${vitals.respiratoryRate !== '--' ? i18n.t("status_normal") : '--'}
+                  <div class="telemetry-status" style="font-size: 0.68rem; line-height: 1.2;">
+                    ${this.isRppgScanning 
+                      ? '● Chest/nasal motion...' 
+                      : (vitals.respiratoryRate !== '--' ? '✓ Resting (12-20 RPM)' : 'Awaiting motion signal')}
                   </div>
                 </div>
               </div>
 
               <!-- Reassuring Clinical Vitals Verification -->
               ${this.patient.rppgVitals ? `
-                <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 10px; padding: 10px 14px; margin-top: 10px; font-size: 0.8rem; color: #6EE7B7; display: flex; align-items: center; gap: 8px;">
+                <div style="background: var(--emerald-light); border: 1px solid var(--emerald-border); border-radius: 10px; padding: 10px 14px; margin-top: 10px; font-size: 0.8rem; color: var(--emerald-dark); display: flex; align-items: center; gap: 8px;">
                   <span style="font-size: 1.2rem;">✓</span>
                   <div>
                     <strong>${i18n.t("vitals_summary_badge")}</strong>
-                    <p style="font-size: 0.74rem; color: #A7F3D0; margin: 2px 0 0 0;">
-                      Heart rate, oxygen saturation, and respiratory rate are securely calibrated for doctor evaluation.
+                    <p style="font-size: 0.74rem; color: var(--emerald-deep); margin: 2px 0 0 0;">
+                      Heart rate, respiratory rate, and autonomic hemodynamics are securely calibrated for doctor evaluation.
                     </p>
                   </div>
                 </div>
@@ -645,9 +795,10 @@ class MediKioskApp {
           </div>
         </div>
       </div>
+      ` : ''}
 
-      <!-- Clinical Intake Layout (Voice & SOCRATES on left, 3D Body Map / AYUSH on right) -->
-      <div style="display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 1.5rem;">
+      <!-- Clinical Intake Layout (Balanced 50/50: Voice & SOCRATES on left, Full-Width Skeleton + Questions Below on right) -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start;">
         <div>
           <!-- Voice Station -->
           <div class="voice-station-3d">
@@ -659,21 +810,23 @@ class MediKioskApp {
 
             <div style="margin-top: 1rem; text-align: left;">
               <label class="input-label-3d">${i18n.t("chief_complaint_label")}</label>
-              <textarea id="chiefComplaintText" class="input-text-3d" rows="3" placeholder="${i18n.t("chief_complaint_ph")}">${this.patient.chiefComplaint}</textarea>
+              <textarea id="chiefComplaintText" class="input-text-3d" rows="3" 
+                        style="width: 100%; min-height: 85px; padding: 12px; font-size: 0.9rem; line-height: 1.5; border-radius: 10px; resize: vertical;" 
+                        placeholder="${i18n.t("chief_complaint_ph")}">${this.patient.chiefComplaint}</textarea>
 
               <!-- Quick Common Symptoms Chips -->
-              <div style="margin-top: 10px;">
-                <label style="font-size: 0.76rem; color: var(--text-muted); display: block; margin-bottom: 5px;">${i18n.t("quick_symptoms_title")}</label>
-                <div style="display: flex; flex-wrap: wrap; gap: 6px;">
-                  <button type="button" class="quick-chip" onclick="window.app.appendSymptom('${i18n.t("sym_fever")}')">🤒 ${i18n.t("sym_fever")}</button>
-                  <button type="button" class="quick-chip" onclick="window.app.appendSymptom('${i18n.t("sym_cough")}')">🤧 ${i18n.t("sym_cough")}</button>
-                  <button type="button" class="quick-chip" onclick="window.app.appendSymptom('${i18n.t("sym_headache")}')">🤕 ${i18n.t("sym_headache")}</button>
-                  <button type="button" class="quick-chip" onclick="window.app.appendSymptom('${i18n.t("sym_chest_pain")}')">🫀 ${i18n.t("sym_chest_pain")}</button>
-                  <button type="button" class="quick-chip" onclick="window.app.appendSymptom('${i18n.t("sym_stomach_pain")}')">🤢 ${i18n.t("sym_stomach_pain")}</button>
-                  <button type="button" class="quick-chip" onclick="window.app.appendSymptom('${i18n.t("sym_breathless")}')">🫁 ${i18n.t("sym_breathless")}</button>
-                  <button type="button" class="quick-chip" onclick="window.app.appendSymptom('${i18n.t("sym_joint_pain")}')">🦴 ${i18n.t("sym_joint_pain")}</button>
-                  <button type="button" class="quick-chip" onclick="window.app.appendSymptom('${i18n.t("sym_vomiting")}')">🤮 ${i18n.t("sym_vomiting")}</button>
-                  <button type="button" class="quick-chip" onclick="window.app.appendSymptom('${i18n.t("sym_fatigue")}')">😴 ${i18n.t("sym_fatigue")}</button>
+              <div style="margin-top: 12px;">
+                <label style="font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); display: block; margin-bottom: 6px;">${i18n.t("quick_symptoms_title")}</label>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                  <button type="button" class="quick-chip" style="min-height: 40px; padding: 6px 14px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px;" onclick="window.app.appendSymptom('${i18n.t("sym_fever")}')">🤒 ${i18n.t("sym_fever")}</button>
+                  <button type="button" class="quick-chip" style="min-height: 40px; padding: 6px 14px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px;" onclick="window.app.appendSymptom('${i18n.t("sym_cough")}')">🤧 ${i18n.t("sym_cough")}</button>
+                  <button type="button" class="quick-chip" style="min-height: 40px; padding: 6px 14px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px;" onclick="window.app.appendSymptom('${i18n.t("sym_headache")}')">🤕 ${i18n.t("sym_headache")}</button>
+                  <button type="button" class="quick-chip" style="min-height: 40px; padding: 6px 14px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px;" onclick="window.app.appendSymptom('${i18n.t("sym_chest_pain")}')">🫀 ${i18n.t("sym_chest_pain")}</button>
+                  <button type="button" class="quick-chip" style="min-height: 40px; padding: 6px 14px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px;" onclick="window.app.appendSymptom('${i18n.t("sym_stomach_pain")}')">🤢 ${i18n.t("sym_stomach_pain")}</button>
+                  <button type="button" class="quick-chip" style="min-height: 40px; padding: 6px 14px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px;" onclick="window.app.appendSymptom('${i18n.t("sym_breathless")}')">🫁 ${i18n.t("sym_breathless")}</button>
+                  <button type="button" class="quick-chip" style="min-height: 40px; padding: 6px 14px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px;" onclick="window.app.appendSymptom('${i18n.t("sym_joint_pain")}')">🦴 ${i18n.t("sym_joint_pain")}</button>
+                  <button type="button" class="quick-chip" style="min-height: 40px; padding: 6px 14px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px;" onclick="window.app.appendSymptom('${i18n.t("sym_vomiting")}')">🤮 ${i18n.t("sym_vomiting")}</button>
+                  <button type="button" class="quick-chip" style="min-height: 40px; padding: 6px 14px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px;" onclick="window.app.appendSymptom('${i18n.t("sym_fatigue")}')">😴 ${i18n.t("sym_fatigue")}</button>
                 </div>
               </div>
             </div>
@@ -683,7 +836,7 @@ class MediKioskApp {
           <div class="card-3d" style="padding: 1.25rem; margin-bottom: 1.25rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
               <div>
-                <h4 style="font-size: 0.88rem; font-weight: 700; color: #5EEAD4;">${i18n.t("herbs_title")}</h4>
+                <h4 style="font-size: 0.88rem; font-weight: 700; color: var(--emerald-dark);">${i18n.t("herbs_title")}</h4>
                 <p style="font-size: 0.72rem; color: var(--text-muted); margin: 0;">${i18n.t("herbs_sub")}</p>
               </div>
               <button class="btn-3d btn-3d-secondary" style="padding: 4px 10px; font-size: 0.72rem;" onclick="window.app.promptAddHerb()">${i18n.t("herbs_add_btn")}</button>
@@ -702,7 +855,7 @@ class MediKioskApp {
 
           <!-- SOCRATES Symptom Probing -->
           <div class="card-3d" style="padding: 1.25rem;">
-            <h4 style="font-size: 0.9rem; font-weight: 700; color: #93C5FD; margin-bottom: 10px;">${i18n.t("socrates_title")}</h4>
+            <h4 style="font-size: 0.9rem; font-weight: 700; color: var(--text-primary); margin-bottom: 10px;">${i18n.t("socrates_title")}</h4>
             
             <div style="margin-bottom: 12px;">
               <label class="input-label-3d">${SOCRATES_QUESTIONS.character.title}</label>
@@ -716,9 +869,9 @@ class MediKioskApp {
             <div>
               <div style="display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 700; margin-bottom: 6px;">
                 <span>Discomfort Severity:</span>
-                <span style="color: ${this.patient.hpi.severity >= 7 ? 'var(--crimson)' : '#60A5FA'}">${this.patient.hpi.severity || 0} / 10 ${this.patient.hpi.severity >= 7 ? '(PRIORITY ALERT)' : ''}</span>
+                <span style="color: ${this.patient.hpi.severity >= 7 ? 'var(--crimson)' : 'var(--emerald)'}">${this.patient.hpi.severity || 0} / 10 ${this.patient.hpi.severity >= 7 ? '(PRIORITY ALERT)' : ''}</span>
               </div>
-              <input type="range" style="width: 100%; accent-color: #0284C7; cursor: pointer;" min="0" max="10" value="${this.patient.hpi.severity || 0}" oninput="window.app.setSeverity(this.value)">
+              <input type="range" style="width: 100%; accent-color: var(--emerald); cursor: pointer;" min="0" max="10" value="${this.patient.hpi.severity || 0}" oninput="window.app.setSeverity(this.value)">
             </div>
           </div>
         </div>
@@ -726,10 +879,12 @@ class MediKioskApp {
         <div>
           ${this.isAyushMode ? this.renderAyushModule() : this.renderBodyMapModule()}
 
-          <div style="display: flex; justify-content: space-between; margin-top: 1.25rem;">
-            <button class="btn-3d btn-3d-secondary" onclick="window.app.prevStep()">${i18n.t("btn_back")}</button>
-            <button class="btn-3d ${this.patient.rppgVitals ? 'btn-3d-success' : 'btn-3d-primary'}" onclick="window.app.nextStep()">
-              ${i18n.t("btn_next_records")}
+          <div class="kiosk-action-footer" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-light);">
+            <button type="button" class="btn-3d btn-3d-secondary" style="min-height: 48px; padding: 12px 24px; font-weight: 700;" onclick="window.app.prevStep()">
+              ← ${i18n.t("btn_back") || "Back to Check-In"}
+            </button>
+            <button type="button" class="btn-3d ${this.patient.rppgVitals ? 'btn-3d-success' : 'btn-3d-primary'}" style="min-height: 48px; padding: 12px 28px; font-weight: 700;" onclick="window.app.nextStep()">
+              ${i18n.t("btn_next_records") || "Next: Upload Records →"}
             </button>
           </div>
         </div>
@@ -739,38 +894,46 @@ class MediKioskApp {
 
   renderBodyMapModule() {
     return `
-      <div class="bodymap-hardware-box">
-        <h4 style="font-size: 0.95rem; font-weight: 800; color: #FFFFFF; text-align: left;">
-          Interactive Anatomical Body Map
-        </h4>
-        <p style="font-size: 0.78rem; color: var(--text-muted); text-align: left;">
-          Tap anatomical area to localize symptom site
-        </p>
+      <div class="bodymap-2d-layout bodymap-3d-layout" style="display: flex; flex-direction: column; gap: 1.25rem; width: 100%;">
+        <!-- Top: 2D Full Skeleton Viewport (Full Width of Right Half Screen) -->
+        <div class="bodymap-2d-card bodymap-3d-card" style="width: 100%;">
+          <!-- Top Bar: Title, Search Autocomplete -->
+          <div class="bodymap-2d-toolbar-top bodymap-3d-toolbar-top">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 1.25rem;">🦴</span>
+              <div>
+                <strong style="color: #FFFFFF; font-size: 0.9rem; display: block; line-height: 1.1;">2D Human Skeleton & Visceral Anatomy Map</strong>
+                <span style="font-size: 0.7rem; color: #38BDF8;">Full-Body Clinical Interactive SVG Engine</span>
+              </div>
+              <span class="pill-3d pill-3d-emerald" style="font-size: 0.68rem; margin-left: 6px;">
+                🦴 2D Skeleton Active
+              </span>
+            </div>
 
-        <div class="bodymap-svg-container">
-          <svg class="human-silhouette" viewBox="0 0 200 280">
-            <circle cx="100" cy="30" r="20" class="body-zone-target ${this.patient.hpi.site.includes('Head') ? 'selected' : ''}" onclick="window.app.selectBodyPart('Head / Sar')"/>
-            <rect x="92" y="52" width="16" height="12" rx="3" class="body-zone-target ${this.patient.hpi.site.includes('Throat') ? 'selected' : ''}" onclick="window.app.selectBodyPart('Throat / Gala')"/>
-            <rect x="70" y="66" width="60" height="40" rx="8" class="body-zone-target ${this.patient.hpi.site.includes('Chest') ? 'selected' : ''}" onclick="window.app.selectBodyPart('Chest / Chhati')"/>
-            <rect x="45" y="70" width="20" height="65" rx="6" class="body-zone-target ${this.patient.hpi.site.includes('Left') ? 'selected' : ''}" onclick="window.app.selectBodyPart('Left Arm / Shoulder')"/>
-            <rect x="135" y="70" width="20" height="65" rx="6" class="body-zone-target" onclick="window.app.selectBodyPart('Right Arm')"/>
-            <rect x="74" y="110" width="52" height="45" rx="8" class="body-zone-target ${this.patient.hpi.site.includes('Abdomen') ? 'selected' : ''}" onclick="window.app.selectBodyPart('Abdomen / Pet')"/>
-            <rect x="76" y="158" width="48" height="25" rx="6" class="body-zone-target ${this.patient.hpi.site.includes('Back') ? 'selected' : ''}" onclick="window.app.selectBodyPart('Back / Pelvis')"/>
-            <rect x="72" y="188" width="22" height="85" rx="8" class="body-zone-target ${this.patient.hpi.site.includes('Knee') ? 'selected' : ''}" onclick="window.app.selectBodyPart('Knee Joints (Left)')"/>
-            <rect x="106" y="188" width="22" height="85" rx="8" class="body-zone-target ${this.patient.hpi.site.includes('Knee') ? 'selected' : ''}" onclick="window.app.selectBodyPart('Knee Joints (Right)')"/>
-          </svg>
+            <!-- Anatomical Search Box -->
+            <div class="bodymap-search-box">
+              <input type="text" id="anatomySearchInput" class="bodymap-search-input" 
+                     placeholder="Search bone, joint or organ (Femur, Heart, गुर्दा)..." 
+                     oninput="window.app.handleAnatomySearch(this.value)"
+                     onfocus="window.app.handleAnatomySearch(this.value)">
+              <div id="anatomySearchDropdown" class="bodymap-search-dropdown" style="display: none;"></div>
+            </div>
+          </div>
+
+          <!-- 2D Viewport Container (BodyMap2D mounts here) -->
+          <div class="bodymap-2d-viewport" id="bodymap2dCanvasContainer" style="width: 100%; min-height: 640px; height: 640px; position: relative;">
+            <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #38BDF8; font-size: 0.85rem; padding: 2rem;">
+              ⏳ Loading Interactive 2D Skeleton & Anatomy Map...
+            </div>
+          </div>
         </div>
 
-        <div style="font-size: 0.85rem; font-weight: 700; color: #38BDF8; margin-bottom: 12px;">
-          Selected Site: <span>${this.patient.hpi.site || 'None selected'}</span>
-        </div>
-
-        <div style="text-align: left;">
-          <label class="input-label-3d">Associated Symptoms</label>
-          <div class="chip-rack">
-            ${SOCRATES_QUESTIONS.associations.options.map(item => `
-              <button class="tactile-chip ${(this.patient.hpi.associations || []).includes(item) ? 'selected' : ''}" onclick="window.app.toggleAssociation('${item}')">${item}</button>
-            `).join('')}
+        <!-- Bottom: Dynamic Symptom Question Engine (Directly in Bottom of Skeleton) -->
+        <div id="symptomQuestionEngineContainer" style="width: 100%;">
+          <div style="background: rgba(15, 23, 42, 0.95); border: 1.5px solid rgba(56, 189, 248, 0.25); border-radius: 14px; padding: 1.25rem; text-align: center; color: #94A3B8;">
+            <div style="font-size: 1.25rem; margin-bottom: 6px;">🩺</div>
+            <strong style="color: #FFFFFF; font-size: 0.86rem; display: block;">Clinical Follow-Up Questions</strong>
+            <p style="font-size: 0.76rem; color: #94A3B8; margin: 4px 0 0 0;">Tap any bone, joint or organ on the skeleton above to open guided clinical questions</p>
           </div>
         </div>
       </div>
@@ -781,30 +944,30 @@ class MediKioskApp {
     const prakritiResult = ayushEngine.calculatePrakriti(this.ayushAnswers);
 
     return `
-      <div class="bodymap-hardware-box" style="border-color: var(--teal);">
-        <h4 style="font-size: 0.95rem; font-weight: 800; color: #5EEAD4; text-align: left;">
+      <div class="bodymap-hardware-box" style="border-color: var(--emerald-border);">
+        <h4 style="font-size: 0.95rem; font-weight: 800; color: var(--emerald-dark); text-align: left;">
           🌿 AYUSH Dashavidha Pariksha & Prakriti Assessment
         </h4>
         <p style="font-size: 0.78rem; color: var(--text-muted); text-align: left;">
           Standardized Ayurvedic phenotypic constitutional evaluation
         </p>
 
-        <div style="background: rgba(13, 148, 136, 0.15); border: 1px solid var(--teal); border-radius: 12px; padding: 12px; margin: 1rem 0;">
+        <div style="background: var(--emerald-light); border: 1px solid var(--emerald-border); border-radius: 12px; padding: 12px; margin: 1rem 0;">
           <div style="display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 700; margin-bottom: 6px;">
             <span>Dominant Prakriti:</span>
-            <span style="color: #5EEAD4;">${prakritiResult.dominant}</span>
+            <span style="color: var(--emerald-deep);">${prakritiResult.dominant}</span>
           </div>
-          <div style="display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: #0F172A;">
+          <div style="display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: #E2E8F0;">
             <div style="width: ${prakritiResult.scores.vata}%; background: #60A5FA;" title="Vata: ${prakritiResult.scores.vata}%"></div>
             <div style="width: ${prakritiResult.scores.pitta}%; background: #F87171;" title="Pitta: ${prakritiResult.scores.pitta}%"></div>
-            <div style="width: ${prakritiResult.scores.kapha}%; background: #34D399;" title="Kapha: ${prakritiResult.scores.kapha}%"></div>
+            <div style="width: ${prakritiResult.scores.kapha}%; background: var(--emerald);" title="Kapha: ${prakritiResult.scores.kapha}%"></div>
           </div>
         </div>
 
         <div style="max-height: 260px; overflow-y: auto; text-align: left;">
           ${AYUSH_QUESTIONS.map(q => `
-            <div style="margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 8px;">
-              <p style="font-size: 0.82rem; font-weight: 700; color: #CCFBF1;">${q.question}</p>
+            <div style="margin-bottom: 12px; border-bottom: 1px solid var(--border-light); padding-bottom: 8px;">
+              <p style="font-size: 0.82rem; font-weight: 700; color: var(--text-primary);">${q.question}</p>
               <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 6px;">
                 ${q.options.map((opt, oIdx) => `
                   <label style="font-size: 0.78rem; display: flex; align-items: flex-start; gap: 6px; cursor: pointer; color: var(--text-secondary);">
@@ -862,7 +1025,7 @@ class MediKioskApp {
           <div>
             <div class="scanner-dropzone-3d" id="uploadDropzone" onclick="window.app.triggerFileInput()">
               <div style="font-size: 2.5rem; margin-bottom: 6px;">📸</div>
-              <strong style="color: #60A5FA; font-size: 1rem;">${i18n.t("upload_dropzone_title")}</strong>
+              <strong style="color: var(--emerald-dark); font-size: 1rem;">${i18n.t("upload_dropzone_title")}</strong>
               <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">
                 ${i18n.t("upload_dropzone_desc")}
               </p>
@@ -874,13 +1037,13 @@ class MediKioskApp {
             </div>
 
             ${this.patient.documents.length > 0 ? `
-              <div style="margin-top: 12px; border-radius: 12px; overflow: hidden; background: #000; max-height: 220px; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center;">
+              <div style="margin-top: 12px; border-radius: 12px; overflow: hidden; background: var(--bg-surface-inset); max-height: 220px; border: 1px solid var(--border-light); display: flex; align-items: center; justify-content: center;">
                 <img src="${this.patient.documents[0].previewUrl}" alt="Scanned Document" style="max-height: 220px; width: 100%; object-fit: contain;">
               </div>
             ` : ''}
 
             ${this.isOcrProcessing ? `
-              <div style="margin-top: 10px; padding: 10px; border-radius: 10px; background: rgba(56, 189, 248, 0.15); border: 1px solid #38BDF8; font-size: 0.82rem; color: #38BDF8; text-align: center;">
+              <div style="margin-top: 10px; padding: 10px; border-radius: 10px; background: var(--emerald-light); border: 1px solid var(--emerald-border); font-size: 0.82rem; color: var(--emerald-dark); text-align: center;">
                 ${i18n.t("ocr_processing_msg")}
               </div>
             ` : ''}
@@ -889,18 +1052,18 @@ class MediKioskApp {
           <!-- Right: Real-Time Extracted Clinical Findings -->
           <div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-              <h4 style="font-size: 0.95rem; font-weight: 700; color: #93C5FD;">Digitized Clinical Findings</h4>
+              <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary);">Digitized Clinical Findings</h4>
               <span class="pill-3d pill-3d-emerald">${this.patient.documents.length} ${i18n.t("files_processed")}</span>
             </div>
 
             ${latestDoc ? `
-              <div style="background: rgba(30, 41, 59, 0.7); border: 1px solid #3B82F6; border-radius: 10px; padding: 12px; margin-bottom: 12px;">
+              <div style="background: var(--bg-surface-inset); border: 1px solid var(--border-light); border-radius: 10px; padding: 12px; margin-bottom: 12px;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                   <span class="pill-3d pill-3d-blue" style="font-weight: 700;">${latestDoc.categoryLabel || latestDoc.type || 'Medical Record'}</span>
                   <span class="pill-3d pill-3d-emerald">${i18n.t("verified_badge")}</span>
                 </div>
                 ${latestDoc.doctorName ? `
-                  <p style="font-size: 0.82rem; font-weight: 700; color: #93C5FD; margin-top: 6px; margin-bottom: 2px;">
+                  <p style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary); margin-top: 6px; margin-bottom: 2px;">
                     👨‍⚕️ Doctor: ${latestDoc.doctorName}
                   </p>
                 ` : ''}
@@ -915,22 +1078,22 @@ class MediKioskApp {
             <!-- Identified Diseases & Clinical Diagnoses Section -->
             <div style="margin-bottom: 14px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                <strong style="font-size: 0.8rem; color: #38BDF8; text-transform: uppercase;">${i18n.t("dx_heading")}</strong>
+                <strong style="font-size: 0.8rem; color: var(--emerald-dark); text-transform: uppercase;">${i18n.t("dx_heading")}</strong>
                 <span class="pill-3d pill-3d-blue" style="font-size: 0.7rem;">${allDiseases.length} Detected</span>
               </div>
               <div style="max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;">
                 ${allDiseases.length > 0 ? allDiseases.map(d => `
-                  <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                  <div style="background: #FFFFFF; border: 1px solid var(--border-light); border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; gap: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
                     <div>
-                      <strong style="color: #FFFFFF; font-size: 0.88rem;">${d.name}</strong>
-                      <p style="font-size: 0.72rem; color: #94A3B8; margin-top: 2px; margin-bottom: 0;">
+                      <strong style="color: var(--text-primary); font-size: 0.88rem;">${d.name}</strong>
+                      <p style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; margin-bottom: 0;">
                         Detected from medical document
                       </p>
                     </div>
                     <span class="pill-3d pill-3d-blue" style="font-size: 0.7rem;">${i18n.t("verified_badge")}</span>
                   </div>
                 `).join('') : `
-                  <div style="background: rgba(15, 23, 42, 0.5); border: 1px dashed rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 12px; font-size: 0.78rem; color: var(--text-muted);">
+                  <div style="background: var(--bg-surface-inset); border: 1px dashed var(--border-medium); border-radius: 8px; padding: 8px 12px; font-size: 0.78rem; color: var(--text-muted);">
                     ${i18n.t("dx_empty")}
                   </div>
                 `}
@@ -940,14 +1103,14 @@ class MediKioskApp {
             <!-- Lab Biomarkers Section -->
             <div style="margin-bottom: 14px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                <strong style="font-size: 0.8rem; color: #F87171; text-transform: uppercase;">${i18n.t("lab_heading")}</strong>
+                <strong style="font-size: 0.8rem; color: var(--crimson); text-transform: uppercase;">${i18n.t("lab_heading")}</strong>
                 <span class="pill-3d pill-3d-crimson" style="font-size: 0.7rem;">${allFlags.length} Flags</span>
               </div>
               <div style="max-height: 140px; overflow-y: auto;">
                 ${allFlags.length > 0 ? allFlags.map(f => `
                   <div class="lab-flag-item-3d">
                     <div>
-                      <strong style="color: #FCA5A5; font-size: 0.82rem;">${f.test || f.param}: ${f.value}</strong>
+                      <strong style="color: #991B1B; font-size: 0.82rem;">${f.test || f.param}: ${f.value}</strong>
                       <p style="font-size: 0.72rem; color: var(--text-muted);">Ref: ${f.ref} [${f.status}]</p>
                     </div>
                     <span class="pill-3d pill-3d-crimson">${(f.status || 'ABNORMAL').split(' ')[0]}</span>
@@ -961,7 +1124,7 @@ class MediKioskApp {
             <!-- Prescribed Medications Section -->
             <div style="margin-bottom: 14px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                <strong style="font-size: 0.8rem; color: #34D399; text-transform: uppercase;">${i18n.t("rx_heading")}</strong>
+                <strong style="font-size: 0.8rem; color: var(--emerald-dark); text-transform: uppercase;">${i18n.t("rx_heading")}</strong>
                 <span class="pill-3d pill-3d-emerald" style="font-size: 0.7rem;">${allExtractedMeds.length} ${i18n.t("active_badge")}</span>
               </div>
               <div style="max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;">
@@ -975,9 +1138,9 @@ class MediKioskApp {
                   return `
                     <div class="medication-card-3d">
                       <div>
-                        <strong style="color: #FFFFFF; font-size: 0.88rem;">${name}</strong>
+                        <strong style="color: var(--text-primary); font-size: 0.88rem;">${name}</strong>
                         ${dosage && dosage !== 'Standard Dose' ? `<span class="pill-3d pill-3d-blue" style="margin-left: 6px; font-size: 0.7rem;">${dosage}</span>` : ''}
-                        <p style="font-size: 0.75rem; color: #A7F3D0; margin: 3px 0 0 0;">
+                        <p style="font-size: 0.75rem; color: var(--text-muted); margin: 3px 0 0 0;">
                           ${freq} • ${timing} ${duration ? `• ${duration}` : ''}
                         </p>
                       </div>
@@ -985,7 +1148,7 @@ class MediKioskApp {
                     </div>
                   `;
                 }).join('') : `
-                  <div style="background: rgba(15, 23, 42, 0.5); border: 1px dashed rgba(56, 189, 248, 0.2); border-radius: 8px; padding: 10px 14px; font-size: 0.78rem; color: #94A3B8;">
+                  <div style="background: var(--bg-surface-inset); border: 1px dashed var(--border-medium); border-radius: 8px; padding: 10px 14px; font-size: 0.78rem; color: var(--text-muted);">
                     ${latestDoc && ((latestDoc.type || '').includes('pathology') || (latestDoc.categoryLabel || '').toLowerCase().includes('pathology') || (latestDoc.categoryLabel || '').toLowerCase().includes('lab')) ? 
                       '🔬 <strong>Pathology Diagnostic Report:</strong> Laboratory test values & diagnostic biomarkers extracted above. (No outpatient prescribed medications in this lab report).' : 
                       i18n.t("rx_empty")}
@@ -1016,56 +1179,68 @@ class MediKioskApp {
     return `
       <div class="card-3d" style="max-width: 600px; margin: 0 auto; text-align: center;">
         <div style="font-size: 2.8rem; margin-bottom: 8px;">🎉</div>
-        <h2 style="font-size: 1.5rem; font-weight: 800; color: #FFFFFF;">${i18n.t("summary_congrats")}</h2>
+        <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary);">${i18n.t("summary_congrats")}</h2>
         <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
           ${i18n.t("summary_subtitle")}
         </p>
 
-        <div style="background: rgba(37, 99, 235, 0.15); border: 2px dashed #3B82F6; border-radius: 16px; padding: 1.75rem; margin: 1.5rem 0;">
-          <p style="font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.08em; color: #93C5FD; font-weight: 800;">
+        <div style="background: var(--emerald-light); border: 2px dashed var(--emerald-border); border-radius: 16px; padding: 1.75rem; margin: 1.5rem 0;">
+          <p style="font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--emerald-dark); font-weight: 800;">
             ${i18n.t("opd_token_header")}
           </p>
-          <div style="font-family: var(--font-display); font-size: 3.5rem; font-weight: 900; color: #FFFFFF; line-height: 1.1; margin: 8px 0; text-shadow: 0 0 25px rgba(59, 130, 246, 0.5);">
+          <div style="font-family: var(--font-display); font-size: 3.5rem; font-weight: 900; color: var(--emerald-deep); line-height: 1.1; margin: 8px 0;">
             ${this.patient.tokenNumber || 'TK-101'}
           </div>
-          <div style="font-size: 0.88rem; color: #E2E8F0; margin-top: 8px;">
+          <div style="font-size: 0.88rem; color: var(--text-primary); margin-top: 8px;">
             ${i18n.t("patient_info_label")}: <strong>${this.patient.name || 'Walk-in Patient'}</strong> (${this.patient.age || '--'} ${i18n.t("age_yrs")} / ${i18n.t("gender_" + (this.patient.gender || "Female").toLowerCase()) || this.patient.gender})
           </div>
-          <div style="font-size: 0.82rem; color: #93C5FD; margin-top: 4px;">
+          <div style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 4px;">
             📱 Registered Mobile: <strong>${this.patient.mobile || '+91 98765 43210'}</strong>
           </div>
 
-          <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1); display: grid; grid-template-columns: 1fr 1fr; gap: 8px; text-align: left; font-size: 0.78rem;">
+          <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-light); display: grid; grid-template-columns: 1fr 1fr; gap: 8px; text-align: left; font-size: 0.78rem;">
             <div>
               <span style="color: var(--text-muted);">${i18n.t("assigned_dept_label")}:</span><br>
-              <strong style="color: #60A5FA;">${i18n.t("default_dept")}</strong>
+              <strong style="color: var(--emerald-dark);">${i18n.t("default_dept")}</strong>
             </div>
             <div>
               <span style="color: var(--text-muted);">${i18n.t("est_wait_label")}:</span><br>
-              <strong style="color: #34D399;">~${estWaitMin} Minutes (${patientsAhead} Ahead)</strong>
+              <strong style="color: var(--emerald);">~${estWaitMin} Minutes (${patientsAhead} Ahead)</strong>
             </div>
           </div>
 
-          <!-- Real-Time Mobile SMS Tracker Card -->
-          <div style="margin-top: 14px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 12px; padding: 12px 14px; text-align: left;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-size: 0.82rem; font-weight: 700; color: #38BDF8;">📲 Real-Time 30-Min Mobile Alert</span>
-              <span class="pill-3d ${this.patient.smsAlertSent ? 'pill-3d-emerald' : 'pill-3d-blue'}" id="kioskSmsStatusPill">
-                ${this.patient.smsAlertSent ? '✓ 30-Min SMS Sent' : '⏳ 30-Min Alert Scheduled'}
-              </span>
+          <!-- Structured 3D Body Map Clinical Intake Summary (When recorded) -->
+          ${this.patient.anatomicalIntake ? `
+            <div style="margin-top: 14px; background: #FFFFFF; border: 1.5px solid #38BDF8; border-radius: 14px; padding: 14px 16px; text-align: left; box-shadow: 0 4px 15px rgba(56, 189, 248, 0.1);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 1.25rem;">🩺</span>
+                  <div>
+                    <strong style="font-size: 0.88rem; color: #0284C7; display: block;">3D Anatomical Symptom Intake Profile</strong>
+                    <span style="font-size: 0.72rem; color: var(--text-muted);">
+                      Site: <strong style="color: var(--text-primary);">${this.patient.anatomicalIntake.primaryPart?.displayName?.[this.currentLanguage] || this.patient.anatomicalIntake.primaryPart?.displayName?.en || 'Selected Structure'}</strong> 
+                      (${this.patient.anatomicalIntake.primaryPart?.laterality || ''} • SNOMED: ${this.patient.anatomicalIntake.primaryPart?.snomedBodyStructure?.code || 'N/A'})
+                    </span>
+                  </div>
+                </div>
+                <span class="pill-3d ${this.patient.anatomicalIntake.urgency?.badgeClass || 'pill-3d-blue'}">
+                  ${this.patient.anatomicalIntake.urgency?.label || 'Triage Level'}
+                </span>
+              </div>
+
+              <div style="background: var(--bg-surface-subtle); border: 1px solid var(--border-light); border-radius: 10px; padding: 10px 12px; font-size: 0.76rem; color: var(--text-secondary); line-height: 1.45; margin: 8px 0;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px;">
+                  <div><span style="color: var(--text-muted);">Severity Score:</span> <strong>${this.patient.anatomicalIntake.answers?.severity ?? '--'}/10</strong></div>
+                  <div><span style="color: var(--text-muted);">Onset / Duration:</span> <strong>${this.patient.anatomicalIntake.answers?.duration_trend || 'Documented'}</strong></div>
+                </div>
+                <p style="margin: 0; font-size: 0.74rem;">${this.patient.anatomicalIntake.urgency?.action || ''}</p>
+              </div>
+
+              <div style="font-size: 0.68rem; color: var(--text-muted); font-style: italic;">
+                ⚖️ CDSCO SaMD Notice: Structured symptom intake aid for clinician evaluation. Not a diagnostic conclusion.
+              </div>
             </div>
-            <p style="font-size: 0.76rem; color: #CBD5E1; margin: 0 0 8px 0; line-height: 1.4;">
-              ${this.patient.smsAlertSent ? 
-                `SMS dispatched in real time to registered mobile <strong>${this.patient.mobile || '+91 98765 43210'}</strong>: <em>"Appointment with Dr. Sharma (Cabin 3) is scheduled in ~${estWaitMin} mins (Token ${this.patient.tokenNumber}). Please be near Waiting Area B."</em>` : 
-                `An automated SMS & WhatsApp notification will be sent to your registered mobile <strong>${this.patient.mobile || '+91 98765 43210'}</strong> exactly 30 minutes before your consultation.`
-              }
-            </p>
-            <div style="display: flex; justify-content: flex-end;">
-              <button type="button" class="btn-3d btn-3d-secondary" style="padding: 5px 12px; font-size: 0.74rem;" onclick="window.app.triggerPatient30MinTestSms()">
-                📲 Test Send 30-Min SMS to Registered Mobile Now
-              </button>
-            </div>
-          </div>
+          ` : ''}
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 10px;">
@@ -1096,7 +1271,7 @@ class MediKioskApp {
     const selectedQueueIdx = this.doctorQueue.findIndex(item => item.id === p.id);
 
     const summary = clinicalParser.generateStructuredSummary(p);
-    const vitals = p.rppgVitals || { heartRate: "--", hrv: "--", spO2: "--", respiratoryRate: "--", stressScore: "--" };
+    const vitals = p.rppgVitals || { heartRate: "--", hrv: "--", respiratoryRate: "--", stressScore: "--" };
     const hdiResult = herbDrugService.evaluateInteractions(p.allopathicMeds || [], p.ayushHerbs || []);
     const reasoningMap = clinicalGraphService.generateReasoningMap(p);
 
@@ -1135,12 +1310,17 @@ class MediKioskApp {
         <!-- SECTION 4: LIVE OPD PATIENT QUEUE (LEFT)   -->
         <!-- ========================================== -->
         <div class="queue-panel-3d">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-light); padding-bottom: 8px; flex-wrap: wrap; gap: 6px;">
             <div>
-              <h3 style="font-size: 0.95rem; font-weight: 800; color: #FFFFFF; margin: 0;">📋 Section 4: Live Patient Queue</h3>
+              <h3 style="font-size: 0.95rem; font-weight: 800; color: var(--text-primary); margin: 0;">📋 Live Patient Queue</h3>
               <p style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">OPD Cabin 3 • Dr. Sharma</p>
             </div>
-            <span class="pill-3d pill-3d-emerald">${this.doctorQueue.length} Active</span>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <button class="btn-3d btn-3d-secondary" style="padding: 4px 8px; font-size: 0.72rem; background: var(--emerald-light); color: var(--emerald-dark); border-color: var(--emerald-border);" onclick="window.app.broadcastRealTimeQueueSms()" title="Broadcast real-time queue position SMS to all waiting patients">
+                📢 Broadcast SMS
+              </button>
+              <span class="pill-3d pill-3d-emerald">${this.doctorQueue.length} Active</span>
+            </div>
           </div>
 
           <div id="queueList" style="display: flex; flex-direction: column; gap: 8px;">
@@ -1150,14 +1330,13 @@ class MediKioskApp {
               const estTime = item.smsAlertTime || (waitMinutes === 0 ? "Now" : new Date(Date.now() + waitMinutes * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
               const isSelected = item.id === p.id;
               const isCurrent = idx === 0;
-              const is30MinPatient = idx === 3 || patientsAhead === 4;
 
               return `
                 <div class="queue-patient-card-3d ${isSelected ? 'active' : ''} ${item.isEmergency ? 'emergency' : ''}" onclick="window.app.selectQueuePatient('${item.id}')" style="cursor: pointer; position: relative;">
                   <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                     <div>
-                      <strong style="font-size: 0.88rem; color: #FFFFFF;">${item.name || 'Walk-in Patient'}</strong>
-                      <div style="font-size: 0.72rem; color: #38BDF8; font-family: monospace; margin-top: 2px;">ABHA: ${item.abhaId || 'Walk-in'}</div>
+                      <strong style="font-size: 0.88rem; color: var(--text-primary);">${item.name || 'Walk-in Patient'}</strong>
+                      <div style="font-size: 0.72rem; color: var(--emerald-dark); font-family: monospace; font-weight: 600; margin-top: 2px;">ABHA: ${item.abhaId || 'Walk-in'}</div>
                     </div>
                     <span class="pill-3d ${item.isEmergency ? 'pill-3d-crimson' : (isCurrent ? 'pill-3d-emerald' : 'pill-3d-blue')}">
                       ${item.isEmergency ? 'EMERGENCY' : (isCurrent ? '🟢 IN CABIN' : 'TOKEN ' + item.tokenNumber)}
@@ -1165,31 +1344,35 @@ class MediKioskApp {
                   </div>
 
                   <p style="font-size: 0.74rem; color: var(--text-muted); margin-top: 4px;">
-                    ${item.age || '--'} Yrs / ${item.gender} • Mobile: ${item.mobile || 'N/A'}
+                    ${item.age || '--'} Yrs / ${item.gender} • 📱 Reg: <strong>${item.mobile || '+91 98765 43210'}</strong>
                   </p>
                   <p style="font-size: 0.73rem; color: var(--text-secondary); margin-top: 3px; line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
                     ${item.chiefComplaint || 'Clinical Intake Completed'}
                   </p>
 
-                  <div style="margin-top: 8px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; flex-direction: column; gap: 4px;">
+                  <div style="margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--border-light); display: flex; flex-direction: column; gap: 4px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.72rem;">
-                      <span style="color: #94A3B8;">Position #${idx + 1} • <strong style="color: ${isCurrent ? '#34D399' : '#FCD34D'};">${isCurrent ? 'With Doctor' : patientsAhead + ' patients ahead'}</strong></span>
-                      <span style="color: #38BDF8; font-weight: 700;">${isCurrent ? 'Consulting' : '~' + waitMinutes + 'm (' + estTime + ')'}</span>
+                      <span style="color: var(--text-muted);">
+                        Pos #${idx + 1} • <strong style="color: ${isCurrent ? 'var(--emerald)' : (patientsAhead === 1 ? 'var(--crimson)' : 'var(--amber)')};">${isCurrent ? '🟢 In Cabin' : (patientsAhead === 1 ? '⚠️ 1 Ahead (Next!)' : `${patientsAhead} members ahead`)}</strong>
+                      </span>
+                      <span style="color: var(--text-primary); font-weight: 700;">⏱️ ${isCurrent ? 'Active Now' : '~' + waitMinutes + 'm (' + estTime + ')'}</span>
                     </div>
 
                     ${item.smsAlertSent ? `
-                      <div class="queue-30min-badge sent" title="Automated notification dispatched 30 mins prior to appointment">
-                        🔔 30-Min Alert Sent (${item.smsAlertTime || '10:15 AM'})
+                      <div class="queue-30min-badge sent" title="Real-time SMS dispatched to registered mobile">
+                        🔔 SMS Dispatched (${item.smsAlertTime || estTime})
                       </div>
-                    ` : (is30MinPatient ? `
-                      <div class="queue-30min-badge" title="Appointment scheduled in ~30 mins (after 4 patients)">
-                        ⚠️ 30-Min Alert Window (~${waitMinutes}m)
-                      </div>
-                    ` : '')}
+                    ` : ''}
 
-                    <div style="display: flex; justify-content: flex-end; margin-top: 2px;">
-                      <button class="btn-sms-alert-3d" onclick="event.stopPropagation(); window.app.sendManual30MinAlert('${item.id}')" title="Dispatch 30-minute advance appointment SMS/WhatsApp alert">
-                        📲 ${item.smsAlertSent ? 'Re-send 30-Min SMS' : 'Send 30-Min SMS'}
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; gap: 4px; flex-wrap: wrap;">
+                      <button class="btn-sms-alert-3d" style="font-size: 0.7rem; padding: 3px 8px;" onclick="event.stopPropagation(); window.app.togglePhoneSimulator(true); window.app.phoneSimulator.open('${item.mobile || "+91 98765 43210"}')" title="Inspect phone handset view">
+                        📱 Phone
+                      </button>
+                      <button class="btn-sms-alert-3d" style="font-size: 0.7rem; padding: 3px 8px; background: #E0F2FE; color: #0284C7; border: 1px solid #BAE6FD;" onclick="event.stopPropagation(); window.app.sendManual30MinAlert('${item.id}')" title="Dispatch 30-minute advance appointment reminder SMS to registered mobile number">
+                        ⏱️ 30-Min Alert
+                      </button>
+                      <button class="btn-sms-alert-3d" style="font-size: 0.7rem; padding: 3px 8px;" onclick="event.stopPropagation(); window.app.sendManualRealTimeSms('${item.id}')" title="Dispatch real-time SMS to registered number with members ahead count and appointment time">
+                        📲 ${item.smsAlertSent ? 'Resend SMS' : 'Send Live SMS'}
                       </button>
                     </div>
                   </div>
@@ -1204,10 +1387,10 @@ class MediKioskApp {
         <!-- ========================================== -->
         <div class="card-3d" style="min-width: 0;">
           <!-- Top Header: Patient Demographic & Quick Action Toolbar -->
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 0.85rem; flex-wrap: wrap; gap: 10px;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; border-bottom: 1px solid var(--border-light); padding-bottom: 0.85rem; flex-wrap: wrap; gap: 10px;">
             <div>
               <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                <h2 style="font-size: 1.35rem; font-weight: 800; color: #FFFFFF; margin: 0;">${p.name || 'Walk-in Patient'}</h2>
+                <h2 style="font-size: 1.35rem; font-weight: 800; color: var(--text-primary); margin: 0;">${p.name || 'Walk-in Patient'}</h2>
                 <span class="pill-3d ${isViewingCurrent ? 'pill-3d-emerald' : 'pill-3d-blue'}" style="font-weight: 800;">
                   ${isViewingCurrent ? '🟢 IN CABIN (CURRENT PATIENT)' : `📋 REVIEWING QUEUE PATIENT (#${selectedQueueIdx + 1})`}
                 </span>
@@ -1216,7 +1399,7 @@ class MediKioskApp {
                 ${p.smsAlertSent ? `<span class="pill-3d pill-3d-emerald">🔔 30-Min SMS Dispatched</span>` : ''}
               </div>
               <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; margin-bottom: 0;">
-                ${p.age || '--'} Years • ${p.gender} • Registered Mobile: <strong style="color: #6EE7B7;">${p.mobile || 'Not provided'}</strong> • Chief Complaint: <span style="color: #E2E8F0;">${p.chiefComplaint || 'None provided'}</span>
+                ${p.age || '--'} Years • ${p.gender} • Registered Mobile: <strong style="color: var(--emerald-dark);">${p.mobile || 'Not provided'}</strong> • Chief Complaint: <span style="color: var(--text-secondary); font-weight: 600;">${p.chiefComplaint || 'None provided'}</span>
               </p>
               ${!isViewingCurrent && currentInCabin ? `
                 <div style="margin-top: 6px;">
@@ -1263,42 +1446,42 @@ class MediKioskApp {
           <!-- SECTION 1: SUMMARY OF ALL UPLOADED DOCUMENTS         -->
           <!-- ==================================================== -->
           ${showSummary ? `
-            <div id="sectionSummary" style="margin-bottom: 1.5rem; background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 1.25rem;">
+            <div id="sectionSummary" style="margin-bottom: 1.5rem; background: var(--bg-surface-inset); border: 1px solid var(--border-light); border-radius: 14px; padding: 1.25rem;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                 <div>
-                  <h3 style="font-size: 1.05rem; font-weight: 800; color: #38BDF8; margin: 0;">📑 Section 1: Summary of All Uploaded Documents</h3>
+                  <h3 style="font-size: 1.05rem; font-weight: 800; color: var(--emerald-dark); margin: 0;">📑 Section 1: Summary of All Uploaded Documents</h3>
                   <p style="font-size: 0.74rem; color: var(--text-muted); margin-top: 2px;">Synthesized Diagnostic Intelligence, OCR Multi-Page Aggregation, and Contactless Vitals</p>
                 </div>
-                <span class="pill-3d pill-3d-blue">${allDocs.length} Total Records</span>
+                <span class="pill-3d pill-3d-emerald">${allDocs.length} Total Records</span>
               </div>
 
               <!-- KPI Metric Ribbon -->
               <div class="doc-kpi-ribbon">
                 <div class="doc-kpi-card">
-                  <div class="doc-kpi-val" style="color: #38BDF8;">${allDocs.length}</div>
+                  <div class="doc-kpi-val" style="color: var(--emerald);">${allDocs.length}</div>
                   <div class="doc-kpi-lbl">Total Documents</div>
                 </div>
                 <div class="doc-kpi-card">
-                  <div class="doc-kpi-val" style="color: #60A5FA;">${allDiseases.length}</div>
+                  <div class="doc-kpi-val" style="color: var(--text-primary);">${allDiseases.length}</div>
                   <div class="doc-kpi-lbl">Identified Diseases</div>
                 </div>
                 <div class="doc-kpi-card">
-                  <div class="doc-kpi-val" style="color: #34D399;">${allMeds.length}</div>
+                  <div class="doc-kpi-val" style="color: var(--emerald-dark);">${allMeds.length}</div>
                   <div class="doc-kpi-lbl">Prescriptions Analyzed</div>
                 </div>
                 <div class="doc-kpi-card">
-                  <div class="doc-kpi-val" style="color: #A78BFA;">${labDocs.length}</div>
+                  <div class="doc-kpi-val" style="color: var(--text-secondary);">${labDocs.length}</div>
                   <div class="doc-kpi-lbl">Labs & Imaging Scans</div>
                 </div>
                 <div class="doc-kpi-card">
-                  <div class="doc-kpi-val" style="color: ${abnormalFlags.length > 0 ? '#F87171' : '#34D399'};">${abnormalFlags.length}</div>
+                  <div class="doc-kpi-val" style="color: ${abnormalFlags.length > 0 ? 'var(--crimson)' : 'var(--emerald)'};">${abnormalFlags.length}</div>
                   <div class="doc-kpi-lbl">Abnormal Biomarker Flags</div>
                 </div>
               </div>
 
               <!-- Contactless Optical Vitals Ribbon -->
-              <div style="background: rgba(56, 189, 248, 0.06); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 12px; padding: 10px 14px; margin-bottom: 1.25rem;">
-                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #38BDF8; font-weight: 700; margin-bottom: 8px;">
+              <div style="background: var(--emerald-light); border: 1px solid var(--emerald-border); border-radius: 12px; padding: 10px 14px; margin-bottom: 1.25rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--emerald-dark); font-weight: 700; margin-bottom: 8px;">
                   <span>Contactless Optical Vitals (rPPG Camera Telemetry)</span>
                   <span class="pill-3d pill-3d-emerald">${vitals.signalQuality || 'Real-Time Ingestion'}</span>
                 </div>
@@ -1306,10 +1489,6 @@ class MediKioskApp {
                   <div class="telemetry-card ${vitals.heartRate > 100 ? 'highlight' : ''}">
                     <div class="telemetry-value">${vitals.heartRate}<span class="telemetry-unit">BPM</span></div>
                     <div class="telemetry-label">Heart Rate</div>
-                  </div>
-                  <div class="telemetry-card ${vitals.spO2 < 95 && vitals.spO2 !== '--' ? 'highlight' : ''}">
-                    <div class="telemetry-value">${vitals.spO2}<span class="telemetry-unit">%</span></div>
-                    <div class="telemetry-label">SpO2 Oxygen</div>
                   </div>
                   <div class="telemetry-card ${vitals.stressScore > 70 ? 'highlight' : ''}">
                     <div class="telemetry-value">${vitals.stressScore !== undefined ? vitals.stressScore : '--'}<span class="telemetry-unit">/100</span></div>
@@ -1330,14 +1509,14 @@ class MediKioskApp {
               ${hdiResult.hasConflict ? `
                 <div class="hdi-alert-box-3d" style="margin-bottom: 1.25rem;">
                   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                    <strong style="color: #F87171; font-size: 0.92rem;">⚠️ HERB-DRUG CONTRAINDICATION ALERT</strong>
+                    <strong style="color: var(--crimson); font-size: 0.92rem;">⚠️ HERB-DRUG CONTRAINDICATION ALERT</strong>
                     <span class="pill-3d pill-3d-crimson">${hdiResult.count} Conflict(s)</span>
                   </div>
                   ${hdiResult.conflicts.map(c => `
-                    <div style="background: rgba(0,0,0,0.4); border-radius: 8px; padding: 8px 12px; margin-top: 6px;">
-                      <strong style="color: #FFFFFF; font-size: 0.84rem;">⚡ ${c.drug} ⟷ ${c.herb} (${c.herbBotanical})</strong>
-                      <p style="font-size: 0.76rem; color: #FCA5A5; margin-top: 2px; margin-bottom: 2px;"><strong>Hazard:</strong> ${c.clinicalEffect}</p>
-                      <p style="font-size: 0.74rem; color: #6EE7B7; margin: 0;"><strong>Recommendation:</strong> ${c.recommendation}</p>
+                    <div style="background: #FFFFFF; border: 1px solid var(--crimson-border); border-radius: 8px; padding: 8px 12px; margin-top: 6px;">
+                      <strong style="color: #991B1B; font-size: 0.84rem;">⚡ ${c.drug} ⟷ ${c.herb} (${c.herbBotanical})</strong>
+                      <p style="font-size: 0.76rem; color: #DC2626; margin-top: 2px; margin-bottom: 2px;"><strong>Hazard:</strong> ${c.clinicalEffect}</p>
+                      <p style="font-size: 0.74rem; color: var(--emerald-dark); margin: 0;"><strong>Recommendation:</strong> ${c.recommendation}</p>
                     </div>
                   `).join('')}
                 </div>
@@ -1346,20 +1525,20 @@ class MediKioskApp {
               <!-- Identified Diseases & Clinical Conditions Breakdown -->
               <div style="margin-bottom: 1.25rem;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                  <strong style="font-size: 0.85rem; color: #38BDF8; text-transform: uppercase;">
+                  <strong style="font-size: 0.85rem; color: var(--text-primary); text-transform: uppercase;">
                     🩺 Patient Diagnoses, Diseases & Active Pathologies:
                   </strong>
-                  <span class="pill-3d pill-3d-blue">${allDiseases.length} Verified</span>
+                  <span class="pill-3d pill-3d-emerald">${allDiseases.length} Verified</span>
                 </div>
                 ${allDiseases.length > 0 ? `
                   <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 8px;">
                     ${allDiseases.map(d => `
-                      <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 8px 12px;">
+                      <div style="background: #FFFFFF; border: 1px solid var(--border-light); border-radius: 8px; padding: 8px 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                          <strong style="color: #FFFFFF; font-size: 0.84rem;">${d.name}</strong>
+                          <strong style="color: var(--text-primary); font-size: 0.84rem;">${d.name}</strong>
                           <span class="pill-3d pill-3d-blue" style="font-size: 0.68rem;">${d.icd10 || 'R69'}</span>
                         </div>
-                        <p style="font-size: 0.72rem; color: #94A3B8; margin-top: 3px; margin-bottom: 0;">
+                        <p style="font-size: 0.72rem; color: var(--text-muted); margin-top: 3px; margin-bottom: 0;">
                           ${d.source || 'Clinical Record Diagnostic Evaluation'}
                         </p>
                       </div>
@@ -1372,28 +1551,28 @@ class MediKioskApp {
 
               <!-- Document-by-Document Diagnostic Findings Breakdown -->
               <div style="margin-top: 1rem;">
-                <strong style="font-size: 0.85rem; color: #93C5FD; text-transform: uppercase; display: block; margin-bottom: 8px;">
+                <strong style="font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase; display: block; margin-bottom: 8px;">
                   📋 Verified Clinical Records & Findings Breakdown:
                 </strong>
                 ${allDocs.length > 0 ? `
                   <div style="display: flex; flex-direction: column; gap: 8px;">
                     ${allDocs.map((doc, idx) => `
-                      <div style="background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+                      <div style="background: #FFFFFF; border: 1px solid var(--border-light); border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
                         <div style="flex: 1;">
                           <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                             <span class="pill-3d ${doc.type === 'prescription' ? 'pill-3d-emerald' : (doc.type === 'radiology' ? 'pill-3d-blue' : 'pill-3d-violet')}">
                               ${doc.categoryLabel || doc.type}
                             </span>
-                            <strong style="font-size: 0.86rem; color: #FFFFFF;">${doc.title}</strong>
+                            <strong style="font-size: 0.86rem; color: var(--text-primary);">${doc.title}</strong>
                             <span style="font-size: 0.72rem; color: var(--text-muted);">${doc.date || 'Recent'} • ${doc.doctor || 'Verified Facility'}</span>
                           </div>
-                          <p style="font-size: 0.78rem; color: #E2E8F0; margin-top: 4px; margin-bottom: 4px;">
-                            <strong style="color: #38BDF8;">Diagnostic Finding / Root Cause:</strong> ${doc.rootCause || 'Verified Clinical Ingestion Record'}
+                          <p style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 4px; margin-bottom: 4px;">
+                            <strong style="color: var(--emerald-dark);">Diagnostic Finding / Root Cause:</strong> ${doc.rootCause || 'Verified Clinical Ingestion Record'}
                           </p>
                           ${(doc.flags && doc.flags.length > 0) ? `
                             <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px;">
                               ${doc.flags.map(f => `
-                                <span style="font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; background: ${f.status === 'NORMAL' ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)'}; color: ${f.status === 'NORMAL' ? '#34D399' : '#F87171'}; border: 1px solid ${f.status === 'NORMAL' ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'};">
+                                <span style="font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; background: ${f.status === 'NORMAL' ? 'var(--emerald-light)' : 'var(--crimson-light)'}; color: ${f.status === 'NORMAL' ? 'var(--emerald-dark)' : '#B91C1C'}; border: 1px solid ${f.status === 'NORMAL' ? 'var(--emerald-border)' : 'var(--crimson-border)'};">
                                   ${f.name}: <strong>${f.value}</strong> [${f.status}]
                                 </span>
                               `).join('')}
@@ -1417,10 +1596,10 @@ class MediKioskApp {
           <!-- SECTION 2: ALL PRESCRIPTIONS EXTRACTED               -->
           <!-- ==================================================== -->
           ${showPrescriptions ? `
-            <div id="sectionPrescriptions" style="margin-bottom: 1.5rem; background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 1.25rem;">
+            <div id="sectionPrescriptions" style="margin-bottom: 1.5rem; background: var(--bg-surface-inset); border: 1px solid var(--border-light); border-radius: 14px; padding: 1.25rem;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
                 <div>
-                  <h3 style="font-size: 1.05rem; font-weight: 800; color: #34D399; margin: 0;">💊 Section 2: All Prescriptions Fetched Using Uploaded Prescriptions</h3>
+                  <h3 style="font-size: 1.05rem; font-weight: 800; color: var(--emerald-dark); margin: 0;">💊 Section 2: All Prescriptions Fetched Using Uploaded Prescriptions</h3>
                   <p style="font-size: 0.74rem; color: var(--text-muted); margin-top: 2px;">Doctor Handwritten & Printed Prescriptions Standardized to SNOMED-CT Clinical Nomenclature</p>
                 </div>
                 <span class="pill-3d pill-3d-emerald">${allMeds.length} Active Prescriptions</span>
@@ -1458,16 +1637,16 @@ class MediKioskApp {
 
                       return `
                         <tr>
-                          <td style="color: #64748B; font-weight: bold;">${idx + 1}</td>
+                          <td style="color: var(--text-muted); font-weight: bold;">${idx + 1}</td>
                           <td>
-                            <strong style="color: #FFFFFF; font-size: 0.85rem;">${name}</strong>
+                            <strong style="color: var(--text-primary); font-size: 0.85rem;">${name}</strong>
                           </td>
                           <td><span class="pill-3d pill-3d-blue" style="font-size: 0.72rem;">${dosage}</span></td>
-                          <td><strong style="color: #34D399;">${freq}</strong></td>
-                          <td style="color: #CBD5E1;">${timing}</td>
-                          <td style="color: #94A3B8;">${duration}</td>
-                          <td><span style="font-size: 0.74rem; color: #93C5FD;">${route}</span></td>
-                          <td><code style="font-size: 0.72rem; color: #38BDF8; background: rgba(56,189,248,0.1); padding: 2px 6px; border-radius: 4px;">${snomed}</code></td>
+                          <td><strong style="color: var(--emerald-dark);">${freq}</strong></td>
+                          <td style="color: var(--text-secondary);">${timing}</td>
+                          <td style="color: var(--text-muted);">${duration}</td>
+                          <td><span style="font-size: 0.74rem; color: var(--text-secondary);">${route}</span></td>
+                          <td><code style="font-size: 0.72rem; color: var(--emerald-dark); background: var(--emerald-light); border: 1px solid var(--emerald-border); padding: 2px 6px; border-radius: 4px;">${snomed}</code></td>
                           <td><span class="pill-3d ${schedule === 'OTC' ? 'pill-3d-emerald' : 'pill-3d-amber'}" style="font-size: 0.68rem;">${schedule}</span></td>
                           <td style="font-size: 0.72rem; color: var(--text-muted); max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${source}</td>
                           <td><span class="pill-3d pill-3d-emerald" style="font-size: 0.68rem;">✓ ${status}</span></td>
@@ -1490,13 +1669,13 @@ class MediKioskApp {
           <!-- SECTION 3: ALL UPLOADED DOCUMENT PREVIEWS GALLERY    -->
           <!-- ==================================================== -->
           ${showPreviews ? `
-            <div id="sectionPreviews" style="margin-bottom: 1.5rem; background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 1.25rem;">
+            <div id="sectionPreviews" style="margin-bottom: 1.5rem; background: var(--bg-surface-inset); border: 1px solid var(--border-light); border-radius: 14px; padding: 1.25rem;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
                 <div>
-                  <h3 style="font-size: 1.05rem; font-weight: 800; color: #A78BFA; margin: 0;">🖼️ Section 3: All Uploaded Document Previews Gallery</h3>
+                  <h3 style="font-size: 1.05rem; font-weight: 800; color: var(--text-primary); margin: 0;">🖼️ Section 3: All Uploaded Document Previews Gallery</h3>
                   <p style="font-size: 0.74rem; color: var(--text-muted); margin-top: 2px;">Interactive Visual Scan Gallery with Optical Zoom Inspection (100% - 250%) & Clinical Cross-Verification</p>
                 </div>
-                <span class="pill-3d pill-3d-violet">${allDocs.length} Visual Scans</span>
+                <span class="pill-3d pill-3d-emerald">${allDocs.length} Visual Scans</span>
               </div>
 
               <div class="doc-preview-gallery-3d">
@@ -1517,7 +1696,7 @@ class MediKioskApp {
                         </span>
                         <span style="font-size: 0.68rem; color: var(--text-muted);">${doc.date || 'Recent'}</span>
                       </div>
-                      <strong style="font-size: 0.84rem; color: #FFFFFF; line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; margin-bottom: 6px;">
+                      <strong style="font-size: 0.84rem; color: var(--text-primary); line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; margin-bottom: 6px;">
                         ${doc.title}
                       </strong>
                       <p style="font-size: 0.72rem; color: var(--text-secondary); line-height: 1.3; margin: 0; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
@@ -1541,7 +1720,7 @@ class MediKioskApp {
 
           <!-- Doctor Examination Notes & E-Prescription Entry -->
           <div class="card-3d" style="padding: 1.25rem; margin-top: 1rem;">
-            <strong style="font-size: 0.85rem; color: #93C5FD; text-transform: uppercase;">Doctor's Consultation Assessment & Notes:</strong>
+            <strong style="font-size: 0.85rem; color: var(--text-primary); text-transform: uppercase;">Doctor's Consultation Assessment & Notes:</strong>
             <textarea class="input-text-3d" rows="3" style="margin-top: 8px;" placeholder="Add clinical examination findings, final diagnosis, and new prescriptions..."></textarea>
             <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px;">
               <button class="btn-3d btn-3d-secondary" onclick="alert('Prescription printed successfully!')">🖨️ Print Prescription</button>
@@ -1555,14 +1734,14 @@ class MediKioskApp {
       <!-- MODAL: DOCUMENT ZOOM & INSPECTION MODAL              -->
       <!-- ==================================================== -->
       ${this.inspectedDoc ? `
-        <div id="docInspectModal" style="position: fixed; inset: 0; background: rgba(2, 6, 23, 0.88); backdrop-filter: blur(12px); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px;">
-          <div class="card-3d" style="width: 90%; max-width: 900px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; padding: 0; border: 1.5px solid #38BDF8; box-shadow: 0 25px 60px rgba(0,0,0,0.8), 0 0 30px rgba(56,189,248,0.25);">
+        <div id="docInspectModal" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px;">
+          <div class="card-3d" style="width: 90%; max-width: 900px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; padding: 0; background: #FFFFFF; border: 1px solid var(--border-light); border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
             <!-- Modal Header -->
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; background: rgba(30, 41, 59, 0.9); border-bottom: 1px solid rgba(255,255,255,0.08);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; background: #FFFFFF; border-bottom: 1px solid var(--border-light);">
               <div>
                 <div style="display: flex; align-items: center; gap: 8px;">
                   <span class="pill-3d ${this.inspectedDoc.type === 'prescription' ? 'pill-3d-emerald' : 'pill-3d-blue'}">${this.inspectedDoc.categoryLabel || this.inspectedDoc.type}</span>
-                  <h3 style="font-size: 1.05rem; font-weight: 800; color: #FFFFFF; margin: 0;">${this.inspectedDoc.title}</h3>
+                  <h3 style="font-size: 1.05rem; font-weight: 800; color: var(--text-primary); margin: 0;">${this.inspectedDoc.title}</h3>
                 </div>
                 <p style="font-size: 0.72rem; color: var(--text-muted); margin: 2px 0 0 0;">${this.inspectedDoc.date || 'Recent'} • ${this.inspectedDoc.doctor || 'Verified Clinical Facility'}</p>
               </div>
@@ -1570,23 +1749,23 @@ class MediKioskApp {
               <!-- Zoom Controls Toolbar -->
               <div style="display: flex; align-items: center; gap: 8px;">
                 <button class="btn-3d btn-3d-secondary" style="padding: 4px 10px; font-size: 0.82rem;" onclick="window.app.changeDocZoom(-0.25)" title="Zoom Out">➖</button>
-                <span id="inspectZoomLabel" style="font-size: 0.78rem; font-family: monospace; color: #38BDF8; min-width: 44px; text-align: center; font-weight: bold;">${Math.round(this.docZoomLevel * 100)}%</span>
+                <span id="inspectZoomLabel" style="font-size: 0.78rem; font-family: monospace; color: var(--emerald-dark); min-width: 44px; text-align: center; font-weight: bold;">${Math.round(this.docZoomLevel * 100)}%</span>
                 <button class="btn-3d btn-3d-secondary" style="padding: 4px 10px; font-size: 0.82rem;" onclick="window.app.changeDocZoom(0.25)" title="Zoom In">➕</button>
                 <button class="btn-3d btn-3d-secondary" style="padding: 4px 8px; font-size: 0.75rem;" onclick="window.app.changeDocZoom(0)" title="Reset Zoom">100%</button>
-                <button class="btn-3d btn-3d-secondary" style="padding: 4px 12px; font-size: 0.82rem; margin-left: 8px; color: #F87171;" onclick="window.app.closeDocInspectModal()">✖ Close</button>
+                <button class="btn-3d btn-3d-secondary" style="padding: 4px 12px; font-size: 0.82rem; margin-left: 8px; color: var(--crimson);" onclick="window.app.closeDocInspectModal()">✖ Close</button>
               </div>
             </div>
 
             <!-- Modal Body: High Resolution Scan Display -->
-            <div style="flex: 1; overflow: auto; padding: 20px; background: #0B0F19; display: flex; justify-content: center; align-items: flex-start;">
-              <img id="inspectModalImage" src="${this.inspectedDoc.previewUrl || ''}" alt="${this.inspectedDoc.title}" style="max-width: 100%; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); transform: scale(${this.docZoomLevel}); transform-origin: top center; transition: transform 0.15s ease-out;" />
+            <div style="flex: 1; overflow: auto; padding: 20px; background: var(--bg-surface-inset); display: flex; justify-content: center; align-items: flex-start;">
+              <img id="inspectModalImage" src="${this.inspectedDoc.previewUrl || ''}" alt="${this.inspectedDoc.title}" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.1); transform: scale(${this.docZoomLevel}); transform-origin: top center; transition: transform 0.15s ease-out;" />
             </div>
 
             <!-- Modal Footer: Extracted Clinical Findings & Text Stream -->
-            <div style="padding: 12px 20px; background: rgba(15, 23, 42, 0.95); border-top: 1px solid rgba(255,255,255,0.08); font-size: 0.78rem;">
+            <div style="padding: 12px 20px; background: #FFFFFF; border-top: 1px solid var(--border-light); font-size: 0.78rem;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                 <div>
-                  <strong style="color: #38BDF8;">Diagnostic Findings:</strong> <span style="color: #E2E8F0;">${this.inspectedDoc.rootCause || 'Verified Record'}</span>
+                  <strong style="color: var(--emerald-dark);">Diagnostic Findings:</strong> <span style="color: var(--text-secondary);">${this.inspectedDoc.rootCause || 'Verified Record'}</span>
                 </div>
                 ${this.inspectedDoc.extractedText ? `
                   <button class="btn-3d btn-3d-secondary" style="padding: 2px 10px; font-size: 0.72rem;" onclick="const el = document.getElementById('inspectRawTextStream'); if(el) el.style.display = el.style.display === 'none' ? 'block' : 'none';">
@@ -1595,7 +1774,7 @@ class MediKioskApp {
                 ` : ''}
               </div>
               ${this.inspectedDoc.extractedText ? `
-                <div id="inspectRawTextStream" style="display: none; margin-top: 8px; max-height: 140px; overflow-y: auto; background: rgba(0,0,0,0.5); padding: 8px 12px; border-radius: 6px; font-family: monospace; font-size: 0.72rem; color: #CBD5E1; white-space: pre-wrap;">${this.inspectedDoc.extractedText}</div>
+                <div id="inspectRawTextStream" style="display: none; margin-top: 8px; max-height: 140px; overflow-y: auto; background: var(--bg-surface-subtle); border: 1px solid var(--border-light); padding: 8px 12px; border-radius: 6px; font-family: monospace; font-size: 0.72rem; color: var(--text-secondary); white-space: pre-wrap;">${this.inspectedDoc.extractedText}</div>
               ` : ''}
             </div>
           </div>
@@ -1605,24 +1784,24 @@ class MediKioskApp {
       <!-- ==================================================== -->
       <!-- MODAL: 30-MIN ADVANCE SMS NOTIFICATION DISPATCH LOGS -->
       <!-- ==================================================== -->
-      <div id="smsLogModal" style="position: fixed; inset: 0; background: rgba(2, 6, 23, 0.85); backdrop-filter: blur(12px); z-index: 9999; display: ${this.isSmsLogModalOpen ? 'flex' : 'none'}; align-items: center; justify-content: center; padding: 20px;">
-        <div class="card-3d" style="width: 90%; max-width: 960px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; padding: 0; border: 1.5px solid #38BDF8; box-shadow: 0 25px 60px rgba(0,0,0,0.8), 0 0 30px rgba(56,189,248,0.25);">
+      <div id="smsLogModal" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px); z-index: 9999; display: ${this.isSmsLogModalOpen ? 'flex' : 'none'}; align-items: center; justify-content: center; padding: 20px;">
+        <div class="card-3d" style="width: 90%; max-width: 960px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; padding: 0; background: #FFFFFF; border: 1px solid var(--border-light); border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
           <!-- Modal Header -->
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 22px; background: rgba(30, 41, 59, 0.9); border-bottom: 1px solid rgba(255,255,255,0.08);">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 22px; background: #FFFFFF; border-bottom: 1px solid var(--border-light);">
             <div>
               <div style="display: flex; align-items: center; gap: 10px;">
                 <span style="font-size: 1.3rem;">📨</span>
-                <h3 style="font-size: 1.1rem; font-weight: 800; color: #FFFFFF; margin: 0;">30-Minute Advance Patient Appointment SMS Dispatch Logs</h3>
+                <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--text-primary); margin: 0;">30-Minute Advance Patient Appointment SMS Dispatch Logs</h3>
               </div>
               <p style="font-size: 0.74rem; color: var(--text-muted); margin: 3px 0 0 0;">
                 Automated SMS & WhatsApp Cloud Gateway Dispatches Sent 30 Minutes Prior to Doctor Consultation (OPD Cabin 3)
               </p>
             </div>
-            <button class="btn-3d btn-3d-secondary" style="padding: 6px 14px; font-size: 0.8rem; color: #F87171;" onclick="window.app.closeSmsLogModal()">✖ Close</button>
+            <button class="btn-3d btn-3d-secondary" style="padding: 6px 14px; font-size: 0.8rem; color: var(--crimson);" onclick="window.app.closeSmsLogModal()">✖ Close</button>
           </div>
 
           <!-- Modal Body Table -->
-          <div style="flex: 1; overflow-y: auto; padding: 16px 20px;">
+          <div style="flex: 1; overflow-y: auto; padding: 16px 20px; background: #FFFFFF;">
             <table class="rx-table-3d" style="width: 100%;">
               <thead>
                 <tr>
@@ -1639,15 +1818,15 @@ class MediKioskApp {
               <tbody>
                 ${this.smsDispatchLogs.length > 0 ? this.smsDispatchLogs.map(log => `
                   <tr>
-                    <td style="font-family: monospace; color: #38BDF8; font-size: 0.74rem; white-space: nowrap;">${log.dispatchTimestamp}</td>
-                    <td><strong style="color: #FFFFFF;">${log.patientName}</strong></td>
+                    <td style="font-family: monospace; color: var(--text-muted); font-size: 0.74rem; white-space: nowrap;">${log.dispatchTimestamp}</td>
+                    <td><strong style="color: var(--text-primary);">${log.patientName}</strong></td>
                     <td><span class="pill-3d pill-3d-blue" style="font-size: 0.72rem;">${log.token}</span></td>
-                    <td style="font-family: monospace; font-size: 0.74rem; color: #94A3B8;">${log.mobile}</td>
+                    <td style="font-family: monospace; font-size: 0.74rem; color: var(--text-muted);">${log.mobile}</td>
                     <td><span class="pill-3d pill-3d-amber" style="font-size: 0.7rem;">${log.patientsAhead} Patients Ahead</span></td>
-                    <td><strong style="color: #34D399; font-size: 0.78rem;">${log.scheduledTime}</strong></td>
+                    <td><strong style="color: var(--emerald-dark); font-size: 0.78rem;">${log.scheduledTime}</strong></td>
                     <td><span class="pill-3d pill-3d-emerald" style="font-size: 0.7rem;">${log.status}</span></td>
-                    <td style="font-size: 0.74rem; color: #E2E8F0; line-height: 1.4; max-width: 320px;">
-                      <div style="background: rgba(0,0,0,0.3); border-radius: 6px; padding: 6px 10px; border-left: 3px solid #38BDF8;">
+                    <td style="font-size: 0.74rem; color: var(--text-secondary); line-height: 1.4; max-width: 320px;">
+                      <div style="background: var(--emerald-light); border: 1px solid var(--emerald-border); border-radius: 6px; padding: 6px 10px; border-left: 3px solid var(--emerald);">
                         "${log.message}"
                       </div>
                     </td>
@@ -1662,8 +1841,8 @@ class MediKioskApp {
           </div>
 
           <!-- Modal Footer -->
-          <div style="padding: 12px 20px; background: rgba(15, 23, 42, 0.95); border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: center; font-size: 0.74rem; color: var(--text-muted);">
-            <span>Gateway: <strong style="color: #38BDF8;">NIC e-Hospital & ABDM SMS Service</strong> • Delivery Latency: &lt;1.2s</span>
+          <div style="padding: 12px 20px; background: var(--bg-surface-inset); border-top: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; font-size: 0.74rem; color: var(--text-muted);">
+            <span>Gateway: <strong style="color: var(--emerald-dark);">NIC e-Hospital & ABDM SMS Service</strong> • Delivery Latency: &lt;1.2s</span>
             <button class="btn-3d btn-3d-secondary" style="padding: 4px 14px; font-size: 0.78rem;" onclick="window.app.closeSmsLogModal()">Close</button>
           </div>
         </div>
@@ -2208,8 +2387,8 @@ class MediKioskApp {
       <div style="display: flex; align-items: flex-start; gap: 10px;">
         <span style="font-size: 1.2rem;">🔔</span>
         <div style="flex: 1;">
-          <strong style="color: #38BDF8; font-size: 0.85rem; display: block; margin-bottom: 2px;">OPD Notification Dispatched</strong>
-          <p style="font-size: 0.78rem; color: #E2E8F0; line-height: 1.4; margin: 0;">${message}</p>
+          <strong style="color: var(--emerald-dark); font-size: 0.85rem; display: block; margin-bottom: 2px;">OPD Notification Dispatched</strong>
+          <p style="font-size: 0.78rem; color: var(--text-secondary); line-height: 1.4; margin: 0;">${message}</p>
         </div>
       </div>
     `;
@@ -2222,10 +2401,11 @@ class MediKioskApp {
     }, 4500);
   }
 
-  checkAndTrigger30MinAlerts() {
+  async checkAndTrigger30MinAlerts() {
     if (!this.doctorQueue || this.doctorQueue.length === 0) return;
 
-    this.doctorQueue.forEach((patient, idx) => {
+    for (let idx = 0; idx < this.doctorQueue.length; idx++) {
+      const patient = this.doctorQueue[idx];
       const patientsAhead = idx;
       const waitMinutes = Math.round(patientsAhead * 7.5);
 
@@ -2236,7 +2416,25 @@ class MediKioskApp {
         patient.smsAlertTime = estTime;
 
         const mobileNum = patient.mobile || "+91 98765 43210";
-        const logItem = {
+
+        // Dispatch real-time SMS to registered number via notificationClientService
+        const res = await notificationClientService.sendRealTimeSms({
+          mobile: mobileNum,
+          patientId: patient.id,
+          patientName: patient.name || "Patient",
+          tokenNumber: patient.tokenNumber || "TK-101",
+          membersNext: patientsAhead,
+          membersAhead: patientsAhead,
+          appointmentTime: estTime,
+          waitMinutes: waitMinutes || 30,
+          doctorName: "Dr. Sharma",
+          cabinNumber: "Cabin 3",
+          department: "General Medicine",
+          alertType: "30min",
+          eventType: "30MIN_REMINDER"
+        });
+
+        const logItem = (res && res.log) ? res.log : {
           id: "SMS-" + Math.floor(100 + Math.random() * 900),
           patientId: patient.id,
           patientName: patient.name || "Patient",
@@ -2248,28 +2446,81 @@ class MediKioskApp {
           dispatchTimestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           status: "Delivered ✓",
           channel: "SMS Gateway + WhatsApp Cloud API",
-          message: `Dear ${patient.name || 'Patient'}, your appointment with Dr. Sharma (OPD Cabin 3) is scheduled after ${patientsAhead} patients at approx ${estTime} (in ~${waitMinutes} mins). Token: ${patient.tokenNumber}. Please be ready near Waiting Zone B.`
+          message: `⏱️ [30-MIN APPOINTMENT REMINDER] Namaste ${patient.name || 'Patient'}! Token #${patient.tokenNumber}. Your appointment with Dr. Sharma (Cabin 3) is scheduled in ~${waitMinutes || 30} mins at ${estTime}. Queue Status: ${patientsAhead} patient(s) ahead of you. Please be present in OPD Waiting Zone B.`
         };
 
-        this.smsDispatchLogs.unshift(logItem);
-        this.showDoctorToast(`📲 Real-Time 30-Min Alert Sent to Registered Mobile: ${mobileNum} (${patient.name || 'Patient'}) for approx ${estTime}!`);
+        if (!this.smsDispatchLogs.some(l => l.token === patient.tokenNumber && (l.alertType === '30min' || (l.message && l.message.includes('30-Min'))))) {
+          this.smsDispatchLogs.unshift({
+            ...logItem,
+            token: patient.tokenNumber,
+            patientsAhead: patientsAhead,
+            scheduledTime: estTime,
+            alertType: '30min'
+          });
+        }
+
+        this.showDoctorToast(`⏱️ Real-Time 30-Min Reminder Dispatched to Registered Mobile: ${mobileNum} (${patient.name || 'Patient'}) for ~${estTime}!`);
       }
-    });
+    }
   }
 
-  sendManual30MinAlert(patientId) {
+  async sendManualRealTimeSms(patientId) {
     const idx = this.doctorQueue.findIndex(p => p.id === patientId);
     if (idx < 0) return;
     const patient = this.doctorQueue[idx];
-    const patientsAhead = Math.max(1, idx);
-    const waitMinutes = Math.max(15, Math.round(patientsAhead * 7.5));
-    const estTime = new Date(Date.now() + waitMinutes * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const membersNext = idx;
+    const waitMinutes = membersNext === 0 ? 0 : Math.round(membersNext * 7.5);
+    const estTime = new Date(Date.now() + Math.max(5, waitMinutes) * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     patient.smsAlertSent = true;
     patient.smsAlertTime = estTime;
 
+    const res = await notificationClientService.sendRealTimeSms({
+      mobile: patient.mobile || "+91 98765 43210",
+      patientId: patient.id,
+      patientName: patient.name || "Patient",
+      tokenNumber: patient.tokenNumber || "TK-101",
+      membersNext,
+      appointmentTime: estTime,
+      waitMinutes,
+      doctorName: "Dr. Sharma",
+      cabinNumber: "Cabin 3",
+      alertType: membersNext === 0 ? "cabin_call" : (membersNext === 1 ? "urgent_next" : (membersNext >= 3 && waitMinutes >= 20 ? "30min" : "update"))
+    });
+
+    this.showDoctorToast(`📲 Real-time SMS dispatched to registered mobile: ${patient.mobile || '+91 98765 43210'} (${membersNext} members ahead, ~${estTime})`);
+    this.render();
+  }
+
+  async sendManual30MinAlert(patientId) {
+    const idx = this.doctorQueue.findIndex(p => p.id === patientId);
+    if (idx < 0) return;
+    const patient = this.doctorQueue[idx];
+    const patientsAhead = idx;
+    const waitMinutes = Math.max(15, Math.round(patientsAhead * 7.5));
+    const estTime = new Date(Date.now() + Math.max(25, waitMinutes) * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    patient.smsAlertSent = true;
+    patient.smsAlertTime = estTime;
+
+    const res = await notificationClientService.sendRealTimeSms({
+      mobile: patient.mobile || "+91 98765 43210",
+      patientId: patient.id,
+      patientName: patient.name || "Patient",
+      tokenNumber: patient.tokenNumber || "TK-101",
+      membersNext: patientsAhead,
+      membersAhead: patientsAhead,
+      appointmentTime: estTime,
+      waitMinutes: waitMinutes || 30,
+      doctorName: "Dr. Sharma",
+      cabinNumber: "Cabin 3",
+      department: "General Medicine",
+      alertType: "30min",
+      eventType: "30MIN_REMINDER"
+    });
+
     const mobileNum = patient.mobile || "+91 98765 43210";
-    const logItem = {
+    const logItem = (res && res.log) ? res.log : {
       id: "SMS-" + Math.floor(100 + Math.random() * 900),
       patientId: patient.id,
       patientName: patient.name || "Patient",
@@ -2281,36 +2532,83 @@ class MediKioskApp {
       dispatchTimestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       status: "Delivered ✓",
       channel: "SMS Gateway + WhatsApp Cloud API",
-      message: `Dear ${patient.name || 'Patient'}, your appointment with Dr. Sharma (OPD Cabin 3) is scheduled after ${patientsAhead} patients at approx ${estTime} (approx ${waitMinutes} mins). Token: ${patient.tokenNumber}. Please be ready near Waiting Zone B.`
+      message: `⏱️ [30-MIN APPOINTMENT REMINDER] Namaste ${patient.name || 'Patient'}! Token #${patient.tokenNumber}. Your appointment with Dr. Sharma (Cabin 3) is scheduled in ~${waitMinutes} mins at ${estTime}. Queue Status: ${patientsAhead} patient(s) ahead of you. Please be present in OPD Waiting Zone B.`
     };
 
-    this.smsDispatchLogs.unshift(logItem);
-    this.showDoctorToast(`📲 Real-Time 30-Min SMS sent to registered mobile ${mobileNum} (${patient.name}) for approx ${estTime}!`);
-    alert(`📲 Real-Time SMS Alert Dispatched!\n\nTo Registered Mobile: ${mobileNum}\nPatient: ${patient.name}\nStatus: Delivered ✓\nMessage: "${logItem.message}"`);
+    this.smsDispatchLogs.unshift({
+      ...logItem,
+      token: patient.tokenNumber,
+      patientsAhead: patientsAhead,
+      scheduledTime: estTime,
+      alertType: '30min'
+    });
+
+    this.showDoctorToast(`⏱️ 30-Min Advance SMS sent to registered mobile: ${mobileNum} (${patientsAhead} patients ahead, appointment at ${estTime})`);
     this.render();
   }
 
-  callNextPatient() {
+  async broadcastRealTimeQueueSms() {
+    if (!this.doctorQueue || this.doctorQueue.length === 0) {
+      alert("No active patients waiting in the queue.");
+      return;
+    }
+
+    const res = await notificationClientService.broadcastQueue(this.doctorQueue, {
+      doctorName: "Dr. Sharma",
+      cabinNumber: "Cabin 3"
+    });
+
+    this.showDoctorToast(`📢 Real-time queue broadcast dispatched to ${this.doctorQueue.length} registered patient mobile numbers!`);
+    this.render();
+  }
+
+  async callNextPatient() {
     if (!this.doctorQueue || this.doctorQueue.length === 0) {
       alert("No more patients waiting in the queue.");
       return;
     }
+    // Atomically advance backend Queue Domain Service (triggers DLT events & BullMQ pipeline)
+    notificationClientService.callNextQueuePatient('DOC_SHARMA');
+
     const completed = this.doctorQueue.shift();
     this.showDoctorToast(`✓ Consultation completed for ${completed.name} (Token ${completed.tokenNumber}). Queue updated.`);
     this.selectedQueuePatient = this.doctorQueue[0] || null;
-    this.checkAndTrigger30MinAlerts();
+
+    // Real-time urgent call to the patient now entering cabin
     if (this.selectedQueuePatient) {
       speechService.speak(`Token number ${this.selectedQueuePatient.tokenNumber}, ${this.selectedQueuePatient.name}, please enter OPD Cabin 3.`);
+      notificationClientService.sendRealTimeSms({
+        mobile: this.selectedQueuePatient.mobile || "+91 98765 43210",
+        patientId: this.selectedQueuePatient.id,
+        patientName: this.selectedQueuePatient.name || "Patient",
+        tokenNumber: this.selectedQueuePatient.tokenNumber || "TK-101",
+        membersNext: 0,
+        appointmentTime: "Now (Cabin 3)",
+        waitMinutes: 0,
+        doctorName: "Dr. Sharma",
+        cabinNumber: "Cabin 3",
+        alertType: "cabin_call"
+      });
     }
+
+    // Broadcast updated queue positions & appointment times to all remaining waiting patients
+    if (this.doctorQueue.length > 0) {
+      notificationClientService.broadcastQueue(this.doctorQueue, {
+        doctorName: "Dr. Sharma",
+        cabinNumber: "Cabin 3"
+      });
+    }
+
+    this.checkAndTrigger30MinAlerts();
     this.render();
   }
 
-  triggerPatient30MinTestSms() {
+  async triggerPatientRealTimeSms() {
     const mobile = this.patient.mobile || "+91 98765 43210";
     const qIdx = this.doctorQueue.findIndex(p => p.id === this.patient.id);
-    const patientsAhead = Math.max(1, qIdx >= 0 ? qIdx : 4);
-    const estWaitMin = Math.round(patientsAhead * 7.5);
-    const estTime = new Date(Date.now() + estWaitMin * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const membersNext = Math.max(0, qIdx >= 0 ? qIdx : 2);
+    const waitMin = membersNext === 0 ? 0 : Math.round(membersNext * 7.5);
+    const estTime = new Date(Date.now() + Math.max(5, waitMin) * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     this.patient.smsAlertSent = true;
     this.patient.smsAlertTime = estTime;
@@ -2320,25 +2618,116 @@ class MediKioskApp {
       this.doctorQueue[qIdx].smsAlertTime = estTime;
     }
 
-    const logItem = {
-      id: "SMS-" + Math.floor(100 + Math.random() * 900),
+    await notificationClientService.sendRealTimeSms({
+      mobile,
       patientId: this.patient.id,
       patientName: this.patient.name || "Walk-in Patient",
-      mobile: mobile,
-      token: this.patient.tokenNumber,
-      queuePosition: qIdx >= 0 ? qIdx + 1 : this.doctorQueue.length,
-      patientsAhead: patientsAhead,
+      tokenNumber: this.patient.tokenNumber || "TK-101",
+      membersNext,
+      appointmentTime: estTime,
+      waitMinutes: waitMin,
+      doctorName: "Dr. Sharma",
+      cabinNumber: "Cabin 3",
+      alertType: "registration"
+    });
+
+    this.showDoctorToast(`📲 Real-Time SMS dispatched to registered mobile: ${mobile} (${membersNext} members ahead, appointment: ${estTime})`);
+    this.render();
+  }
+
+  async triggerPatient30MinTestSms() {
+    const mobile = this.patient.mobile || "+91 98765 43210";
+    const qIdx = this.doctorQueue.findIndex(p => p.id === this.patient.id);
+    const membersNext = Math.max(0, qIdx >= 0 ? qIdx : 4);
+    const waitMin = 30;
+    const estTime = new Date(Date.now() + 30 * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    this.patient.smsAlertSent = true;
+    this.patient.smsAlertTime = estTime;
+
+    if (qIdx >= 0) {
+      this.doctorQueue[qIdx].smsAlertSent = true;
+      this.doctorQueue[qIdx].smsAlertTime = estTime;
+    }
+
+    const res = await notificationClientService.sendRealTimeSms({
+      mobile,
+      patientId: this.patient.id,
+      patientName: this.patient.name || "Registered Patient",
+      tokenNumber: this.patient.tokenNumber || "TK-101",
+      membersNext,
+      membersAhead: membersNext,
+      appointmentTime: estTime,
+      waitMinutes: waitMin,
+      doctorName: "Dr. Sharma",
+      cabinNumber: "Cabin 3",
+      department: "General Medicine",
+      alertType: "30min",
+      eventType: "30MIN_REMINDER"
+    });
+
+    const logItem = (res && res.log) ? res.log : {
+      id: "SMS-" + Math.floor(100 + Math.random() * 900),
+      patientId: this.patient.id,
+      patientName: this.patient.name || "Patient",
+      mobile,
+      token: this.patient.tokenNumber || "TK-101",
+      queuePosition: membersNext + 1,
+      patientsAhead: membersNext,
       scheduledTime: estTime,
       dispatchTimestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       status: "Delivered ✓",
       channel: "SMS Gateway + WhatsApp Cloud API",
-      message: `Dear ${this.patient.name || 'Patient'}, your appointment with Dr. Sharma (OPD Cabin 3) is scheduled after ${patientsAhead} patients at approx ${estTime} (in ~${estWaitMin} mins). Token: ${this.patient.tokenNumber}. Please be ready near Waiting Zone B.`
+      message: `⏱️ [30-MIN APPOINTMENT REMINDER] Namaste ${this.patient.name || 'Patient'}! Token #${this.patient.tokenNumber || 'TK-101'}. Your appointment with Dr. Sharma (Cabin 3) is scheduled in ~30 mins at ${estTime}. Queue Status: ${membersNext} patient(s) ahead of you. Please be present in OPD Waiting Zone B.`
     };
 
-    this.smsDispatchLogs.unshift(logItem);
-    this.showDoctorToast(`📲 Real-Time 30-Min SMS Alert sent to registered mobile ${mobile} (${this.patient.name || 'Patient'})!`);
-    alert(`📲 Real-Time SMS Alert Dispatched!\n\nTo Registered Mobile: ${mobile}\nStatus: Delivered ✓\nMessage: "${logItem.message}"`);
+    this.smsDispatchLogs.unshift({
+      ...logItem,
+      token: this.patient.tokenNumber || "TK-101",
+      patientsAhead: membersNext,
+      scheduledTime: estTime,
+      alertType: '30min'
+    });
+
+    this.showDoctorToast(`⏱️ 30-Minute Advance SMS dispatched to registered mobile: ${mobile} (Appointment: ${estTime})`);
     this.render();
+  }
+
+  togglePhoneSimulator(forceOpen) {
+    if (!this.phoneSimulator) {
+      this.phoneSimulator = new PhoneSimulatorModal(this);
+    }
+    const mobile = this.patient.mobile || "+91 98765 43210";
+    if (typeof forceOpen === 'boolean') {
+      if (forceOpen) this.phoneSimulator.open(mobile);
+      else this.phoneSimulator.close();
+    } else {
+      this.phoneSimulator.toggle(mobile);
+    }
+  }
+
+  sendTestSmsFromSimulator() {
+    const input = document.getElementById("simulatorMobileInput");
+    const mobile = (input && input.value.trim()) ? input.value.trim() : (this.patient.mobile || "+91 98765 43210");
+    const qIdx = this.doctorQueue.findIndex(p => p.id === this.patient.id);
+    const membersNext = Math.max(0, qIdx >= 0 ? qIdx : 2);
+    const waitMin = membersNext === 0 ? 0 : Math.round(membersNext * 7.5);
+    const estTime = new Date(Date.now() + Math.max(5, waitMin) * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    notificationClientService.sendRealTimeSms({
+      mobile,
+      patientId: this.patient.id,
+      patientName: this.patient.name || "Registered Patient",
+      tokenNumber: this.patient.tokenNumber || "TK-101",
+      membersNext,
+      appointmentTime: estTime,
+      waitMinutes: waitMin,
+      doctorName: "Dr. Sharma",
+      cabinNumber: "Cabin 3",
+      alertType: membersNext === 0 ? "cabin_call" : (membersNext === 1 ? "urgent_next" : "update")
+    });
+
+    this.showDoctorToast(`📲 Live SMS dispatched to registered mobile: ${mobile} (${membersNext} members ahead, appointment: ${estTime})`);
   }
 
   initDefaultDoctorQueue() {
@@ -2707,6 +3096,152 @@ class MediKioskApp {
   speakDocScanPrompt() {
     const prompt = i18n.getAudioPrompt("audio_step3");
     speechService.speak(prompt, this.currentLanguage);
+  }
+
+  initBodyMapModule() {
+    const container = document.getElementById("bodymap2dCanvasContainer") || document.getElementById("bodymap3dCanvasContainer");
+    const questionContainer = document.getElementById("symptomQuestionEngineContainer");
+
+    if (container) {
+      if (this.bodyMap2DInstance) {
+        try {
+          this.bodyMap2DInstance.destroy?.();
+        } catch (e) {
+          console.warn("[MediKiosk] Previous bodymap cleanup error:", e);
+        }
+        this.bodyMap2DInstance = null;
+      }
+      this.bodyMap2DInstance = new BodyMap2D(container);
+      this.bodyMap2DInstance.init();
+    }
+
+    if (questionContainer) {
+      if (this.questionEngineInstance) {
+        try {
+          this.questionEngineInstance.destroy?.();
+        } catch (e) {
+          console.warn("[MediKiosk] Previous question engine cleanup error:", e);
+        }
+        this.questionEngineInstance = null;
+      }
+      this.questionEngineInstance = new SymptomQuestionEngine(questionContainer, {
+        onSummaryGenerated: (summary) => this.handleIntakeSummaryGenerated(summary),
+        onEmergencyTriggered: (triage) => this.handleEmergencyTriggered(triage)
+      });
+      this.questionEngineInstance.init();
+    }
+  }
+
+  destroyBodyMapModule() {
+    if (this.bodyMap2DInstance) {
+      this.bodyMap2DInstance.destroy?.();
+      this.bodyMap2DInstance = null;
+    }
+    if (this.questionEngineInstance) {
+      this.questionEngineInstance.destroy?.();
+      this.questionEngineInstance = null;
+    }
+  }
+
+  handleAnatomySearch(query) {
+    const dropdown = document.getElementById("anatomySearchDropdown");
+    if (!dropdown) return;
+
+    if (!query || query.trim().length === 0) {
+      dropdown.style.display = "none";
+      return;
+    }
+
+    const results = anatomyRegistryService.search(query, this.currentLanguage);
+    if (results.length === 0) {
+      dropdown.innerHTML = `<div style="padding: 10px; font-size: 0.78rem; color: #94A3B8;">No anatomical parts found matching "${query}"</div>`;
+      dropdown.style.display = "block";
+      return;
+    }
+
+    dropdown.innerHTML = results.slice(0, 8).map(item => `
+      <div class="search-item" onclick="window.app.selectAnatomyFromSearch('${item.id}')" style="padding: 8px 12px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.06);">
+        <div>
+          <strong style="color: #FFFFFF; font-size: 0.82rem;">${item.displayName[this.currentLanguage] || item.displayName.en}</strong>
+          <span style="font-size: 0.7rem; color: #94A3B8; margin-left: 6px;">(${item.displayName.en})</span>
+        </div>
+        <div style="font-size: 0.68rem; color: #38BDF8; margin-top: 2px;">
+          ${item.system.toUpperCase()} • ${item.laterality.toUpperCase()} • SNOMED: ${item.snomedBodyStructure.code}
+        </div>
+      </div>
+    `).join("");
+    dropdown.style.display = "block";
+  }
+
+  selectAnatomyFromSearch(id) {
+    bodymapStore.selectPart(id, false);
+    const dropdown = document.getElementById("anatomySearchDropdown");
+    const input = document.getElementById("anatomySearchInput");
+    if (dropdown) dropdown.style.display = "none";
+    if (input) {
+      const item = anatomyRegistryService.getById(id);
+      input.value = item ? item.displayName[this.currentLanguage] || item.displayName.en : "";
+    }
+  }
+
+  setCameraPreset(preset) {
+    if (this.bodyMap2DInstance) {
+      this.bodyMap2DInstance.setView(preset === "back" ? "back" : "front");
+    }
+  }
+
+  setBodyMapOpacity(val) {
+    if (this.bodyMap2DInstance) {
+      this.bodyMap2DInstance.setPeelLevel(val);
+    }
+  }
+
+  toggleIsolateSelected(val) {
+    bodymapStore.setIsolateSelected(val);
+  }
+
+  setAnatomySystem(systemId) {
+    bodymapStore.setActiveSystem(systemId);
+    if (this.bodyMap2DInstance) {
+      this.bodyMap2DInstance.setSystem(systemId);
+    }
+  }
+
+  removeSelectedOrgan(id) {
+    bodymapStore.deselectPart(id);
+  }
+
+  toggle3DBodyMapMode() {
+    if (this.bodyMap2DInstance) {
+      const nextView = this.bodyMap2DInstance.currentView === "front" ? "back" : "front";
+      this.bodyMap2DInstance.setView(nextView);
+    }
+  }
+
+  resetBodyMap() {
+    bodymapStore.reset();
+    if (this.bodyMap2DInstance) {
+      this.bodyMap2DInstance.resetTransform();
+      this.bodyMap2DInstance.setView("front");
+    }
+  }
+
+  handleIntakeSummaryGenerated(summary) {
+    this.patient.anatomicalIntake = summary;
+    if (summary.primaryPart) {
+      const organName = summary.primaryPart.displayName[this.currentLanguage] || summary.primaryPart.displayName.en;
+      this.patient.chiefComplaint = `${organName} - ${summary.urgency.label}`;
+    }
+    this.showDoctorToast(`✓ Anatomical Clinical Summary recorded for ${summary.primaryPart?.displayName?.en || 'selected region'}`);
+  }
+
+  handleEmergencyTriggered(triage) {
+    this.patient.isEmergency = true;
+    if (!this.patient.emergencyDetails) {
+      this.patient.emergencyDetails = triage;
+    }
+    const alertMsg = triage.triggeredRules?.[0]?.reason || "Critical clinical red flag detected during symptom intake!";
+    this.showDoctorToast(`🚨 CRITICAL EMERGENCY ALERT: ${alertMsg}`);
   }
 
   resetSession() {

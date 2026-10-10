@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  # 1. MediKiosk REST API & Socket.IO Real-Time Gateway
+  api:
+    build: .
+    container_name: medikiosk-api
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - NODE_ENV=development
+      - REDIS_URL=redis://redis:6379
+      - MONGODB_URI=mongodb://mongo:27017/medikiosk_db
+      - DLT_ENTITY_ID=1401550000000000001
+      - DLT_SENDER_ID=MDKIOS
+      - PATIENT_NAME_MASKING=FIRST_NAME
+      - TRACKING_BASE_URL=http://localhost:3000/q
+    depends_on:
+      redis:
+        condition: service_healthy
+      mongo:
+        condition: service_started
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+  # 2. BullMQ Dedicated SMS Notification Worker
+  worker:
+    build: .
+    container_name: medikiosk-sms-worker
+    restart: unless-stopped
+    command: ["npm", "run", "worker"]
+    environment:
+      - NODE_ENV=development
+      - REDIS_URL=redis://redis:6379
+      - MONGODB_URI=mongodb://mongo:27017/medikiosk_db
+      - DLT_ENTITY_ID=1401550000000000001
+      - DLT_SENDER_ID=MDKIOS
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+  # 3. Redis Service for BullMQ Job Queues & Socket.IO Adapter
+  redis:
+    image: redis:7-alpine
+    container_name: medikiosk-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    volumes:
+      - redis_data:/data
+
+  # 4. MongoDB Clinical Persistence Store
+  mongo:
+    image: mongo:7.0
+    container_name: medikiosk-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  redis_data:
+  mongo_data:

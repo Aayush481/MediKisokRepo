@@ -7,7 +7,10 @@
     "start": "node backend/server.js",
     "dev": "node backend/server.js",
     "server": "node backend/server.js",
-    "test": "node test_advanced_prescription_and_lab_summary.js && node test_doc_detection_suite.js && node test_prescription_engine.js"
+    "worker": "node backend/workers/runWorker.js",
+    "test": "node test_advanced_prescription_and_lab_summary.js && node test_doc_detection_suite.js && node test_prescription_engine.js",
+    "test:abdm": "node --test tests/test_abdm_service.test.js tests/test_abha_routes.test.js",
+    "test:sms": "node --test tests/test_sms_queue_unit.test.js tests/test_sms_queue_integration.test.js tests/test_sms_queue_chaos.test.js tests/test_sms_queue_load.test.js"
   },
   "keywords": [
     "sih2026",
@@ -24,9 +27,14 @@
   "license": "MIT",
   "dependencies": {
     "@mediapipe/tasks-vision": "^1.0.1",
+    "bullmq": "^6.3.12",
     "cors": "^2.8.6",
     "dotenv": "^18.0.4",
     "express": "^5.2.1",
+    "ioredis": "^6.0.0",
+    "mongoose": "^9.11.1",
+    "socket.io": "^4.8.4",
+    "socket.io-client": "^4.8.4",
     "tesseract.js": "^7.0.0"
   }
 }

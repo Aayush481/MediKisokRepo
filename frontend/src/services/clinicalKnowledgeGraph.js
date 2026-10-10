@@ -145,7 +145,7 @@ class ClinicalKnowledgeGraphService {
       triageUrgency: "LEVEL 4 - ROUTINE OUTPATIENT",
       positiveFindings: [
         { label: patient.chiefComplaint || "New Clinical Intake", weight: 75 },
-        { label: `Vitals: HR ${vitals.heartRate || 72} BPM, SpO2 ${vitals.spO2 || 98}%`, weight: 80 }
+        { label: `Vitals: HR ${vitals.heartRate || 72} BPM, RR ${vitals.respiratoryRate || 18} RPM`, weight: 80 }
       ],
       negativePertinents: [
         { label: "No critical red-flag emergency symptoms elicited", status: "Screened" }

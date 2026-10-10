@@ -3,6 +3,15 @@ import { FaceDetectorController } from '../controllers/faceDetectorController.js
 import { ClinicalDocController } from '../controllers/clinicalDocController.js';
 import { PatientController } from '../controllers/patientController.js';
 import { FHIRController } from '../controllers/fhirController.js';
+import abhaRoutes from './abhaRoutes.js';
+import intakeRoutes from './intakeRoutes.js';
+import notificationRoutes from './notificationRoutes.js';
+import queueRoutes from './queueRoutes.js';
+import { SmsWebhookController } from '../controllers/smsWebhookController.js';
+import { setupQueueNotificationBridge } from '../services/queueNotificationBridge.js';
+
+// Activate event-driven Queue Notification Bridge
+setupQueueNotificationBridge();
 
 const router = express.Router();
 
@@ -12,15 +21,34 @@ router.get('/health', (req, res) => {
     status: 'healthy',
     system: 'MediKiosk MERN Clinical System',
     timestamp: new Date().toISOString(),
-    version: '2.0.0',
+    version: '2.1.0',
     services: {
       expressServer: 'active',
       pythonFaceDetector: 'ready',
       geminiVisionAI: 'active',
-      patientStore: 'connected'
+      patientStore: 'connected',
+      abdmAbhaGateway: 'active',
+      anatomyIntakeEngine: 'active',
+      smsNotificationGateway: 'active',
+      queueDomainService: 'active'
     }
   });
 });
+
+// Real-Time SMS & Queue Notifications
+router.use('/notifications', notificationRoutes);
+
+// Queue Domain Service & Atomic State Machine
+router.use('/queue', queueRoutes);
+router.post('/sms/webhook/:provider', SmsWebhookController.handleDeliveryReceipt);
+router.post('/sms/inbound', SmsWebhookController.handleInboundSms);
+router.get('/sms/telemetry', SmsWebhookController.getTelemetry);
+
+// ABDM M1 Patient Lookup & Verification
+router.use('/abha', abhaRoutes);
+
+// 3D Anatomical Intake & Registry
+router.use('/intake', intakeRoutes);
 
 // Face Detector Bridge
 router.get('/face-detector-status', FaceDetectorController.getStatus);
@@ -39,3 +67,4 @@ router.post('/patients', PatientController.savePatient);
 router.post('/fhir-bundle', FHIRController.generateBundle);
 
 export default router;
+
