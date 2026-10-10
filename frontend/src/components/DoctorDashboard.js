@@ -248,6 +248,95 @@ export function renderDoctorDashboard(app, i18n) {
               </div>
             </div>
 
+            <!-- Neurodevelopmental & ADHD Clinical Screening Summary Card -->
+            ${p.neuroAssessment ? `
+              <div class="card-3d" style="background: #FFFFFF; border: 1.5px solid #E2E8F0; border-radius: 10px; padding: 16px 20px; margin-bottom: 1.25rem; box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                  <div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                        <polyline points="10 9 9 9 8 9"/>
+                      </svg>
+                      <h4 style="font-size: 0.98rem; font-weight: 800; color: #0F172A; margin: 0;">
+                        Neurodevelopmental & ADHD Intake Screening Summary
+                      </h4>
+                      <span class="pill-3d ${p.neuroAssessment.triage?.outcome === 'PATH_B_SPECIALIST_RECOMMENDED' ? 'pill-3d-amber' : 'pill-3d-emerald'}">
+                        ${p.neuroAssessment.triage?.outcome === 'PATH_B_SPECIALIST_RECOMMENDED' ? 'Specialist Recommended' : 'Subthreshold / Self-Care'}
+                      </span>
+                    </div>
+                    <p style="font-size: 0.72rem; color: #64748B; font-family: var(--font-mono); margin: 4px 0 0 0;">
+                      Provenance: ${p.neuroAssessment.summary?.provenance || 'Deterministic Clinical Rules + Supportive CDS'}
+                    </p>
+                  </div>
+                  <button class="btn-3d btn-3d-secondary" style="padding: 4px 12px; font-size: 0.74rem; background: #FFFFFF; border: 1px solid #CBD5E1; color: #334155;" onclick="const d = document.getElementById('adhdDocAnswerDetails'); if(d) d.style.display = d.style.display === 'none' ? 'block' : 'none';">
+                    Toggle Raw Responses
+                  </button>
+                </div>
+
+                <!-- SBAR Clinical Summary -->
+                <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-left: 4px solid #059669; border-radius: 6px; padding: 12px 14px; margin-bottom: 12px; font-size: 0.8rem; line-height: 1.55; color: #1E293B; white-space: pre-wrap; font-family: var(--font-mono);">
+${p.neuroAssessment.summary?.sbarClinicalSummary || 'Intake summary recorded.'}
+                </div>
+
+                <!-- Clinical KPIs Ribbon (Scores, Impairment, Chronicity) -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 12px;">
+                  <div style="background: #F8FAFC; padding: 10px 12px; border-radius: 8px; border: 1px solid #E2E8F0;">
+                    <div style="font-size: 0.68rem; color: #64748B; font-weight: 700; text-transform: uppercase;">DSM-5 / ASRS Screener</div>
+                    <div style="font-size: 1rem; font-weight: 800; color: #059669; font-family: var(--font-mono); margin: 2px 0;">
+                      ${p.neuroAssessment.scoring?.screener?.positiveThresholdCount ?? (p.neuroAssessment.scoring?.screener?.elevatedCount ?? '--')}/6 Positive
+                    </div>
+                    <div style="font-size: 0.7rem; color: #475569;">${p.neuroAssessment.scoring?.screener?.isScreenPositive ? 'Threshold Met' : 'Subthreshold'}</div>
+                  </div>
+
+                  <div style="background: #F8FAFC; padding: 10px 12px; border-radius: 8px; border: 1px solid #E2E8F0;">
+                    <div style="font-size: 0.68rem; color: #64748B; font-weight: 700; text-transform: uppercase;">Multi-Setting Impairment</div>
+                    <div style="font-size: 1rem; font-weight: 800; color: #047857; font-family: var(--font-mono); margin: 2px 0;">
+                      ${p.neuroAssessment.scoring?.impairment?.satisfiesMultiSetting ? 'YES (Multi-Domain)' : 'Subthreshold'}
+                    </div>
+                    <div style="font-size: 0.7rem; color: #475569;">${(p.neuroAssessment.scoring?.impairment?.settings || []).join(', ') || 'None reported'}</div>
+                  </div>
+
+                  <div style="background: #F8FAFC; padding: 10px 12px; border-radius: 8px; border: 1px solid #E2E8F0;">
+                    <div style="font-size: 0.68rem; color: #64748B; font-weight: 700; text-transform: uppercase;">Onset & Chronicity</div>
+                    <div style="font-size: 1rem; font-weight: 800; color: #059669; font-family: var(--font-mono); margin: 2px 0;">
+                      ${p.neuroAssessment.scoring?.chronicity?.meetsDsmDurationCriteria ? 'Childhood (>=6m)' : 'Recent / Unclear'}
+                    </div>
+                    <div style="font-size: 0.7rem; color: #475569;">${p.neuroAssessment.scoring?.chronicity?.value || 'Documented'}</div>
+                  </div>
+
+                  <div style="background: #F8FAFC; padding: 10px 12px; border-radius: 8px; border: 1px solid #E2E8F0;">
+                    <div style="font-size: 0.68rem; color: #64748B; font-weight: 700; text-transform: uppercase;">Routing Specialty</div>
+                    <div style="font-size: 1rem; font-weight: 800; color: #0F172A; font-family: var(--font-mono); margin: 2px 0;">
+                      ${p.neuroAssessment.triage?.primarySpecialty || 'Psychiatry'}
+                    </div>
+                    <div style="font-size: 0.7rem; color: #475569;">Cabin 304 (3rd Floor)</div>
+                  </div>
+                </div>
+
+                <!-- Collapsible Raw Responses Drawer -->
+                <div id="adhdDocAnswerDetails" style="display: none; background: #F8FAFC; padding: 12px 14px; border-radius: 8px; border: 1px solid #E2E8F0; margin-bottom: 12px; max-height: 200px; overflow-y: auto;">
+                  <strong style="font-size: 0.74rem; color: #64748B; text-transform: uppercase; display: block; margin-bottom: 8px;">Per-Question Responses:</strong>
+                  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px;">
+                    ${Object.entries(p.neuroAssessment.answers || {}).map(([k, v]) => `
+                      <div style="font-size: 0.74rem; color: #1E293B; font-family: var(--font-mono); background: #FFFFFF; border: 1px solid #E2E8F0; padding: 5px 8px; border-radius: 6px;">
+                        <span style="color: #64748B;">${k}:</span> <strong style="color: #047857;">${typeof v === 'object' ? JSON.stringify(v) : v}</strong>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+
+                <!-- Mandatory CDSCO SaMD Disclaimer -->
+                <div style="font-size: 0.72rem; color: #64748B; border-top: 1px solid #E2E8F0; padding-top: 10px; display: flex; align-items: flex-start; gap: 8px; line-height: 1.45;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" style="flex-shrink: 0; margin-top: 2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  <span><strong>CDSCO Class B Clinical Decision Support:</strong> This screening tool is purely informational decision support and does NOT constitute a diagnosis. Evaluation and clinical diagnosis requires Registered Medical Practitioner (RMP) confirmation under the Mental Healthcare Act 2017.</span>
+                </div>
+              </div>
+            ` : ''}
+
             <!-- Herb-drug interaction alert -->
             ${hdiResult.hasConflict ? `
               <div class="hdi-alert-box-3d" style="background: rgba(239, 68, 68, 0.08); border: 1px solid var(--crimson); border-radius: 6px; padding: 12px 14px; margin-bottom: 1.25rem;">

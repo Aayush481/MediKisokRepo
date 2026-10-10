@@ -33,6 +33,15 @@ export function renderStepper(app, i18n) {
           <div class="step-subtext">${i18n.t("step4_sub")}</div>
         </div>
       </div>
+      <div class="step-node ${app.patient?.hasNeuroScreening ? 'completed' : ''}" onclick="window.app.openAdhdScreening()" style="cursor: pointer;" title="Optional ADHD & Neurodevelopmental Focus Screener">
+        <div class="step-number" style="background: #ECFDF5; color: #047857; border-color: #A7F3D0;">
+          ${app.patient?.hasNeuroScreening ? '✓' : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>'}
+        </div>
+        <div>
+          <div class="step-label" style="color: #065F46;">${i18n.t("step_neuro_title", "Wellness & Focus")}</div>
+          <div class="step-subtext">${app.patient?.hasNeuroScreening ? i18n.t("step_neuro_done", "Screened") : i18n.t("step_neuro_sub", "Intake Screener")}</div>
+        </div>
+      </div>
     </div>
   `;
 }

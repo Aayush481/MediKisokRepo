@@ -10,7 +10,8 @@
     "worker": "node backend/workers/runWorker.js",
     "test": "node test_advanced_prescription_and_lab_summary.js && node test_doc_detection_suite.js && node test_prescription_engine.js",
     "test:abdm": "node --test tests/test_abdm_service.test.js tests/test_abha_routes.test.js",
-    "test:sms": "node --test tests/test_sms_queue_unit.test.js tests/test_sms_queue_integration.test.js tests/test_sms_queue_chaos.test.js tests/test_sms_queue_load.test.js"
+    "test:sms": "node --test tests/test_sms_queue_unit.test.js tests/test_sms_queue_integration.test.js tests/test_sms_queue_chaos.test.js tests/test_sms_queue_load.test.js",
+    "test:neuro": "node --test tests/test_adhd_scoring_and_triage.test.js tests/test_adhd_integration.test.js"
   },
   "keywords": [
     "sih2026",

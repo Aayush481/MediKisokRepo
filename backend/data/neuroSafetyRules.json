@@ -1,0 +1,118 @@
+{
+  "version": "1.0.0",
+  "name": "MediKiosk Deterministic Neuro-Psychiatric Safety & Crisis Rules",
+  "lastReviewed": "2026-10-10",
+  "helplines": {
+    "teleManas": {
+      "number": "14416",
+      "tollFree": "1800-891-4416",
+      "nameEn": "Tele-MANAS (National Mental Health Helpline of India, 24x7 Free)",
+      "nameHi": "टेली-मानस (राष्ट्रीय मानसिक स्वास्थ्य हेल्पलाइन, 24x7 निःशुल्क)"
+    },
+    "nationalEmergency": {
+      "number": "112",
+      "nameEn": "National Emergency All-in-One Response",
+      "nameHi": "राष्ट्रीय आपातकालीन नंबर 112"
+    },
+    "childline": {
+      "number": "1098",
+      "nameEn": "Childline India (for minors in distress)",
+      "nameHi": "चाइल्डलाइन 1098 (बच्चों की सुरक्षा हेतु)"
+    },
+    "hospitalEmergencyBay": {
+      "number": "Ext. 102",
+      "nameEn": "Hospital Emergency Triage & Resuscitation Bay",
+      "nameHi": "अस्पताल आपातकालीन वार्ड एवं ट्राइएज"
+    }
+  },
+  "rules": [
+    {
+      "id": "SAFETY_SUICIDE_SELF_HARM",
+      "category": "SUICIDAL_IDEATION_OR_SELF_HARM",
+      "severity": "EMERGENCY_CRITICAL",
+      "keywordsEn": [
+        "suicide", "kill myself", "end my life", "want to die", "hanging myself",
+        "slit my wrist", "take all my pills", "better off dead", "no reason to live",
+        "overdose on purpose"
+      ],
+      "keywordsHi": [
+        "आत्महत्या", "मरना चाहता", "मरना चाहती", "खुद को खत्म", "जान देना",
+        "खुदकुशी", "जीने का मन नहीं", "फांसी", "नस काटना"
+      ],
+      "regexPatterns": [
+        "\\b(kill|end)\\s+(my\\s+life|myself)\\b",
+        "\\bwant\\s+to\\s+die\\b",
+        "\\b(suicid|hang\\s+myself|slit\\s+wrist)\\b"
+      ],
+      "structuredTriggers": [
+        { "questionId": "CRISIS_SAFETY_CHECK", "value": "crisis_need_help" }
+      ],
+      "emergencyAction": "HALT_QUESTIONNAIRE_DISPLAY_CRISIS_SUPPORT",
+      "alertClinicalDesk": true
+    },
+    {
+      "id": "SAFETY_HARM_OTHERS",
+      "category": "THREAT_TO_OTHERS",
+      "severity": "EMERGENCY_CRITICAL",
+      "keywordsEn": [
+        "kill someone", "stab someone", "murder", "hurt someone badly", "shoot them"
+      ],
+      "keywordsHi": [
+        "किसी को मारना", "किसी की जान लेना", "हमला करना", "चाकू मारना"
+      ],
+      "regexPatterns": [
+        "\\b(kill|stab|shoot|murder)\\s+(someone|others|them)\\b"
+      ],
+      "emergencyAction": "HALT_QUESTIONNAIRE_DISPLAY_CRISIS_SUPPORT",
+      "alertClinicalDesk": true
+    },
+    {
+      "id": "SAFETY_CHILD_ABUSE_NEGLECT",
+      "category": "MINOR_PROTECTION_ALERT",
+      "severity": "URGENT_PROTECTION",
+      "keywordsEn": [
+        "child abuse", "hits the child", "beats me everyday", "starving the child", "sexual abuse", "molested"
+      ],
+      "keywordsHi": [
+        "बच्चे को मारते", "शोषण", "उत्पीड़न", "दुर्व्यवहार"
+      ],
+      "regexPatterns": [
+        "\\b(molest|abuse|beat\\s+the\\s+child|starv)\\b"
+      ],
+      "emergencyAction": "HALT_QUESTIONNAIRE_CHILD_PROTECTION_ALERT",
+      "alertClinicalDesk": true
+    },
+    {
+      "id": "SAFETY_ACUTE_PSYCHOSIS_MANIA",
+      "category": "ACUTE_PSYCHOSIS_OR_MANIA",
+      "severity": "EMERGENCY_CLINICAL",
+      "keywordsEn": [
+        "voices telling me to", "hearing demons", "conspiracy chips inside", "aliens commanding me"
+      ],
+      "keywordsHi": [
+        "आवाजें सुनाई दे रही", "भूत कह रहे", "मेरे दिमाग को कोई नियंत्रित कर रहा"
+      ],
+      "regexPatterns": [
+        "\\bvoices\\s+(telling|commanding)\\s+me\\b"
+      ],
+      "emergencyAction": "HALT_QUESTIONNAIRE_DISPLAY_CRISIS_SUPPORT",
+      "alertClinicalDesk": true
+    },
+    {
+      "id": "SAFETY_SEVERE_WITHDRAWAL_SEIZURE",
+      "category": "MEDICAL_WITHDRAWAL_EMERGENCY",
+      "severity": "EMERGENCY_CLINICAL",
+      "keywordsEn": [
+        "delirium tremens", "shaking uncontrollably from alcohol", "seizure right now", "passed out shaking"
+      ],
+      "keywordsHi": [
+        "शराब छूटने से कंपकंपी", "दौरे पड़ रहे", "कांप रहा हूं बुरी तरह"
+      ],
+      "regexPatterns": [
+        "\\b(delirium\\s+tremens|seizure\\s+right\\s+now)\\b"
+      ],
+      "emergencyAction": "HALT_QUESTIONNAIRE_MEDICAL_EMERGENCY",
+      "alertClinicalDesk": true
+    }
+  ]
+}

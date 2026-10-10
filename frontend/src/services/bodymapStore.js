@@ -47,7 +47,6 @@ class BodyMapStore {
     if (isMulti) {
       if (parts.includes(id)) {
         parts = parts.filter(p => p !== id);
-        if (parts.length === 0) parts = [id];
       } else {
         if (parts.length >= this.state.maxMultiSelect) {
           parts.shift(); // remove oldest to respect cap
@@ -59,7 +58,13 @@ class BodyMapStore {
     }
 
     this.state.selectedParts = parts;
-    this.state.primarySelectedPart = id;
+    this.state.primarySelectedPart = parts.length > 0 ? parts[parts.length - 1] : null;
+    this.notify();
+  }
+
+  clearSelection() {
+    this.state.selectedParts = [];
+    this.state.primarySelectedPart = null;
     this.notify();
   }
 

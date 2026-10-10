@@ -31,6 +31,7 @@ import { renderStep2VitalsAndIntake, renderBodyMapModule, renderAyushModule } fr
 import { renderStep3Records } from "./components/Step3Records.js";
 import { renderStep4Summary, generateBarcodeSvg } from "./components/Step4Summary.js";
 import { renderDoctorDashboard } from "./components/DoctorDashboard.js";
+import { AdhdChatAssistant } from "./components/AdhdChatAssistant.js";
 
 function generateMedicalDocSvg(type, title, facility, items = [], rootCause = "", patientName = "Priya Patel", token = "A-24") {
   const isRx = type === "prescription";
@@ -221,6 +222,8 @@ class MediKioskApp {
       onSuccess: (profile) => this.onAbhaProfileLinked(profile)
     });
     this.phoneSimulator = new PhoneSimulatorModal(this);
+    this.adhdAssistant = new AdhdChatAssistant(this);
+    window.adhdAssistant = this.adhdAssistant;
     this.currentLanguage = i18n.getLanguage() || "hi";
     speechService.setLanguage(this.currentLanguage);
     const langSelect = document.getElementById("langSelect");
@@ -228,6 +231,14 @@ class MediKioskApp {
     this.updateStaticHeaderTranslations();
     this.bindGlobalEvents();
     this.render();
+  }
+
+  openAdhdScreening() {
+    if (!this.adhdAssistant) {
+      this.adhdAssistant = new AdhdChatAssistant(this);
+      window.adhdAssistant = this.adhdAssistant;
+    }
+    this.adhdAssistant.open();
   }
 
   openAbhaLookupModal() {
@@ -457,6 +468,15 @@ class MediKioskApp {
               <div class="step-subtext">${i18n.t("step4_sub")}</div>
             </div>
           </div>
+          <div class="step-node ${this.patient?.hasNeuroScreening ? 'completed' : ''}" onclick="window.app.openAdhdScreening()" style="cursor: pointer;" title="Optional ADHD & Focus Screener">
+            <div class="step-number" style="background: #ECFDF5; color: #047857; border-color: #A7F3D0;">
+              ${this.patient?.hasNeuroScreening ? '✓' : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>'}
+            </div>
+            <div>
+              <div class="step-label" style="color: #065F46;">Wellness & Focus</div>
+              <div class="step-subtext">${this.patient?.hasNeuroScreening ? 'Screened' : 'Intake Screener'}</div>
+            </div>
+          </div>
         </div>
 
         <!-- Active Wizard Step -->
@@ -563,7 +583,7 @@ class MediKioskApp {
     `;
   }
 
-  // Step 2: Optical vitals and clinical intake
+  // Step 2: Optical vitals, symptom intake, and full 2D skeleton map
   renderStep2VitalsAndIntake() {
     const vitals = this.patient.rppgVitals || {
       heartRate: "--",
@@ -576,368 +596,467 @@ class MediKioskApp {
     const isLocked = this.faceLockState.isLocked;
     const checks = this.faceLockState.checks || {};
 
+    // 1. Heart Rate State Label
+    let hrStateLabel = "Waiting for signal";
+    let hrStateClass = "waiting";
+    if (this.isRppgScanning) {
+      hrStateLabel = "Sampling 30 FPS...";
+      hrStateClass = "scanning";
+    } else if (vitals.heartRate !== "--") {
+      const hrNum = Number(vitals.heartRate);
+      if (hrNum > 100) {
+        hrStateLabel = "Elevated (>100)";
+        hrStateClass = "alert";
+      } else if (hrNum < 60) {
+        hrStateLabel = "Low (<60)";
+        hrStateClass = "alert";
+      } else {
+        hrStateLabel = "Resting / Normal";
+        hrStateClass = "normal";
+      }
+    } else if (this.faceLockState.message && !checks.isStill) {
+      hrStateLabel = "Hold still";
+    } else if (this.faceLockState.message && !checks.faceDetected) {
+      hrStateLabel = "Face lost";
+    }
+
+    // 2. Stress / Energy State Label
+    let stressStateLabel = "Waiting for signal";
+    let stressStateClass = "waiting";
+    if (this.isRppgScanning) {
+      stressStateLabel = "Computing spectral power...";
+      stressStateClass = "scanning";
+    } else if (vitals.stressScore !== "--" && vitals.stressScore !== undefined) {
+      const stressNum = Number(vitals.stressScore);
+      if (stressNum > 65) {
+        stressStateLabel = "High Stress";
+        stressStateClass = "alert";
+      } else if (stressNum > 35) {
+        stressStateLabel = "Mild Stress";
+        stressStateClass = "normal";
+      } else {
+        stressStateLabel = "Relaxed";
+        stressStateClass = "normal";
+      }
+    }
+
+    // 3. HRV Stability State Label
+    let hrvStateLabel = "Waiting for signal";
+    let hrvStateClass = "waiting";
+    if (this.isRppgScanning) {
+      hrvStateLabel = "Tracking R-R intervals...";
+      hrvStateClass = "scanning";
+    } else if (vitals.hrv !== "--") {
+      const hrvNum = Number(vitals.hrv);
+      if (hrvNum >= 40) {
+        hrvStateLabel = "Steady";
+        hrvStateClass = "normal";
+      } else if (hrvNum >= 25) {
+        hrvStateLabel = "Moderate";
+        hrvStateClass = "normal";
+      } else {
+        hrvStateLabel = "Low Variability";
+        hrvStateClass = "alert";
+      }
+    }
+
+    // 4. Breathing Rate State Label
+    let respStateLabel = "Waiting for signal";
+    let respStateClass = "waiting";
+    if (this.isRppgScanning) {
+      respStateLabel = "Chest/nasal motion...";
+      respStateClass = "scanning";
+    } else if (vitals.respiratoryRate !== "--") {
+      const respNum = Number(vitals.respiratoryRate);
+      if (respNum > 20) {
+        respStateLabel = "Rapid (>20)";
+        respStateClass = "alert";
+      } else if (respNum < 12) {
+        respStateLabel = "Shallow (<12)";
+        respStateClass = "alert";
+      } else {
+        respStateLabel = "Relaxed";
+        respStateClass = "normal";
+      }
+    }
+
+    const commonSymptoms = [
+      { id: "sym_fever", text: i18n.t("sym_fever") || "Fever", icon: "🤒" },
+      { id: "sym_cough", text: i18n.t("sym_cough") || "Cough & Cold", icon: "🤧" },
+      { id: "sym_headache", text: i18n.t("sym_headache") || "Headache", icon: "🤕" },
+      { id: "sym_chest_pain", text: i18n.t("sym_chest_pain") || "Chest Pain", icon: "🫀" },
+      { id: "sym_stomach_pain", text: i18n.t("sym_stomach_pain") || "Stomach Ache", icon: "🤢" },
+      { id: "sym_joint_pain", text: i18n.t("sym_joint_pain") || "Joint Pain", icon: "🦴" }
+    ];
+
+    const moreSymptoms = [
+      { id: "sym_breathless", text: i18n.t("sym_breathless") || "Breathlessness", icon: "🫁" },
+      { id: "sym_vomiting", text: i18n.t("sym_vomiting") || "Vomiting", icon: "🤮" },
+      { id: "sym_fatigue", text: i18n.t("sym_fatigue") || "Weakness / Fatigue", icon: "😴" }
+    ];
+
+    if (!this.selectedSymptomChips) this.selectedSymptomChips = new Set();
+
     return `
-      ${this.isVitalsBayCollapsed ? `
-        <!-- Collapsed Compact Vitals Telemetry Strip -->
-        <div class="vitals-hardware-bay vitals-hardware-bay-collapsed" style="padding: 10px 18px; margin-bottom: 1.25rem;">
-          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-              <span style="font-size: 1.3rem;">📷</span>
-              <div>
-                <strong style="color: var(--text-primary); font-size: 0.9rem;">${i18n.t("vitals_title")}</strong>
-                <span style="font-size: 0.74rem; color: var(--text-muted); display: block;">
-                  ${this.patient.rppgVitals ? '✓ Calibrated Diagnostic Telemetry' : 'Contactless Optical Scanner (Optional)'}
-                </span>
-              </div>
-            </div>
-            
-            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-              <span class="pill-3d ${vitals.heartRate !== '--' ? 'pill-3d-emerald' : 'pill-3d-subtle'}" style="font-size: 0.74rem; padding: 4px 10px;">
-                🫀 <strong>${vitals.heartRate}</strong> BPM
-              </span>
-              <span class="pill-3d ${vitals.stressScore !== '--' && vitals.stressScore !== undefined ? 'pill-3d-emerald' : 'pill-3d-subtle'}" style="font-size: 0.74rem; padding: 4px 10px;">
-                ⚡ <strong>${vitals.stressScore !== undefined ? vitals.stressScore : '--'}</strong>/100 Stress
-              </span>
-              <span class="pill-3d ${vitals.hrv !== '--' ? 'pill-3d-emerald' : 'pill-3d-subtle'}" style="font-size: 0.74rem; padding: 4px 10px;">
-                〰 <strong>${vitals.hrv}</strong> ms HRV
-              </span>
-              <span class="pill-3d ${vitals.respiratoryRate !== '--' ? 'pill-3d-emerald' : 'pill-3d-subtle'}" style="font-size: 0.74rem; padding: 4px 10px;">
-                🫁 <strong>${vitals.respiratoryRate}</strong> RPM
-              </span>
-              <button class="btn-3d btn-3d-secondary" style="padding: 5px 12px; font-size: 0.74rem;" onclick="window.app.toggleVitalsBayCollapse()">
-                ⌄ Expand Camera Scanner
-              </button>
-            </div>
-          </div>
-        </div>
-      ` : `
-        <!-- Vitals Hardware Bay -->
-        <div class="vitals-hardware-bay">
-          <div class="bay-header">
+      <div class="kiosk-three-sections-container">
+        
+        <!-- ================================================================
+             SECTION 1: VITALS BAND (TOP)
+             ================================================================ -->
+        <div class="vitals-band-card">
+          <div class="vitals-band-header">
             <div>
-              <h3 style="font-family: var(--font-display); font-size: 1.15rem; font-weight: 800; color: var(--text-primary);">
+              <h3 style="font-family: var(--font-display); font-size: 1.15rem; font-weight: 800; color: var(--text-primary, #0F172A); margin: 0;">
                 ${i18n.t("vitals_title")}
               </h3>
-              <p style="font-size: 0.78rem; color: var(--text-muted);">
+              <p style="font-size: 0.78rem; color: var(--text-muted, #64748B); margin: 3px 0 0 0;">
                 ${i18n.t("vitals_subtitle")}
               </p>
             </div>
 
-            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-              <!-- Scan Duration Switcher -->
-              <div style="background: var(--bg-surface-subtle); padding: 3px; border-radius: 10px; border: 1px solid var(--border-light); display: flex; gap: 2px;">
-                <button class="mode-btn ${this.scanDuration === 30000 ? 'active' : ''}" style="padding: 4px 10px; font-size: 0.74rem;" onclick="window.app.setScanDuration(30000)">
-                  ${i18n.t("rapid_scan_btn")}
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+              <!-- 30s/60s Mode Switch -->
+              <div style="background: var(--bg-surface-inset, #F8FAFC); padding: 3px; border-radius: 8px; border: 1px solid var(--border-light, #E2E8F0); display: flex; gap: 2px;">
+                <button class="mode-btn ${this.scanDuration === 30000 ? 'active' : ''}" style="padding: 5px 12px; font-size: 0.75rem; font-weight: 700;" onclick="window.app.setScanDuration(30000)">
+                  ${i18n.t("rapid_scan_btn")} (30s)
                 </button>
-                <button class="mode-btn ${this.scanDuration === 60000 ? 'active' : ''}" style="padding: 4px 10px; font-size: 0.74rem;" onclick="window.app.setScanDuration(60000)">
-                  ${i18n.t("diagnostic_scan_btn")}
+                <button class="mode-btn ${this.scanDuration === 60000 ? 'active' : ''}" style="padding: 5px 12px; font-size: 0.75rem; font-weight: 700;" onclick="window.app.setScanDuration(60000)">
+                  ${i18n.t("diagnostic_scan_btn")} (60s)
                 </button>
               </div>
 
-              <button class="btn-3d ${this.isAyushMode ? 'btn-3d-success' : 'btn-3d-secondary'}" style="padding: 6px 12px; font-size: 0.76rem;" onclick="window.app.toggleAyushMode()">
-                🌿 ${this.isAyushMode ? 'AYUSH Active' : i18n.t("ayush_mode_btn")}
-              </button>
-
-              <button class="btn-3d btn-3d-secondary" style="padding: 6px 10px; font-size: 0.74rem;" onclick="window.app.toggleVitalsBayCollapse()" title="Minimize camera bay to give full height to Body Map">
-                ⌃ Minimize Bay
-              </button>
+              <!-- Primary Scan Vitals Button -->
+              ${this.patient.rppgVitals ? `
+                <button class="btn-3d btn-3d-success" style="min-height: 44px; padding: 8px 18px; font-size: 0.8rem; font-weight: 700;" onclick="window.app.triggerRppgScan()">
+                  ✓ Recalibrate Scan
+                </button>
+              ` : `
+                <button id="btnStartVitalsScan" class="btn-3d ${isLocked ? 'btn-3d-success' : 'btn-3d-primary'}" style="min-height: 44px; padding: 8px 20px; font-size: 0.82rem; font-weight: 700;" onclick="window.app.triggerRppgScan()">
+                  ${this.isRppgScanning ? '⏳ ' + i18n.t("btn_scanning_vitals") : (isLocked ? '⚡ ' + i18n.t("auto_scan_msg") : '🩺 ' + i18n.t("btn_scan_vitals"))}
+                </button>
+              `}
             </div>
-          </div>`}
+          </div>
 
-        ${!this.isVitalsBayCollapsed ? `
-        <div style="display: grid; grid-template-columns: 240px 1fr; gap: 1.25rem; align-items: stretch;">
-          <!-- Camera View / Verified Card -->
-          <div>
-            ${this.patient.rppgVitals ? `
-              <div style="height: 200px; border-radius: 14px; background: var(--green-surface); border: 2px solid var(--emerald); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 1rem; box-shadow: 0 2px 8px rgba(5, 150, 105, 0.15);">
-                <div style="font-size: 2.5rem; line-height: 1; margin-bottom: 6px; color: var(--emerald);">✓</div>
-                <strong style="color: var(--emerald-dark); font-size: 0.95rem;">${i18n.t("vitals_calibrated")}</strong>
-                <p style="font-size: 0.74rem; color: var(--emerald-deep); margin-top: 2px;">${i18n.t("vitals_calibrated_sub")}</p>
-                <span class="pill-3d pill-3d-emerald" style="margin-top: 8px;">
-                  ${this.patient.rppgVitals.durationSeconds || 30}s • ${i18n.t("verified_badge")}
-                </span>
-              </div>
-            ` : `
-              <div class="camera-hardware-lens" id="rppgCameraFeedContainer" style="cursor: pointer;" onclick="if(!window.app.patient.rppgVitals && window.app.cameraError) window.app.requestCameraDirectly();">
-                <div class="reticle-hud ${isLocked ? 'locked' : ''}">
-                  <span class="reticle-status-badge">
-                    ${this.cameraError ? '🔴 ' + i18n.t("camera_req_btn") : (this.faceLockState.message || (this.isRppgScanning ? i18n.t("btn_scanning_vitals") : 'ALIGNING FACE...'))}
-                  </span>
+          <div class="vitals-band-grid">
+            <!-- Left: Camera Preview Card with 4:3 Aspect Ratio and Face Reticle -->
+            <div class="camera-preview-card">
+              <!-- Face-check chips row above preview: Face / Centered / Distance / Still -->
+              <div class="face-checks-row">
+                <div class="face-check-chip ${this.patient.rppgVitals || checks.faceDetected ? 'pass' : ''}">
+                  <span>${this.patient.rppgVitals || checks.faceDetected ? '✓' : '○'}</span> Face
+                </div>
+                <div class="face-check-chip ${this.patient.rppgVitals || checks.isCentered ? 'pass' : ''}">
+                  <span>${this.patient.rppgVitals || checks.isCentered ? '✓' : '○'}</span> Centered
+                </div>
+                <div class="face-check-chip ${this.patient.rppgVitals || checks.isOptimalDistance ? 'pass' : ''}">
+                  <span>${this.patient.rppgVitals || checks.isOptimalDistance ? '✓' : '○'}</span> Distance
+                </div>
+                <div class="face-check-chip ${this.patient.rppgVitals || checks.isStill ? 'pass' : ''}">
+                  <span>${this.patient.rppgVitals || checks.isStill ? '✓' : '○'}</span> Still
                 </div>
               </div>
-              ${this.cameraError ? `
-                <div style="margin-top: 6px; text-align: center;">
+
+              <!-- 4:3 Camera Preview Container -->
+              ${this.patient.rppgVitals ? `
+                <div class="camera-preview-4x3" style="background: var(--emerald-light, #ECFDF5); border: 2px solid var(--emerald, #059669); flex-direction: column; padding: 1.25rem; text-align: center;">
+                  <div style="font-size: 2.2rem; color: var(--emerald, #059669); line-height: 1;">✓</div>
+                  <strong style="color: var(--emerald-dark, #047857); font-size: 0.95rem; margin-top: 6px;">${i18n.t("vitals_calibrated")}</strong>
+                  <p style="font-size: 0.74rem; color: var(--emerald-deep, #065F46); margin: 2px 0 0 0;">${i18n.t("vitals_calibrated_sub")}</p>
+                  <span class="pill-3d pill-3d-emerald" style="margin-top: 10px;">
+                    ${this.patient.rppgVitals.durationSeconds || 30}s • ${i18n.t("verified_badge")}
+                  </span>
+                </div>
+              ` : `
+                <div class="camera-preview-4x3" id="rppgCameraFeedContainer" style="cursor: pointer;" onclick="if(!window.app.patient.rppgVitals && window.app.cameraError) window.app.requestCameraDirectly();">
+                  <div class="face-guide-oval-reticle ${isLocked ? 'locked' : ''}"></div>
+                  <span class="reticle-status-badge" style="position: absolute; bottom: 8px; font-size: 0.68rem; font-weight: 700; background: rgba(0,0,0,0.7); color: #FFFFFF; padding: 3px 8px; border-radius: 6px;">
+                    ${this.cameraError ? '🔴 ' + i18n.t("camera_req_btn") : (this.faceLockState.message || (this.isRppgScanning ? i18n.t("btn_scanning_vitals") : 'ALIGN FACE'))}
+                  </span>
+                </div>
+                ${this.cameraError ? `
                   <button class="btn-3d btn-3d-warning" style="padding: 6px 12px; font-size: 0.78rem; width: 100%;" onclick="window.app.requestCameraDirectly()">
                     ${i18n.t("camera_req_btn")}
                   </button>
-                </div>
-              ` : ''}
-            `}
-
-            <!-- 5-Point Alignment Status Checklist -->
-            <div class="checklist-pill-bar">
-              <div class="pill-check ${this.patient.rppgVitals || checks.faceDetected ? 'pass' : ''}">
-                <span>${this.patient.rppgVitals || checks.faceDetected ? '✓' : '○'}</span> Face
-              </div>
-              <div class="pill-check ${this.patient.rppgVitals || checks.isCentered ? 'pass' : ''}">
-                <span>${this.patient.rppgVitals || checks.isCentered ? '✓' : '○'}</span> Center
-              </div>
-              <div class="pill-check ${this.patient.rppgVitals || checks.isOptimalDistance ? 'pass' : ''}">
-                <span>${this.patient.rppgVitals || checks.isOptimalDistance ? '✓' : '○'}</span> Distance
-              </div>
-              <div class="pill-check ${this.patient.rppgVitals || checks.isStill ? 'pass' : ''}">
-                <span>${this.patient.rppgVitals || checks.isStill ? '✓' : '○'}</span> Still
-              </div>
-              <div class="pill-check ${this.patient.rppgVitals || checks.hasValidROIs ? 'pass' : ''}">
-                <span>${this.patient.rppgVitals || checks.hasValidROIs ? '✓' : '○'}</span> Skin ROI
-              </div>
+                ` : ''}
+              `}
             </div>
-          </div>
 
-          <!-- Telemetry Monitors & Pulse Extraction Waveform -->
-          <div style="display: flex; flex-direction: column; justify-content: space-between;">
-            <div>
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                <span style="font-size: 0.78rem; color: var(--emerald-dark); font-weight: 700;">
-                  ${this.scanDuration >= 60000 ? i18n.t("diagnostic_scan_btn") : i18n.t("rapid_scan_btn")}:
-                </span>
-                ${this.patient.rppgVitals ? `
-                  <button class="btn-3d btn-3d-success" style="padding: 6px 14px; font-size: 0.78rem;" onclick="window.app.nextStep()">
-                    ${i18n.t("btn_next_records")}
-                  </button>
-                ` : `
-                  <button id="btnStartVitalsScan" class="btn-3d ${isLocked ? 'btn-3d-success' : 'btn-3d-primary'}" style="padding: 6px 14px; font-size: 0.78rem;" onclick="window.app.triggerRppgScan()">
-                    ${this.isRppgScanning ? i18n.t("btn_scanning_vitals") : (isLocked ? i18n.t("auto_scan_msg") : i18n.t("btn_scan_vitals"))}
-                  </button>
-                `}
-              </div>
-
+            <!-- Right: Wide Pulse Waveform Oscilloscope & Row of FOUR Equal-Width Metric Tiles -->
+            <div class="vitals-telemetry-bay">
               ${this.isRppgScanning ? `
-                <div style="background: #0F172A; border: 1px solid #334155; border-radius: 10px; padding: 8px 12px; margin-bottom: 10px;">
-                  <div style="display: flex; justify-content: space-between; font-size: 0.76rem; color: #34D399; font-weight: 600;">
+                <div style="background: var(--bg-surface-inset, #F8FAFC); border: 1.5px solid var(--primary-border, #A7F3D0); border-radius: 10px; padding: 8px 12px;">
+                  <div style="display: flex; justify-content: space-between; font-size: 0.76rem; color: var(--emerald-dark, #047857); font-weight: 700;">
                     <span id="rppgCountdownText">${this.rppgElapsedSec || '0.0'}s / ${(this.scanDuration/1000).toFixed(1)}s (Hold Still)</span>
                     <strong id="rppgProgressText">${this.rppgProgress}%</strong>
                   </div>
-                  <div style="width: 100%; height: 6px; background: #1E293B; border-radius: 3px; overflow: hidden; margin-top: 5px;">
-                    <div id="rppgProgressBar" style="width: ${this.rppgProgress}%; height: 100%; background: var(--emerald); transition: width 0.1s linear;"></div>
+                  <div style="width: 100%; height: 6px; background: var(--grey-200, #E2E8F0); border-radius: 3px; overflow: hidden; margin-top: 5px;">
+                    <div id="rppgProgressBar" style="width: ${this.rppgProgress}%; height: 100%; background: var(--primary-gradient, #059669); transition: width 0.1s linear;"></div>
                   </div>
                 </div>
               ` : ''}
 
-              <!-- Real-Time Capillary Pulse Wave Oscilloscope Visualizer -->
-              <div class="oscilloscope-container-3d">
-                <div class="oscilloscope-legend">
+              <!-- Wide Live Photoplethysmogram Oscilloscope Card -->
+              <div class="oscilloscope-card-wide">
+                <div class="oscilloscope-header">
                   <span>📈 Live Photoplethysmogram Oscilloscope (Pulse Waveform)</span>
-                  <span style="color: ${this.isRppgScanning ? '#34D399' : (this.patient.rppgVitals ? '#6EE7B7' : 'var(--text-muted)')}; font-weight: 700;">
+                  <span style="color: ${this.isRppgScanning ? '#34D399' : (this.patient.rppgVitals ? '#6EE7B7' : '#94A3B8')}; font-family: var(--font-mono, monospace); font-weight: 700;">
                     ${this.isRppgScanning ? '● SAMPLING 30 FPS' : (this.patient.rppgVitals ? '✓ CAPTURE LOCKED' : '○ STANDBY')}
                   </span>
                 </div>
-                <canvas id="rppgOscilloscopeCanvas" width="480" height="52" class="oscilloscope-canvas-3d"></canvas>
+                <canvas id="rppgOscilloscopeCanvas" width="600" height="52" class="oscilloscope-canvas-3d" style="width: 100%; height: 52px; display: block;"></canvas>
               </div>
 
-              <!-- Real-Time Telemetry Grid -->
-              <div class="telemetry-grid">
-                <div class="telemetry-card ${vitals.heartRate > 100 ? 'highlight' : ''}">
-                  <div class="telemetry-value">${vitals.heartRate}<span class="telemetry-unit">${i18n.t("telemetry_hr_unit")}</span></div>
-                  <div class="telemetry-label">${i18n.t("telemetry_hr")}</div>
-                  <div class="telemetry-status" style="font-size: 0.68rem; line-height: 1.2;">
-                    ${this.isRppgScanning 
-                      ? '● Sampling 30 FPS...' 
-                      : (vitals.heartRate !== '--' 
-                          ? (vitals.heartRate > 100 ? '⚠️ High (>100)' : '✓ Verified Normal') 
-                          : 'Awaiting scan (60-100)')}
-                  </div>
-                </div>
-
-                <div class="telemetry-card ${vitals.stressScore > 70 ? 'highlight' : ''}">
-                  <div class="telemetry-value">${vitals.stressScore !== undefined ? vitals.stressScore : '--'}<span class="telemetry-unit">${i18n.t("telemetry_stress_unit")}</span></div>
-                  <div class="telemetry-label">${i18n.t("telemetry_stress")}</div>
-                  <div class="telemetry-status" style="font-size: 0.68rem; line-height: 1.2; color: var(--text-secondary);">
-                    ${this.isRppgScanning 
-                      ? '● Computing spectral power...' 
-                      : (vitals.stressScore !== '--' && vitals.stressScore !== undefined 
-                          ? (vitals.stressScore > 70 ? '⚡ High Stress' : '✓ Normal / Balanced') 
-                          : 'Awaiting baseline')}
-                  </div>
-                </div>
-
-                <div class="telemetry-card">
-                  <div class="telemetry-value">${vitals.hrv}<span class="telemetry-unit">${i18n.t("telemetry_hrv_unit")}</span></div>
-                  <div class="telemetry-label">${i18n.t("telemetry_hrv")}</div>
-                  <div class="telemetry-status" style="font-size: 0.68rem; line-height: 1.2;">
-                    ${this.isRppgScanning 
-                      ? '● Tracking R-R intervals...' 
-                      : (vitals.hrv !== '--' ? '✓ Steady Baseline' : 'Requires 15s stable wave')}
-                  </div>
-                </div>
-
-                <div class="telemetry-card">
-                  <div class="telemetry-value">${vitals.respiratoryRate}<span class="telemetry-unit">${i18n.t("telemetry_resp_unit")}</span></div>
-                  <div class="telemetry-label">${i18n.t("telemetry_resp")}</div>
-                  <div class="telemetry-status" style="font-size: 0.68rem; line-height: 1.2;">
-                    ${this.isRppgScanning 
-                      ? '● Chest/nasal motion...' 
-                      : (vitals.respiratoryRate !== '--' ? '✓ Resting (12-20 RPM)' : 'Awaiting motion signal')}
-                  </div>
-                </div>
-              </div>
-
-              <!-- Reassuring Clinical Vitals Verification -->
-              ${this.patient.rppgVitals ? `
-                <div style="background: var(--emerald-light); border: 1px solid var(--emerald-border); border-radius: 10px; padding: 10px 14px; margin-top: 10px; font-size: 0.8rem; color: var(--emerald-dark); display: flex; align-items: center; gap: 8px;">
-                  <span style="font-size: 1.2rem;">✓</span>
+              <!-- Exactly ONE Row of FOUR Equal-Width Metric Tiles -->
+              <div class="telemetry-grid-4">
+                <!-- 1. Heart Rate (BPM) -->
+                <div class="metric-tile-wireframe ${vitals.heartRate > 100 ? 'alert' : ''}">
                   <div>
-                    <strong>${i18n.t("vitals_summary_badge")}</strong>
-                    <p style="font-size: 0.74rem; color: var(--emerald-deep); margin: 2px 0 0 0;">
-                      Heart rate, respiratory rate, and autonomic hemodynamics are securely calibrated for doctor evaluation.
-                    </p>
+                    <div class="metric-tile-label">${i18n.t("telemetry_hr")}</div>
+                    <div class="metric-tile-value">
+                      ${vitals.heartRate}<span class="metric-tile-unit">${i18n.t("telemetry_hr_unit")}</span>
+                    </div>
+                  </div>
+                  <div class="metric-tile-state ${hrStateClass}">
+                    ${hrStateLabel}
                   </div>
                 </div>
-              ` : ''}
-            </div>
-          </div>
-        </div>
-      </div>
-      ` : ''}
 
-      <!-- Clinical Intake Layout (Balanced 50/50: Voice & SOCRATES on left, Full-Width Skeleton + Questions Below on right) -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start;">
-        <div>
-          <!-- Voice Station -->
-          <div class="voice-station-3d">
-            <button id="micBtn" class="mic-tactile-button" onclick="window.app.toggleSpeech()">
-              🎙️
-            </button>
-            <h4 id="micStatusText" style="font-size: 1.05rem; margin-top: 10px; font-weight: 700;">${i18n.t("voice_mic_title")}</h4>
-            <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">${i18n.t("voice_mic_sub")}</p>
+                <!-- 2. Stress / Energy -->
+                <div class="metric-tile-wireframe ${vitals.stressScore > 65 ? 'alert' : ''}">
+                  <div>
+                    <div class="metric-tile-label">${i18n.t("telemetry_stress")}</div>
+                    <div class="metric-tile-value">
+                      ${vitals.stressScore !== undefined ? vitals.stressScore : '--'}<span class="metric-tile-unit">${i18n.t("telemetry_stress_unit")}</span>
+                    </div>
+                  </div>
+                  <div class="metric-tile-state ${stressStateClass}">
+                    ${stressStateLabel}
+                  </div>
+                </div>
 
-            <div style="margin-top: 1rem; text-align: left;">
-              <label class="input-label-3d">${i18n.t("chief_complaint_label")}</label>
-              <textarea id="chiefComplaintText" class="input-text-3d" rows="3" 
-                        style="width: 100%; min-height: 85px; padding: 12px; font-size: 0.9rem; line-height: 1.5; border-radius: 10px; resize: vertical;" 
-                        placeholder="${i18n.t("chief_complaint_ph")}">${this.patient.chiefComplaint}</textarea>
+                <!-- 3. HRV Stability -->
+                <div class="metric-tile-wireframe">
+                  <div>
+                    <div class="metric-tile-label">${i18n.t("telemetry_hrv")}</div>
+                    <div class="metric-tile-value">
+                      ${vitals.hrv}<span class="metric-tile-unit">${i18n.t("telemetry_hrv_unit")}</span>
+                    </div>
+                  </div>
+                  <div class="metric-tile-state ${hrvStateClass}">
+                    ${hrvStateLabel}
+                  </div>
+                </div>
 
-              <!-- Quick Common Symptoms Chips -->
-              <div style="margin-top: 12px;">
-                <label style="font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); display: block; margin-bottom: 6px;">${i18n.t("quick_symptoms_title")}</label>
-                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                  <button type="button" class="quick-chip" style="min-height: 40px; padding: 6px 14px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px;" onclick="window.app.appendSymptom('${i18n.t("sym_fever")}')">🤒 ${i18n.t("sym_fever")}</button>
-                  <button type="button" class="quick-chip" style="min-height: 40px; padding: 6px 14px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px;" onclick="window.app.appendSymptom('${i18n.t("sym_cough")}')">🤧 ${i18n.t("sym_cough")}</button>
-                  <button type="button" class="quick-chip" style="min-height: 40px; padding: 6px 14px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px;" onclick="window.app.appendSymptom('${i18n.t("sym_headache")}')">🤕 ${i18n.t("sym_headache")}</button>
-                  <button type="button" class="quick-chip" style="min-height: 40px; padding: 6px 14px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px;" onclick="window.app.appendSymptom('${i18n.t("sym_chest_pain")}')">🫀 ${i18n.t("sym_chest_pain")}</button>
-                  <button type="button" class="quick-chip" style="min-height: 40px; padding: 6px 14px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px;" onclick="window.app.appendSymptom('${i18n.t("sym_stomach_pain")}')">🤢 ${i18n.t("sym_stomach_pain")}</button>
-                  <button type="button" class="quick-chip" style="min-height: 40px; padding: 6px 14px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px;" onclick="window.app.appendSymptom('${i18n.t("sym_breathless")}')">🫁 ${i18n.t("sym_breathless")}</button>
-                  <button type="button" class="quick-chip" style="min-height: 40px; padding: 6px 14px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px;" onclick="window.app.appendSymptom('${i18n.t("sym_joint_pain")}')">🦴 ${i18n.t("sym_joint_pain")}</button>
-                  <button type="button" class="quick-chip" style="min-height: 40px; padding: 6px 14px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px;" onclick="window.app.appendSymptom('${i18n.t("sym_vomiting")}')">🤮 ${i18n.t("sym_vomiting")}</button>
-                  <button type="button" class="quick-chip" style="min-height: 40px; padding: 6px 14px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px;" onclick="window.app.appendSymptom('${i18n.t("sym_fatigue")}')">😴 ${i18n.t("sym_fatigue")}</button>
+                <!-- 4. Breathing Rate (RPM) -->
+                <div class="metric-tile-wireframe ${vitals.respiratoryRate > 20 ? 'alert' : ''}">
+                  <div>
+                    <div class="metric-tile-label">${i18n.t("telemetry_resp")}</div>
+                    <div class="metric-tile-value">
+                      ${vitals.respiratoryRate}<span class="metric-tile-unit">${i18n.t("telemetry_resp_unit")}</span>
+                    </div>
+                  </div>
+                  <div class="metric-tile-state ${respStateClass}">
+                    ${respStateLabel}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+        </div>
 
-          <!-- AYUSH / Home Herbal Remedies Declaration -->
-          <div class="card-3d" style="padding: 1.25rem; margin-bottom: 1.25rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <div>
-                <h4 style="font-size: 0.88rem; font-weight: 700; color: var(--emerald-dark);">${i18n.t("herbs_title")}</h4>
-                <p style="font-size: 0.72rem; color: var(--text-muted); margin: 0;">${i18n.t("herbs_sub")}</p>
-              </div>
-              <button class="btn-3d btn-3d-secondary" style="padding: 4px 10px; font-size: 0.72rem;" onclick="window.app.promptAddHerb()">${i18n.t("herbs_add_btn")}</button>
-            </div>
-            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
-              ${(this.patient.ayushHerbs || []).map((h, hIdx) => `
-                <span class="pill-3d pill-3d-emerald" style="cursor: pointer;" onclick="window.app.removeHerb(${hIdx})">
-                  🌿 ${h.name} ✕
-                </span>
-              `).join('')}
-              ${(!this.patient.ayushHerbs || this.patient.ayushHerbs.length === 0) ? `
-                <span style="font-size: 0.78rem; color: var(--text-muted);">${i18n.t("herbs_empty")}</span>
-              ` : ''}
-            </div>
-          </div>
-
-          <!-- SOCRATES Symptom Probing -->
-          <div class="card-3d" style="padding: 1.25rem;">
-            <h4 style="font-size: 0.9rem; font-weight: 700; color: var(--text-primary); margin-bottom: 10px;">${i18n.t("socrates_title")}</h4>
+        <!-- ================================================================
+             SECTION 2: SYMPTOM + BODY MAP CARD (MIDDLE, TWO EQUAL HALVES)
+             ================================================================ -->
+        <div class="symptom-bodymap-card">
+          <div class="symptom-bodymap-grid">
             
-            <div style="margin-bottom: 12px;">
-              <label class="input-label-3d">${SOCRATES_QUESTIONS.character.title}</label>
-              <div class="chip-rack">
-                ${SOCRATES_QUESTIONS.character.options.map(opt => `
-                  <button class="tactile-chip ${this.patient.hpi.character === opt ? 'selected' : ''}" onclick="window.app.setHpiField('character', '${opt}')">${opt}</button>
-                `).join('')}
+            <!-- LEFT HALF: VOICE INPUT, TEXTAREA, QUICK CHIPS, COLLAPSIBLE AYUSH -->
+            <div class="complaint-voice-panel">
+              <!-- Large Circular Microphone Button -->
+              <div style="text-align: center; margin-bottom: 6px;">
+                <button id="micBtn" class="mic-circle-button ${this.isSpeechListening ? 'listening' : ''}" onclick="window.app.toggleSpeech()" title="Tap microphone to speak symptoms">
+                  🎙️
+                </button>
+                <div class="mic-caption-text">
+                  ${i18n.t("voice_mic_title") || "Tap microphone to speak symptoms"}
+                </div>
+                <p id="micStatusText" style="font-size: 0.74rem; color: var(--text-muted, #64748B); margin: 2px 0 0 0;">
+                  ${this.isSpeechListening ? "Listening in real-time... Speak clearly into microphone" : (i18n.t("voice_mic_sub") || "English, Hindi or regional languages supported")}
+                </p>
+              </div>
+
+              <!-- Live Speech Transcript Display -->
+              <div id="liveSpeechTranscript" style="display: ${this.isSpeechListening ? 'block' : 'none'}; background: #FEF3C7; border: 1px solid #FCD34D; border-radius: 8px; padding: 6px 12px; font-size: 0.8rem; color: #92400E; font-weight: 600;">
+                <span style="animation: blink 1s infinite;">● Live Transcript: </span><span id="speechInterimResult">Listening...</span>
+              </div>
+
+              <!-- Comfortable Multi-Line Textbox -->
+              <div>
+                <label class="input-label-3d" for="chiefComplaintText" style="display: flex; justify-content: space-between; font-weight: 700;">
+                  <span>${i18n.t("chief_complaint_label") || "Chief Health Complaint / लक्षण"}</span>
+                  <span style="font-size: 0.74rem; color: var(--text-muted, #64748B); font-weight: 500;">Type or dictate symptoms</span>
+                </label>
+                <textarea id="chiefComplaintText" class="input-text-3d" rows="3" 
+                          style="width: 100%; min-height: 90px; padding: 12px 14px; font-size: 0.92rem; line-height: 1.5; border-radius: 12px; resize: vertical;" 
+                          placeholder="${i18n.t("chief_complaint_ph") || "Describe what hurts, how long it has persisted, or choose from common symptom chips below..."}"
+                          oninput="window.app.updateChiefComplaint(this.value)">${this.patient.chiefComplaint || ''}</textarea>
+              </div>
+
+              <!-- Wrapping Grid of Quick-Symptom Chips (48px - 56px Touch Targets) -->
+              <div>
+                <label style="font-size: 0.78rem; font-weight: 700; color: var(--text-secondary, #475569); display: block; margin-bottom: 8px;">
+                  ${i18n.t("quick_symptoms_title") || "Common Symptoms (Tap to toggle)"}
+                </label>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                  ${commonSymptoms.map(sym => {
+                    const isSelected = this.selectedSymptomChips.has(sym.text);
+                    return `
+                      <button type="button" class="quick-symptom-chip-touch ${isSelected ? 'selected' : ''}" onclick="window.app.toggleSymptomChip('${sym.text}')">
+                        <span>${sym.icon}</span> <span>${sym.text}</span> ${isSelected ? '<span style="font-weight: 900; margin-left: 2px;">✓</span>' : ''}
+                      </button>
+                    `;
+                  }).join('')}
+
+                  ${this.showMoreSymptoms ? moreSymptoms.map(sym => {
+                    const isSelected = this.selectedSymptomChips.has(sym.text);
+                    return `
+                      <button type="button" class="quick-symptom-chip-touch ${isSelected ? 'selected' : ''}" onclick="window.app.toggleSymptomChip('${sym.text}')">
+                        <span>${sym.icon}</span> <span>${sym.text}</span> ${isSelected ? '<span style="font-weight: 900; margin-left: 2px;">✓</span>' : ''}
+                      </button>
+                    `;
+                  }).join('') : ''}
+
+                  <!-- Expander Toggle for More Symptoms -->
+                  <button type="button" class="quick-symptom-chip-touch" style="border-style: dashed; color: var(--primary, #059669); font-weight: 700;" onclick="window.app.toggleMoreSymptoms()">
+                    ${this.showMoreSymptoms ? '▴ Show Fewer Symptoms' : '+ 3 More Symptoms ▼'}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Collapsible AYUSH / Home Remedy Intake Row -->
+              <div class="collapsible-ayush-drawer">
+                <div class="collapsible-ayush-header" onclick="window.app.toggleAyushDrawer()">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 1.1rem;">🌿</span>
+                    <span>${i18n.t("herbs_title") || "Home Remedies / AYUSH Intake"} (${(this.patient.ayushHerbs || []).length} Declared)</span>
+                  </div>
+                  <span style="color: var(--primary, #059669); font-weight: 700;">
+                    ${this.isAyushDrawerOpen ? '▴ Collapse' : '▾ Expand'}
+                  </span>
+                </div>
+                <div class="collapsible-ayush-content ${this.isAyushDrawerOpen ? 'open' : ''}">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="font-size: 0.74rem; color: var(--text-muted, #64748B);">${i18n.t("herbs_sub") || "Declare traditional decoctions, Kadha, Tulsi, or herbal remedies"}</span>
+                    <button type="button" class="btn-3d btn-3d-secondary" style="padding: 4px 10px; font-size: 0.72rem;" onclick="window.app.promptAddHerb()">
+                      + Add Remedy
+                    </button>
+                  </div>
+                  <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                    ${(this.patient.ayushHerbs || []).map((h, hIdx) => `
+                      <span class="pill-3d pill-3d-emerald" style="cursor: pointer;" onclick="window.app.removeHerb(${hIdx})">
+                        🌿 ${h.name} ✕
+                      </span>
+                    `).join('')}
+                    ${(!this.patient.ayushHerbs || this.patient.ayushHerbs.length === 0) ? `
+                      <span style="font-size: 0.76rem; color: var(--text-muted, #94A3B8);">${i18n.t("herbs_empty") || "No remedies declared yet"}</span>
+                    ` : ''}
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div>
-              <div style="display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 700; margin-bottom: 6px;">
-                <span>Discomfort Severity:</span>
-                <span style="color: ${this.patient.hpi.severity >= 7 ? 'var(--crimson)' : 'var(--emerald)'}">${this.patient.hpi.severity || 0} / 10 ${this.patient.hpi.severity >= 7 ? '(PRIORITY ALERT)' : ''}</span>
+            <!-- RIGHT HALF: COMPLETE 2D SKELETON MAP (HEAD TO FEET) -->
+            <div class="skeleton-viewport-card">
+              <div class="bodymap-2d-toolbar-top bodymap-3d-toolbar-top">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 1.25rem;">🦴</span>
+                  <div>
+                    <strong style="color: #FFFFFF; font-size: 0.9rem; display: block; line-height: 1.1;">2D Human Skeleton & Visceral Anatomy Map</strong>
+                    <span style="font-size: 0.7rem; color: #38BDF8;">Full Adult Figure (Skull to Toes)</span>
+                  </div>
+                  <span class="pill-3d pill-3d-emerald" style="font-size: 0.68rem; margin-left: 6px;">
+                    🦴 Complete Canon
+                  </span>
+                </div>
+
+                <div class="bodymap-search-box">
+                  <input type="text" id="anatomySearchInput" class="bodymap-search-input" 
+                         placeholder="Search bone, joint or organ (Femur, Heart, गुर्दा)..." 
+                         oninput="window.app.handleAnatomySearch(this.value)"
+                         onfocus="window.app.handleAnatomySearch(this.value)">
+                  <div id="anatomySearchDropdown" class="bodymap-search-dropdown" style="display: none;"></div>
+                </div>
               </div>
-              <input type="range" style="width: 100%; accent-color: var(--emerald); cursor: pointer;" min="0" max="10" value="${this.patient.hpi.severity || 0}" oninput="window.app.setSeverity(this.value)">
+
+              <!-- Skeleton SVG Container with clamp() and dvh Units -->
+              <div class="skeleton-viewport-container" id="bodymap2dCanvasContainer">
+                <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #38BDF8; font-size: 0.85rem; padding: 2rem;">
+                  ⏳ Loading Interactive 2D Skeleton & Anatomy Map...
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div>
-          ${this.isAyushMode ? this.renderAyushModule() : this.renderBodyMapModule()}
-
-          <div class="kiosk-action-footer" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-light);">
-            <button type="button" class="btn-3d btn-3d-secondary" style="min-height: 48px; padding: 12px 24px; font-weight: 700;" onclick="window.app.prevStep()">
-              ← ${i18n.t("btn_back") || "Back to Check-In"}
-            </button>
-            <button type="button" class="btn-3d ${this.patient.rppgVitals ? 'btn-3d-success' : 'btn-3d-primary'}" style="min-height: 48px; padding: 12px 28px; font-weight: 700;" onclick="window.app.nextStep()">
-              ${i18n.t("btn_next_records") || "Next: Upload Records →"}
-            </button>
-          </div>
+        <!-- ================================================================
+             SECTION 3: FOLLOW-UP QUESTIONS CARD (BOTTOM FULL-WIDTH CARD)
+             ================================================================ -->
+        <div id="symptomQuestionEngineContainer" class="followup-questions-section" style="width: 100%;">
+          <!-- SymptomQuestionEngine mounts here -->
         </div>
+
       </div>
     `;
   }
 
-  // Anatomical body map localization
+  // Helper: Toggle quick symptom chips
+  toggleSymptomChip(symptomText) {
+    if (!this.selectedSymptomChips) this.selectedSymptomChips = new Set();
+    if (this.selectedSymptomChips.has(symptomText)) {
+      this.selectedSymptomChips.delete(symptomText);
+      if (this.patient.chiefComplaint) {
+        this.patient.chiefComplaint = this.patient.chiefComplaint
+          .replace(new RegExp(`(^|,\\s*)${symptomText}`, 'i'), '')
+          .replace(/^,\s*/, '')
+          .trim();
+      }
+    } else {
+      this.selectedSymptomChips.add(symptomText);
+      if (this.patient.chiefComplaint && this.patient.chiefComplaint.trim().length > 0) {
+        if (!this.patient.chiefComplaint.includes(symptomText)) {
+          this.patient.chiefComplaint += `, ${symptomText}`;
+        }
+      } else {
+        this.patient.chiefComplaint = symptomText;
+      }
+    }
+    const txtArea = document.getElementById("chiefComplaintText");
+    if (txtArea) txtArea.value = this.patient.chiefComplaint;
+    this.render();
+  }
+
+  toggleMoreSymptoms() {
+    this.showMoreSymptoms = !this.showMoreSymptoms;
+    this.render();
+  }
+
+  toggleAyushDrawer() {
+    this.isAyushDrawerOpen = !this.isAyushDrawerOpen;
+    this.render();
+  }
+
+  updateChiefComplaint(val) {
+    this.patient.chiefComplaint = val;
+  }
+
+  // Backward-compatible fallback for renderBodyMapModule
   renderBodyMapModule() {
     return `
-      <div class="bodymap-2d-layout bodymap-3d-layout" style="display: flex; flex-direction: column; gap: 1.25rem; width: 100%;">
-        <!-- Top: 2D Full Skeleton Viewport (Full Width of Right Half Screen) -->
-        <div class="bodymap-2d-card bodymap-3d-card" style="width: 100%;">
-          <!-- Top Bar: Title, Search Autocomplete -->
-          <div class="bodymap-2d-toolbar-top bodymap-3d-toolbar-top">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 1.25rem;">🦴</span>
-              <div>
-                <strong style="color: #FFFFFF; font-size: 0.9rem; display: block; line-height: 1.1;">2D Human Skeleton & Visceral Anatomy Map</strong>
-                <span style="font-size: 0.7rem; color: #38BDF8;">Full-Body Clinical Interactive SVG Engine</span>
-              </div>
-              <span class="pill-3d pill-3d-emerald" style="font-size: 0.68rem; margin-left: 6px;">
-                🦴 2D Skeleton Active
-              </span>
-            </div>
-
-            <!-- Anatomical Search Box -->
-            <div class="bodymap-search-box">
-              <input type="text" id="anatomySearchInput" class="bodymap-search-input" 
-                     placeholder="Search bone, joint or organ (Femur, Heart, गुर्दा)..." 
-                     oninput="window.app.handleAnatomySearch(this.value)"
-                     onfocus="window.app.handleAnatomySearch(this.value)">
-              <div id="anatomySearchDropdown" class="bodymap-search-dropdown" style="display: none;"></div>
-            </div>
-          </div>
-
-          <!-- 2D Viewport Container (BodyMap2D mounts here) -->
-          <div class="bodymap-2d-viewport" id="bodymap2dCanvasContainer" style="width: 100%; min-height: 640px; height: 640px; position: relative;">
-            <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #38BDF8; font-size: 0.85rem; padding: 2rem;">
-              ⏳ Loading Interactive 2D Skeleton & Anatomy Map...
-            </div>
-          </div>
-        </div>
-
-        <!-- Bottom: Dynamic Symptom Question Engine (Directly in Bottom of Skeleton) -->
-        <div id="symptomQuestionEngineContainer" style="width: 100%;">
-          <div style="background: rgba(15, 23, 42, 0.95); border: 1.5px solid rgba(56, 189, 248, 0.25); border-radius: 14px; padding: 1.25rem; text-align: center; color: #94A3B8;">
-            <div style="font-size: 1.25rem; margin-bottom: 6px;">🩺</div>
-            <strong style="color: #FFFFFF; font-size: 0.86rem; display: block;">Clinical Follow-Up Questions</strong>
-            <p style="font-size: 0.76rem; color: #94A3B8; margin: 4px 0 0 0;">Tap any bone, joint or organ on the skeleton above to open guided clinical questions</p>
+      <div class="skeleton-viewport-card">
+        <div class="skeleton-viewport-container" id="bodymap2dCanvasContainer">
+          <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #38BDF8; font-size: 0.85rem; padding: 2rem;">
+            ⏳ Loading Interactive 2D Skeleton & Anatomy Map...
           </div>
         </div>
       </div>

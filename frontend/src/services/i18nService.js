@@ -29,6 +29,9 @@ export const TRANSLATIONS = {
     step3_sub: "Prescription & Lab OCR",
     step4_title: "Encounter Summary",
     step4_sub: "OPD Token & Consultation",
+    step_neuro_title: "Wellness / ADHD",
+    step_neuro_sub: "Focus & Sleep Screener",
+    step_neuro_done: "Screening Done",
 
     // Step 1: Registration
     reg_title: "Patient Registration & ABHA Check-In",
@@ -244,6 +247,9 @@ export const TRANSLATIONS = {
     step3_sub: "पर्चे और रिपोर्ट की डिजिटल जांच",
     step4_title: "परामर्श पर्ची व टोकन",
     step4_sub: "ओपीडी टोकन नंबर",
+    step_neuro_title: "वेलनेस / एडीएचडी",
+    step_neuro_sub: "फोकस एवं नींद जांच",
+    step_neuro_done: "जांच पूर्ण",
 
     // Step 1: Registration
     reg_title: "मरीज पंजीकरण एवं आभा (ABHA) सत्यापन",

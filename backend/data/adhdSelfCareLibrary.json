@@ -1,0 +1,134 @@
+{
+  "version": "1.0.0",
+  "name": "MediKiosk Plain-Language Focus & Daily Routine Self-Care Library",
+  "disclaimer": "These daily habits support focus and sleep routines. They do NOT replace consultation with a doctor.",
+  "items": [
+    {
+      "id": "TIP_SLEEP_ANCHOR",
+      "category": "sleep_routine",
+      "titleEn": "Wake Up at the Same Time",
+      "titleHi": "रोज एक ही समय पर उठें",
+      "actionEn": "Set an alarm for the same time every day. Morning sunlight helps set your natural body clock.",
+      "actionHi": "रोज सुबह एक ही समय पर उठें। सुबह की धूप शरीर की जैविक घड़ी को सही रखने में मदद करती है।",
+      "source": "Sleep Medicine Guidelines",
+      "targetDomain": "sleep"
+    },
+    {
+      "id": "TIP_SCREEN_WIND_DOWN",
+      "category": "sleep_hygiene",
+      "titleEn": "Screen Break Before Bed",
+      "titleHi": "सोने से पहले स्क्रीन बंद करें",
+      "actionEn": "Put away your phone and screens 1 hour before sleeping. Try listening to calming music or light stretching instead.",
+      "actionHi": "सोने से 1 घंटा पहले फोन और स्क्रीन को दूर रखें ताकि दिमाग शांत हो सके और अच्छी नींद आए।",
+      "source": "Clinical Sleep Medicine",
+      "targetDomain": "screentime"
+    },
+    {
+      "id": "TIP_CAFFEINE_CUTOFF",
+      "category": "diet_stimulants",
+      "titleEn": "Limit Tea & Coffee After Lunch",
+      "titleHi": "दोपहर 2 बजे के बाद चाय या कॉफी से बचें",
+      "actionEn": "Avoid tea, coffee, or energy drinks after 2:00 PM so your brain can relax and sleep deeply at night.",
+      "actionHi": "दोपहर 2 बजे के बाद चाय या कॉफी न पिएं, ताकि रात में गहरी और आरामदायक नींद आ सके।",
+      "source": "Sleep Hygiene Guidelines",
+      "targetDomain": "substance"
+    },
+    {
+      "id": "TIP_PROTEIN_MEALS",
+      "category": "nutrition",
+      "titleEn": "Eat Regular, Healthy Meals",
+      "titleHi": "नियमित एवं पौष्टिक भोजन",
+      "actionEn": "Set reminders for breakfast and lunch. Eating healthy protein (eggs, paneer, lentils, nuts) helps keep your energy steady.",
+      "actionHi": "नाश्ते और दोपहर के भोजन के लिए समय तय रखें। पौष्टिक भोजन शरीर की ऊर्जा बनाए रखता है।",
+      "source": "Nutrition Guidelines",
+      "targetDomain": "diet"
+    },
+    {
+      "id": "TIP_POMODORO_CHUNK",
+      "category": "executive_function",
+      "titleEn": "25-Minute Focus Blocks",
+      "titleHi": "25 मिनट का फोकस ब्लॉक",
+      "actionEn": "Work on just one thing for 25 minutes, then take a 5-minute break to stretch and drink water.",
+      "actionHi": "25 मिनट तक सिर्फ एक काम पर ध्यान दें और फिर 5 मिनट का छोटा ब्रेक लें।",
+      "source": "Focus Coaching Methods",
+      "targetDomain": "attention"
+    },
+    {
+      "id": "TIP_MICRO_MOVEMENT",
+      "category": "physical_activity",
+      "titleEn": "Short Movement Breaks",
+      "titleHi": "हर घंटे थोड़ा टहलें",
+      "actionEn": "Stand up and walk around for 2 to 3 minutes every hour to refresh your energy and focus.",
+      "actionHi": "काम या पढ़ाई के दौरान हर घंटे उठकर 2-3 मिनट टहलें। इससे शरीर और दिमाग तरोताजा रहता है।",
+      "source": "Physical Activity Guidelines",
+      "targetDomain": "activity"
+    },
+    {
+      "id": "TIP_BODY_DOUBLING",
+      "category": "productivity",
+      "titleEn": "Work Alongside a Friend",
+      "titleHi": "साथी के साथ काम करें",
+      "actionEn": "Work near a friend or family member when doing boring or difficult tasks. Their presence helps you stay on track.",
+      "actionHi": "मुश्किल या उबाऊ काम करते समय किसी दोस्त या परिजन के साथ बैठें। इससे ध्यान भटकता नहीं है।",
+      "source": "Productivity Methods",
+      "targetDomain": "impulsivity"
+    },
+    {
+      "id": "TIP_ENVIRONMENT_MINIMIZATION",
+      "category": "attention_environment",
+      "titleEn": "Keep Your Desk Clean",
+      "titleHi": "अपनी मेज साफ रखें",
+      "actionEn": "Keep only the items you need for your current task on your table. Less clutter means fewer distractions.",
+      "actionHi": "अपनी मेज से गैर-जरूरी सामान हटा दें। कम सामान होने से ध्यान कम भटकता है।",
+      "source": "Cognitive Ergonomics",
+      "targetDomain": "attention"
+    },
+    {
+      "id": "TIP_PARENT_CLEAR_INSTRUCTIONS",
+      "category": "parent_coaching",
+      "titleEn": "One Clear Step at a Time",
+      "titleHi": "एक समय में एक निर्देश दें",
+      "actionEn": "Give children one simple instruction at a time instead of several at once. Ask them gently to repeat it back.",
+      "actionHi": "बच्चों को एक साथ कई काम बताने के बजाय एक समय में केवल एक स्पष्ट निर्देश दें।",
+      "source": "Child Guidance Protocol",
+      "targetDomain": "impulsivity"
+    }
+  ],
+  "sample7DayPlan": [
+    {
+      "day": 1,
+      "theme": "Sleep & Rhythm Foundation",
+      "actions": ["TIP_SLEEP_ANCHOR", "TIP_SCREEN_WIND_DOWN"]
+    },
+    {
+      "day": 2,
+      "theme": "Energy & Routine",
+      "actions": ["TIP_CAFFEINE_CUTOFF", "TIP_PROTEIN_MEALS"]
+    },
+    {
+      "day": 3,
+      "theme": "Focus Anchors",
+      "actions": ["TIP_POMODORO_CHUNK", "TIP_ENVIRONMENT_MINIMIZATION"]
+    },
+    {
+      "day": 4,
+      "theme": "Movement Recharge",
+      "actions": ["TIP_MICRO_MOVEMENT", "TIP_POMODORO_CHUNK"]
+    },
+    {
+      "day": 5,
+      "theme": "Support & Task Flow",
+      "actions": ["TIP_BODY_DOUBLING", "TIP_SCREEN_WIND_DOWN"]
+    },
+    {
+      "day": 6,
+      "theme": "Weekend Routine",
+      "actions": ["TIP_SLEEP_ANCHOR", "TIP_MICRO_MOVEMENT"]
+    },
+    {
+      "day": 7,
+      "theme": "Review & Preparation",
+      "actions": ["TIP_PROTEIN_MEALS", "TIP_POMODORO_CHUNK"]
+    }
+  ]
+}

@@ -2882,7 +2882,434 @@ body {
   .kiosk-quick-bar {
     padding: 0.4rem 1rem;
   }
+  .vitals-band-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .telemetry-grid-4 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .symptom-bodymap-grid {
+    grid-template-columns: 1fr !important;
+  }
 }
 
+/* ==========================================================================
+   TARGET WIREFRAME: 3 STACKED SECTIONS ARCHITECTURE
+   Section 1: Vitals Band (Top)
+   Section 2: Symptom + Body Map Card (Middle, Two Equal Halves)
+   Section 3: Follow-Up Questions Card (Bottom)
+   ========================================================================== */
 
+/* Layout Container for the 3 Stacked Sections */
+.kiosk-three-sections-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
 
+/* SECTION 1: VITALS BAND */
+.vitals-band-card {
+  background: var(--bg-card, #FFFFFF);
+  border: 1px solid var(--border-light, #E2E8F0);
+  border-radius: var(--radius-xl, 18px);
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+
+.vitals-band-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-light, #E2E8F0);
+}
+
+.vitals-band-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 1.5rem;
+  align-items: stretch;
+}
+
+.camera-preview-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.camera-preview-4x3 {
+  aspect-ratio: 4 / 3;
+  width: 100%;
+  border-radius: var(--radius-md, 12px);
+  background: #0F172A;
+  border: 2px solid var(--border-medium, #CBD5E1);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.face-guide-oval-reticle {
+  position: absolute;
+  width: 58%;
+  height: 74%;
+  border: 2px dashed rgba(56, 189, 248, 0.65);
+  border-radius: 50%;
+  pointer-events: none;
+  box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.35);
+  transition: border-color 0.2s ease;
+}
+
+.face-guide-oval-reticle.locked {
+  border: 2.5px solid var(--emerald, #059669);
+  box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.25), 0 0 16px rgba(5, 150, 105, 0.5);
+}
+
+.face-checks-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  background: var(--bg-surface-inset, #F8FAFC);
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-light, #E2E8F0);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-secondary, #475569);
+}
+
+.face-check-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.face-check-chip.pass {
+  color: var(--emerald, #059669);
+  font-weight: 700;
+}
+
+/* Oscilloscope & 4 Equal-Width Metric Tiles */
+.vitals-telemetry-bay {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.oscilloscope-card-wide {
+  background: #0B132B;
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-radius: 12px;
+  padding: 10px 14px;
+}
+
+.oscilloscope-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #E2E8F0;
+}
+
+.telemetry-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  width: 100%;
+}
+
+.metric-tile-wireframe {
+  background: var(--bg-surface-inset, #F8FAFC);
+  border: 1.5px solid var(--border-light, #E2E8F0);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 96px;
+  transition: all 0.2s ease;
+}
+
+.metric-tile-wireframe.alert {
+  border-color: #F87171;
+  background: #FEF2F2;
+}
+
+.metric-tile-value {
+  font-family: var(--font-mono, monospace);
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: var(--text-primary, #0F172A);
+  line-height: 1.1;
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+}
+
+.metric-tile-unit {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted, #64748B);
+}
+
+.metric-tile-label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--text-secondary, #475569);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-top: 4px;
+}
+
+.metric-tile-state {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--emerald, #059669);
+  margin-top: 2px;
+}
+
+.metric-tile-state.waiting {
+  color: var(--text-muted, #94A3B8);
+}
+
+.metric-tile-state.alert {
+  color: #DC2626;
+}
+
+/* SECTION 2: SYMPTOM + BODY MAP CARD */
+.symptom-bodymap-card {
+  background: var(--bg-card, #FFFFFF);
+  border: 1px solid var(--border-light, #E2E8F0);
+  border-radius: var(--radius-xl, 18px);
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+.symptom-bodymap-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  align-items: stretch;
+  height: clamp(480px, 75dvh, 760px);
+  min-height: 0;
+}
+
+@media (max-width: 900px) {
+  .symptom-bodymap-grid {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+}
+
+/* Left Half: Complaint & Voice */
+.complaint-voice-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.mic-circle-button {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--primary-gradient, linear-gradient(135deg, #059669 0%, #047857 100%));
+  color: #FFFFFF;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35);
+  margin: 0 auto;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  min-height: 56px;
+}
+
+.mic-circle-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(5, 150, 105, 0.45);
+}
+
+.mic-circle-button.listening {
+  background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+  animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  70% { box-shadow: 0 0 0 16px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+.mic-caption-text {
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary, #0F172A);
+  margin-top: 4px;
+}
+
+.quick-symptom-chip-touch {
+  min-height: 48px;
+  padding: 8px 16px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border-light, #E2E8F0);
+  background: var(--bg-surface-inset, #F8FAFC);
+  color: var(--text-primary, #0F172A);
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.15s ease;
+}
+
+.quick-symptom-chip-touch:hover {
+  border-color: var(--emerald, #059669);
+  background: #ECFDF5;
+}
+
+.quick-symptom-chip-touch.selected {
+  border-color: var(--emerald, #059669);
+  background: var(--emerald-light, #ECFDF5);
+  color: var(--emerald-dark, #047857);
+  font-weight: 700;
+  box-shadow: 0 0 0 1px var(--emerald, #059669);
+}
+
+.collapsible-ayush-drawer {
+  background: var(--bg-surface-inset, #F8FAFC);
+  border: 1px solid var(--border-light, #E2E8F0);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.collapsible-ayush-header {
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-primary, #0F172A);
+}
+
+.collapsible-ayush-content {
+  padding: 12px 14px;
+  border-top: 1px solid var(--border-light, #E2E8F0);
+  display: none;
+}
+
+.collapsible-ayush-content.open {
+  display: block;
+}
+
+/* Right Half: Full Skeleton Viewport Container */
+.skeleton-viewport-card {
+  background: #070D19;
+  border: 1.5px solid #1E293B;
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.skeleton-viewport-container {
+  width: 100%;
+  flex: 1 1 0%;
+  min-height: 0;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.bodymap-2d-canvas-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  flex: 1 1 0%;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+  background: #070D18;
+}
+
+.anatomy-svg-container {
+  flex: 1 1 0%;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 35%, #0d1e36 0%, #060c18 90%);
+}
+
+#anatomySvgMap {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  display: block;
+  margin: 0 auto;
+}
+
+/* SECTION 3: FOLLOW-UP QUESTIONS CARD */
+.followup-questions-card {
+  background: var(--bg-card, #FFFFFF);
+  border: 1px solid var(--border-light, #E2E8F0);
+  border-radius: var(--radius-xl, 18px);
+  padding: 1.5rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+.emergency-red-flag-banner {
+  background: #FEF2F2;
+  border: 2px solid #EF4444;
+  border-radius: 12px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  color: #991B1B;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.15);
+}
+
+.question-empty-state-card {
+  text-align: center;
+  padding: 2.5rem 1.5rem;
+  color: var(--text-muted, #64748B);
+}
+
+.unified-flow-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--border-light, #E2E8F0);
+  padding-top: 1.25rem;
+  margin-top: 1.25rem;
+}

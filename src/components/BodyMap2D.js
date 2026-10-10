@@ -1,9 +1,8 @@
 /**
- * MediKiosk Interactive 2D Human Skeleton & Visceral Anatomy Map Component
- * Clinical-Grade Layered SVG Anatomy Engine (Anterior & Dorsal Views).
- * Zero WebGL overhead, 60fps on low-end mobile & kiosk terminals, WCAG 2.1 AA accessible.
- * Fully synchronized with bodymapStore, patient-perspective laterality, layer peeling, and pan/zoom.
- * High-definition full skeleton from cranial vault down to distal toe phalanges.
+ * MediKiosk Interactive 2D Static Human Skeleton & Visceral Anatomy Map
+ * Ultra-Clean Flat Anatomic Vector Illustration (Anterior & Posterior Views).
+ * Zero scrolling (100% fit to container height), multi-select by default, 44px touch targets.
+ * Fully synchronized with bodymapStore and ANATOMY_REGISTRY.
  */
 
 import { ANATOMY_REGISTRY, ANATOMY_SYSTEMS } from "../data/anatomyRegistry.js";
@@ -15,23 +14,18 @@ export class BodyMap2D {
     this.options = options;
     this.unsubscribe = null;
 
-    // Viewport & Transform state
+    // View & Display state
     this.currentView = "front"; // "front" (anterior) | "back" (posterior)
-    this.displayMode = "skeleton"; // "skeleton" (pure bones) | "combined" (bones + organs) | "organs"
+    this.displayMode = "skeleton"; // "skeleton" | "combined" | "organs"
+    this.multiSelect = true; // Multi-select enabled by default for multi-region intake
+    this.activeSystem = "all";
+    this.isListDrawerOpen = false;
+
+    // Backward compatibility props
     this.zoom = 1.0;
     this.panX = 0;
     this.panY = 0;
-    this.isPanning = false;
-    this.startX = 0;
-    this.startY = 0;
-
-    // Layer peeling & filter
-    this.peelLevel = 0.0; // 0.0 (opaque) to 0.85 (peeled anterior viscera)
-    this.activeSystem = "all";
-    this.multiSelect = false;
-
-    // Bound listeners for clean lifecycle
-    this._handleKeyDown = this._handleKeyDown.bind(this);
+    this.peelLevel = 0.0;
   }
 
   init() {
@@ -39,10 +33,6 @@ export class BodyMap2D {
     this.unsubscribe = bodymapStore.subscribe((state) => {
       this.updateHighlights(state.selectedParts || []);
       this.updateSelectedChips(state.selectedParts || []);
-      if (state.activeSystem && state.activeSystem !== this.activeSystem) {
-        this.activeSystem = state.activeSystem;
-        this._applySystemFilter();
-      }
     });
   }
 
@@ -58,97 +48,50 @@ export class BodyMap2D {
     this.render();
   }
 
-  setPeelLevel(val) {
-    this.peelLevel = Math.max(0, Math.min(0.85, parseFloat(val) || 0));
-    const superficialGroup = this.container?.querySelector("#layer_superficial_organs");
-    if (superficialGroup) {
-      superficialGroup.style.opacity = (1.0 - this.peelLevel).toFixed(2);
+  toggleMultiSelect() {
+    this.multiSelect = !this.multiSelect;
+    const btn = this.container?.querySelector("#btnMultiSelectToggle");
+    if (btn) {
+      btn.innerHTML = this.multiSelect ? "☑ Multi-Select ON" : "☐ Multi-Select";
+      btn.style.color = this.multiSelect ? "#38BDF8" : "#94A3B8";
+      btn.style.borderColor = this.multiSelect ? "#38BDF8" : "rgba(255,255,255,0.15)";
+      btn.style.background = this.multiSelect ? "rgba(2,132,199,0.25)" : "transparent";
+      btn.setAttribute("aria-pressed", this.multiSelect ? "true" : "false");
     }
+  }
+
+  toggleListDrawer() {
+    this.isListDrawerOpen = !this.isListDrawerOpen;
+    const drawer = this.container?.querySelector("#bodymapListDrawer");
+    if (drawer) {
+      drawer.style.display = this.isListDrawerOpen ? "flex" : "none";
+    }
+  }
+
+  clearAll() {
+    bodymapStore.clearSelection();
+    this.updateHighlights([]);
+    this.updateSelectedChips([]);
+  }
+
+  setPeelLevel(val) {
+    this.peelLevel = parseFloat(val) || 0;
   }
 
   setSystem(sysId) {
     this.activeSystem = sysId;
-    bodymapStore.setSystem(sysId);
     if (sysId === "skeletal") {
       this.displayMode = "skeleton";
     } else if (["circulatory", "digestive", "respiratory", "nervous", "endocrine", "urinary"].includes(sysId)) {
-      if (this.displayMode === "skeleton") {
-        this.displayMode = "combined";
-      }
+      this.displayMode = "combined";
     }
     this.render();
   }
 
-  _applySystemFilter() {
-    if (!this.container) return;
-    const nodes = this.container.querySelectorAll(".anatomy-svg-node");
-    nodes.forEach(node => {
-      const id = node.id;
-      const item = ANATOMY_REGISTRY.find(x => x.id === id);
-      if (!item) return;
-
-      if (this.activeSystem === "all" || item.system === this.activeSystem) {
-        node.style.opacity = "1";
-        node.style.pointerEvents = "auto";
-      } else {
-        node.style.opacity = "0.22";
-        node.style.pointerEvents = "auto";
-      }
-    });
-
-    // Update system chip buttons
-    const chips = this.container.querySelectorAll(".system-chip");
-    chips.forEach(chip => {
-      const isCur = chip.getAttribute("data-sys") === this.activeSystem;
-      chip.classList.toggle("active", isCur);
-      if (isCur) {
-        chip.style.background = "#0284C7";
-        chip.style.borderColor = "#38BDF8";
-        chip.style.color = "#FFFFFF";
-      } else {
-        chip.style.background = "rgba(30, 41, 59, 0.7)";
-        chip.style.borderColor = "rgba(255, 255, 255, 0.1)";
-        chip.style.color = "#94A3B8";
-      }
-    });
-  }
-
-  zoomIn() {
-    this.zoom = Math.min(2.5, +(this.zoom + 0.25).toFixed(2));
-    this._applyTransform();
-  }
-
-  zoomOut() {
-    this.zoom = Math.max(0.75, +(this.zoom - 0.25).toFixed(2));
-    this._applyTransform();
-  }
-
-  resetTransform() {
-    this.zoom = 1.0;
-    this.panX = 0;
-    this.panY = 0;
-    this._applyTransform();
-  }
-
-  _applyTransform() {
-    const svgContent = this.container?.querySelector("#anatomySvgViewportGroup");
-    if (svgContent) {
-      svgContent.setAttribute("transform", `translate(${this.panX}, ${this.panY}) scale(${this.zoom})`);
-    }
-  }
-
-  toggleMultiSelect(enabled) {
-    this.multiSelect = enabled !== undefined ? enabled : !this.multiSelect;
-    const btn = this.container?.querySelector("#btnMultiSelectToggle");
-    if (btn) {
-      btn.classList.toggle("active", this.multiSelect);
-      btn.setAttribute("aria-pressed", this.multiSelect ? "true" : "false");
-      btn.style.background = this.multiSelect ? "#0284C7" : "rgba(30, 41, 59, 0.8)";
-      btn.style.borderColor = this.multiSelect ? "#38BDF8" : "rgba(255, 255, 255, 0.15)";
-      btn.style.color = this.multiSelect ? "#FFFFFF" : "#94A3B8";
-      btn.innerHTML = this.multiSelect ? "☑ Multi-Select ON" : "☐ Multi-Select";
-    }
-  }
+  // Backward-compatible no-ops
+  zoomIn() {}
+  zoomOut() {}
+  resetTransform() {}
 
   handleRegionClick(regionId) {
     if (!regionId) return;
@@ -167,115 +110,71 @@ export class BodyMap2D {
     const currentLang = window.app?.currentLanguage || "en";
 
     this.container.innerHTML = `
-      <div class="bodymap-2d-canvas-wrapper" style="position: relative; background: #070d18; border-radius: 16px; border: 1.5px solid rgba(56, 189, 248, 0.25); overflow: hidden; display: flex; flex-direction: column; width: 100%; user-select: none; box-shadow: 0 10px 32px rgba(0,0,0,0.5);">
+      <div class="bodymap-2d-canvas-wrapper" style="position: relative; background: #070D18; border-radius: 12px; border: 1px solid rgba(56, 189, 248, 0.2); overflow: hidden; display: flex; flex-direction: column; width: 100%; height: 100%; flex: 1 1 0%; min-height: 0; user-select: none;">
         
-        <!-- Viewport Top Toolbar -->
-        <div style="background: rgba(15, 23, 42, 0.95); padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-          <!-- Front / Back View Switcher & Display Modes -->
-          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <div style="background: rgba(30, 41, 59, 0.85); padding: 3px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); display: inline-flex;">
+        <!-- Compact Single-Row Toolbar (<= 34px) -->
+        <div style="background: rgba(15, 23, 42, 0.95); padding: 5px 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-shrink: 0;">
+          <!-- Left: View Toggle & Mode Switcher -->
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <div style="background: rgba(30, 41, 59, 0.9); padding: 2px; border-radius: 6px; display: inline-flex; border: 1px solid rgba(255,255,255,0.08);">
               <button type="button" class="view-toggle-btn ${isFront ? 'active' : ''}" 
                       onclick="window.__bodymap_inst.setView('front')" 
                       aria-pressed="${isFront ? 'true' : 'false'}"
-                      style="padding: 5px 12px; font-size: 0.74rem; font-weight: 700; border-radius: 6px; border: none; cursor: pointer; transition: all 0.2s ease; ${isFront ? 'background: #0284C7; color: #FFFFFF;' : 'background: transparent; color: #94A3B8;'}">
+                      style="padding: 3px 9px; font-size: 0.72rem; font-weight: 700; border-radius: 5px; border: none; cursor: pointer; transition: all 0.15s ease; ${isFront ? 'background: #0284C7; color: #FFFFFF;' : 'background: transparent; color: #94A3B8;'}">
                 🦴 Anterior (Front)
               </button>
               <button type="button" class="view-toggle-btn ${!isFront ? 'active' : ''}" 
                       onclick="window.__bodymap_inst.setView('back')" 
                       aria-pressed="${!isFront ? 'true' : 'false'}"
-                      style="padding: 5px 12px; font-size: 0.74rem; font-weight: 700; border-radius: 6px; border: none; cursor: pointer; transition: all 0.2s ease; ${!isFront ? 'background: #0284C7; color: #FFFFFF;' : 'background: transparent; color: #94A3B8;'}">
+                      style="padding: 3px 9px; font-size: 0.72rem; font-weight: 700; border-radius: 5px; border: none; cursor: pointer; transition: all 0.15s ease; ${!isFront ? 'background: #0284C7; color: #FFFFFF;' : 'background: transparent; color: #94A3B8;'}">
                 🦴 Posterior (Back)
               </button>
             </div>
 
-            <!-- View Mode Switcher: Pure Skeleton vs Skeleton+Organs vs Organs -->
-            <div style="background: rgba(30, 41, 59, 0.85); padding: 3px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); display: inline-flex;">
-              <button type="button" class="mode-toggle-btn ${this.displayMode === 'skeleton' ? 'active' : ''}" 
-                      onclick="window.__bodymap_inst.setDisplayMode('skeleton')" 
-                      title="Inspect full skeletal framework from skull to feet"
-                      style="padding: 5px 10px; font-size: 0.72rem; font-weight: 700; border-radius: 6px; border: none; cursor: pointer; transition: all 0.2s ease; ${this.displayMode === 'skeleton' ? 'background: #0284C7; color: #FFFFFF;' : 'background: transparent; color: #94A3B8;'}">
-                🦴 Pure Skeleton
+            <div style="background: rgba(30, 41, 59, 0.9); padding: 2px; border-radius: 6px; display: inline-flex; border: 1px solid rgba(255,255,255,0.08);">
+              <button type="button" onclick="window.__bodymap_inst.setDisplayMode('skeleton')" 
+                      title="Show pure skeleton"
+                      style="padding: 3px 7px; font-size: 0.7rem; font-weight: 600; border-radius: 5px; border: none; cursor: pointer; ${this.displayMode === 'skeleton' ? 'background: #0284C7; color: #FFFFFF;' : 'background: transparent; color: #94A3B8;'}">
+                Bones
               </button>
-              <button type="button" class="mode-toggle-btn ${this.displayMode === 'combined' ? 'active' : ''}" 
-                      onclick="window.__bodymap_inst.setDisplayMode('combined')" 
-                      title="Combined anatomical view: Bones and Visceral Organs"
-                      style="padding: 5px 10px; font-size: 0.72rem; font-weight: 700; border-radius: 6px; border: none; cursor: pointer; transition: all 0.2s ease; ${this.displayMode === 'combined' ? 'background: #0284C7; color: #FFFFFF;' : 'background: transparent; color: #94A3B8;'}">
-                🔬 Bones + Organs
-              </button>
-              <button type="button" class="mode-toggle-btn ${this.displayMode === 'organs' ? 'active' : ''}" 
-                      onclick="window.__bodymap_inst.setDisplayMode('organs')" 
-                      title="Visceral internal organ emphasis"
-                      style="padding: 5px 10px; font-size: 0.72rem; font-weight: 700; border-radius: 6px; border: none; cursor: pointer; transition: all 0.2s ease; ${this.displayMode === 'organs' ? 'background: #0284C7; color: #FFFFFF;' : 'background: transparent; color: #94A3B8;'}">
-                🫀 Organs
+              <button type="button" onclick="window.__bodymap_inst.setDisplayMode('combined')" 
+                      title="Combined Bones + Visceral Organs"
+                      style="padding: 3px 7px; font-size: 0.7rem; font-weight: 600; border-radius: 5px; border: none; cursor: pointer; ${this.displayMode === 'combined' ? 'background: #0284C7; color: #FFFFFF;' : 'background: transparent; color: #94A3B8;'}">
+                + Organs
               </button>
             </div>
+          </div>
 
-            <!-- Multi-Select Toggle -->
+          <!-- Right: Multi-Select Toggle, Clear All, Accessible List Toggle -->
+          <div style="display: flex; align-items: center; gap: 5px;">
             <button type="button" id="btnMultiSelectToggle"
-                    style="padding: 5px 10px; font-size: 0.72rem; font-weight: 600; border-radius: 6px; border: 1px solid ${this.multiSelect ? '#38BDF8' : 'rgba(255,255,255,0.15)'}; background: ${this.multiSelect ? '#0284C7' : 'rgba(30, 41, 59, 0.8)'}; color: ${this.multiSelect ? '#FFFFFF' : '#94A3B8'}; cursor: pointer;"
                     onclick="window.__bodymap_inst.toggleMultiSelect()"
-                    title="Toggle multi-organ selection mode (up to 5 regions)"
-                    aria-pressed="${this.multiSelect ? 'true' : 'false'}">
+                    title="Toggle multi-area selection"
+                    aria-pressed="${this.multiSelect ? 'true' : 'false'}"
+                    style="padding: 3px 8px; font-size: 0.7rem; font-weight: 600; border-radius: 5px; border: 1px solid ${this.multiSelect ? '#38BDF8' : 'rgba(255,255,255,0.15)'}; background: ${this.multiSelect ? 'rgba(2,132,199,0.3)' : 'transparent'}; color: ${this.multiSelect ? '#38BDF8' : '#94A3B8'}; cursor: pointer;">
               ${this.multiSelect ? '☑ Multi-Select ON' : '☐ Multi-Select'}
             </button>
-          </div>
 
-          <!-- Layer Peeling & Pan/Zoom Controls -->
-          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-            ${(isFront && this.displayMode !== 'skeleton') ? `
-              <div style="display: flex; align-items: center; gap: 6px; background: rgba(30, 41, 59, 0.7); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
-                <label for="peelSlider" style="font-size: 0.68rem; color: #38BDF8; font-weight: 700; cursor: pointer;">Peel Organs:</label>
-                <input type="range" id="peelSlider" min="0" max="0.85" step="0.05" value="${this.peelLevel}" 
-                       oninput="window.__bodymap_inst.setPeelLevel(this.value)"
-                       style="width: 75px; accent-color: #0284C7; cursor: pointer;"
-                       title="Reduce opacity of superficial organs to easily inspect deep skeleton">
-              </div>
-            ` : ''}
+            <button type="button" onclick="window.__bodymap_inst.clearAll()" 
+                    title="Clear all selected regions"
+                    style="padding: 3px 7px; font-size: 0.7rem; font-weight: 600; border-radius: 5px; border: 1px solid rgba(255,255,255,0.12); background: rgba(30,41,59,0.8); color: #94A3B8; cursor: pointer;">
+              ↺ Clear
+            </button>
 
-            <!-- Pan & Zoom Control Buttons -->
-            <div style="display: flex; gap: 4px;">
-              <button type="button" onclick="window.__bodymap_inst.zoomIn()" title="Zoom In" 
-                      style="padding: 4px 9px; font-size: 0.85rem; font-weight: bold; background: rgba(30,41,59,0.85); color: #FFFFFF; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; cursor: pointer;">+</button>
-              <button type="button" onclick="window.__bodymap_inst.zoomOut()" title="Zoom Out" 
-                      style="padding: 4px 9px; font-size: 0.85rem; font-weight: bold; background: rgba(30,41,59,0.85); color: #FFFFFF; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; cursor: pointer;">−</button>
-              <button type="button" onclick="window.__bodymap_inst.resetTransform()" title="Reset Pan & Zoom" 
-                      style="padding: 4px 9px; font-size: 0.74rem; font-weight: 600; background: rgba(30,41,59,0.85); color: #94A3B8; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; cursor: pointer;">⊙ Reset</button>
-            </div>
+            <button type="button" onclick="window.__bodymap_inst.toggleListDrawer()" 
+                    title="Toggle accessible body part dropdown"
+                    style="padding: 3px 7px; font-size: 0.7rem; font-weight: 600; border-radius: 5px; border: 1px solid rgba(255,255,255,0.12); background: rgba(30,41,59,0.8); color: #94A3B8; cursor: pointer;">
+              ☰ List
+            </button>
           </div>
         </div>
 
-        <!-- System Layer Filter Rack -->
-        <div style="background: rgba(15, 23, 42, 0.75); padding: 6px 12px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none;">
-          ${ANATOMY_SYSTEMS.map(sys => {
-            const isCur = this.activeSystem === sys.id;
-            return `
-              <button type="button" class="system-chip ${isCur ? 'active' : ''}" data-sys="${sys.id}"
-                      onclick="window.__bodymap_inst.setSystem('${sys.id}')"
-                      style="padding: 3px 9px; font-size: 0.68rem; font-weight: 600; border-radius: 12px; white-space: nowrap; cursor: pointer; transition: all 0.2s ease; border: 1px solid ${isCur ? '#38BDF8' : 'rgba(255,255,255,0.1)'}; background: ${isCur ? '#0284C7' : 'rgba(30, 41, 59, 0.7)'}; color: ${isCur ? '#FFFFFF' : '#94A3B8'};">
-                <span>${sys.icon}</span> ${sys.label}
-              </button>
-            `;
-          }).join('')}
-        </div>
-
-        <!-- Laterality Clinical Banner (Strict Patient Perspective) -->
-        <div style="background: #0B132B; padding: 5px 14px; border-bottom: 1px solid rgba(56, 189, 248, 0.2); display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem;">
-          <span style="color: ${isFront ? '#38BDF8' : '#F59E0B'}; font-weight: 800; letter-spacing: 0.4px;">
-            ${isFront 
-              ? '◄ PATIENT RIGHT (Viewer Left)  |  PATIENT LEFT (Viewer Right) ►' 
-              : '◄ PATIENT LEFT (Viewer Left)  |  PATIENT RIGHT (Viewer Right) ►'}
-          </span>
-          <span style="color: #CBD5E1; font-weight: 600;">
-            ${isFront ? 'Full-Body Skeletal Framework (Head to Feet)' : 'Dorsal Spine & Retroperitoneal Anatomy'}
-          </span>
-        </div>
-
-        <!-- Accessible List Alternative Selector (WCAG 2.1 AA) -->
-        <div style="padding: 6px 14px; background: rgba(15, 23, 42, 0.85); border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; gap: 8px;">
-          <label for="accessibleOrganSelector" style="font-size: 0.72rem; color: #94A3B8; white-space: nowrap;">Accessible Dropdown:</label>
+        <!-- Collapsible Accessible Dropdown Row (WCAG 2.1 AA) -->
+        <div id="bodymapListDrawer" style="display: ${this.isListDrawerOpen ? 'flex' : 'none'}; padding: 5px 12px; background: #0B132B; border-bottom: 1px solid rgba(56,189,248,0.25); align-items: center; gap: 8px; flex-shrink: 0;">
+          <label for="accessibleOrganSelector" style="font-size: 0.7rem; color: #94A3B8; white-space: nowrap;">Accessible Dropdown:</label>
           <select id="accessibleOrganSelector" class="accessible-organ-dropdown" 
                   onchange="window.__bodymap_inst.handleRegionClick(this.value)"
-                  style="flex: 1; background: #1E293B; color: #F8FAFC; border: 1px solid #334155; border-radius: 6px; padding: 4px 8px; font-size: 0.74rem;">
+                  style="flex: 1; background: #1E293B; color: #F8FAFC; border: 1px solid #334155; border-radius: 5px; padding: 3px 8px; font-size: 0.72rem;">
             <option value="">-- Choose bone, joint or organ from accessible list --</option>
             ${ANATOMY_REGISTRY.map(item => `
               <option value="${item.id}" ${selectedParts.includes(item.id) ? 'selected' : ''}>
@@ -285,597 +184,402 @@ export class BodyMap2D {
           </select>
         </div>
 
-        <!-- SVG Anatomy Canvas (ViewBox: 0 0 360 720, Golden Anatomical Proportion, Zero Clipping) -->
-        <div class="anatomy-svg-container" style="flex: 1; height: 620px; min-height: 560px; max-height: 660px; width: 100%; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 50% 35%, #0d1e36 0%, #060c18 90%); cursor: default;">
+        <!-- Static SVG Anatomy Canvas (100% Fit, Zero Overflow, Head to Feet) -->
+        <div class="anatomy-svg-container" style="flex: 1 1 0%; min-height: 0; width: 100%; height: 100%; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 50% 35%, #0d1e36 0%, #060c18 90%); cursor: default;">
           
+          <!-- Subtle corner laterality indicators -->
+          <div style="position: absolute; top: 8px; left: 10px; font-size: 0.64rem; font-weight: 800; color: ${isFront ? '#38BDF8' : '#F59E0B'}; background: rgba(15,23,42,0.75); padding: 2px 7px; border-radius: 4px; pointer-events: none; border: 1px solid rgba(56,189,248,0.2); letter-spacing: 0.4px;">
+            ${isFront ? '◄ PATIENT RIGHT' : '◄ PATIENT LEFT'}
+          </div>
+          <div style="position: absolute; top: 8px; right: 10px; font-size: 0.64rem; font-weight: 800; color: ${isFront ? '#38BDF8' : '#F59E0B'}; background: rgba(15,23,42,0.75); padding: 2px 7px; border-radius: 4px; pointer-events: none; border: 1px solid rgba(56,189,248,0.2); letter-spacing: 0.4px;">
+            ${isFront ? 'PATIENT LEFT ►' : 'PATIENT RIGHT ►'}
+          </div>
+
           <svg id="anatomySvgMap" viewBox="0 0 360 720" preserveAspectRatio="xMidYMid meet"
-               style="height: 100%; max-height: 100%; width: auto; max-width: 100%; display: block; margin: 0 auto; filter: drop-shadow(0 8px 24px rgba(0,0,0,0.7));"
-               xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Interactive Full Human Skeleton and Anatomy Map From Head to Feet">
+               style="width: 100%; height: 100%; max-width: 100%; max-height: 100%; display: block; margin: 0 auto; filter: drop-shadow(0 6px 18px rgba(0,0,0,0.6));"
+               xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Interactive Static 2D Full Human Skeleton and Anatomy Map From Head to Feet">
             
             <defs>
-              <!-- Luminous selection glow filters -->
-              <filter id="selectionGlow" x="-30%" y="-30%" width="160%" height="160%">
-                <feGaussianBlur stdDeviation="4.5" result="blur" />
+              <filter id="selectionGlow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="3.5" result="blur" />
                 <feMerge>
                   <feMergeNode in="blur" />
                   <feMergeNode in="SourceGraphic" />
                 </feMerge>
               </filter>
 
-              <!-- Bone texture gradients for clinical fidelity -->
-              <linearGradient id="boneGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#F8FAFC" />
-                <stop offset="50%" stop-color="#E2E8F0" />
-                <stop offset="100%" stop-color="#94A3B8" />
-              </linearGradient>
+              <pattern id="accessibleHatch" width="8" height="8" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
+                <line x1="0" y1="0" x2="0" y2="8" stroke="#38BDF8" stroke-width="2.2" opacity="0.85" />
+              </pattern>
 
               <linearGradient id="boneShaftGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" stop-color="#94A3B8" />
                 <stop offset="50%" stop-color="#F1F5F9" />
                 <stop offset="100%" stop-color="#CBD5E1" />
               </linearGradient>
-
-              <linearGradient id="jointGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.9" />
-                <stop offset="100%" stop-color="#0284C7" stop-opacity="0.95" />
-              </linearGradient>
-
-              <!-- Striped Hatch Pattern for High-Contrast Non-Color Accessibility -->
-              <pattern id="accessibleHatch" width="8" height="8" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
-                <line x1="0" y1="0" x2="0" y2="8" stroke="#38BDF8" stroke-width="2.2" opacity="0.85" />
-              </pattern>
             </defs>
 
-            <g id="anatomySvgViewportGroup" transform="translate(0, 0) scale(1)">
+            <g id="anatomySvgStaticGroup">
               ${isFront ? this._renderFrontViewSVG(selectedParts) : this._renderBackViewSVG(selectedParts)}
             </g>
           </svg>
 
           <!-- Interactive Hover Tooltip Overlay -->
-          <div id="anatomyHoverTooltip" style="position: absolute; display: none; pointer-events: none; background: rgba(15, 23, 42, 0.95); border: 1.5px solid #38BDF8; color: #FFFFFF; padding: 7px 12px; border-radius: 8px; font-size: 0.72rem; box-shadow: 0 8px 24px rgba(0,0,0,0.7); z-index: 100; max-width: 260px;"></div>
+          <div id="anatomyHoverTooltip" style="position: absolute; display: none; pointer-events: none; background: rgba(15, 23, 42, 0.95); border: 1.5px solid #38BDF8; color: #FFFFFF; padding: 6px 10px; border-radius: 6px; font-size: 0.72rem; box-shadow: 0 8px 24px rgba(0,0,0,0.7); z-index: 100; max-width: 240px;"></div>
         </div>
 
         <!-- Selected Anatomical Chips Rack -->
-        <div id="bodymapSelectedChipsRack" style="background: rgba(15, 23, 42, 0.95); padding: 8px 14px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-          <span style="font-size: 0.72rem; color: #94A3B8; font-weight: 700;">Selected Site(s):</span>
+        <div id="bodymapSelectedChipsRack" style="background: rgba(15, 23, 42, 0.95); padding: 5px 12px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; flex-shrink: 0; min-height: 32px;">
+          <span style="font-size: 0.7rem; color: #94A3B8; font-weight: 700;">Selected Site(s):</span>
           ${this._renderSelectedChips(selectedParts)}
         </div>
       </div>
     `;
 
-    // Attach global window bridge for SVG elements
+    // Global bridge for SVG onclick
     window.__bodymap_inst = this;
     window.__bodymap_select = (id) => this.handleRegionClick(id);
 
     this._bindInteractiveEvents();
-    this._applySystemFilter();
   }
 
   _renderFrontViewSVG(selectedParts) {
     const isSkeletonOnly = this.displayMode === "skeleton";
-    const isOrgansOnly = this.displayMode === "organs";
-    const boneBaseOpacity = isOrgansOnly ? 0.3 : 1.0;
     const organVisibility = isSkeletonOnly ? "display: none;" : "display: block;";
-    const peelOp = isSkeletonOnly ? 0 : (1.0 - this.peelLevel).toFixed(2);
 
     return `
       <!-- ============================================================ -->
-      <!-- 1. DETAILED ANATOMICAL SKELETON (CRANIUM TO TOES)            -->
+      <!-- 1. SOFT BODY SILHOUETTE GUIDE (HEAD TO TOES, ZERO CLIPPING)  -->
       <!-- ============================================================ -->
-      <g id="layer_skeleton_base" style="opacity: ${boneBaseOpacity}; transition: opacity 0.25s ease;">
-        <!-- Body Silhouette Background Guide -->
-        <path d="M 180,18 C 160,18 146,34 146,62 C 146,88 156,102 166,108 
-                 C 134,114 104,134 96,178 C 84,222 68,318 68,335 C 68,342 78,346 84,340 
-                 C 98,320 114,240 120,218 C 120,256 116,316 122,380 C 130,442 126,512 148,605 
-                 C 152,624 140,642 134,660 C 130,670 144,676 156,672 C 166,668 170,648 170,612 
-                 C 172,570 174,472 180,335 C 186,472 188,570 190,612 
-                 C 190,648 194,668 204,672 C 216,676 230,670 226,660 
-                 C 220,642 208,624 212,605 C 234,512 230,442 238,380 
-                 C 244,316 240,256 240,218 C 246,240 262,320 276,340 
-                 C 282,346 292,342 292,335 C 292,318 276,222 264,178 
-                 C 256,134 226,114 194,108 C 204,102 214,88 214,62 
-                 C 214,34 200,18 180,18 Z"
-              fill="#060e1b" stroke="#1e293b" stroke-width="1.6" />
+      <path d="M 180,18 C 160,18 146,34 146,62 C 146,88 156,102 166,108 
+               C 134,114 104,134 96,178 C 84,222 68,318 68,335 C 68,342 78,346 84,340 
+               C 98,320 114,240 120,218 C 120,256 116,316 122,380 C 130,442 126,512 148,605 
+               C 152,624 140,642 134,660 C 130,670 144,676 156,672 C 166,668 170,648 170,612 
+               C 172,570 174,472 180,335 C 186,472 188,570 190,612 
+               C 190,648 194,668 204,672 C 216,676 230,670 226,660 
+               C 220,642 208,624 212,605 C 234,512 230,442 238,380 
+               C 244,316 240,256 240,218 C 246,240 262,320 276,340 
+               C 282,346 292,342 292,335 C 292,318 276,222 264,178 
+               C 256,134 226,114 194,108 C 204,102 214,88 214,62 
+               C 214,34 200,18 180,18 Z"
+            fill="#081224" stroke="#162338" stroke-width="1.4" opacity="0.9" />
 
-        <!-- Skull (Cranium, Facial Skeleton, Zygoma, Maxilla, Mandible) -->
+      <!-- ============================================================ -->
+      <!-- 2. CLEAN SIMPLIFIED SKELETAL FRAMEWORK (SKULL TO TOES)       -->
+      <!-- ============================================================ -->
+      <g id="layer_skeleton_base">
+
+        <!-- SKULL & JAW (y: 20 to 88, cranium ratio: 68/720 = 0.094) -->
         <g id="skel_skull" class="anatomy-svg-node" onclick="window.__bodymap_select('skel_skull')" 
-           tabindex="0" role="button" aria-label="Skull, Cranium & Facial Skeleton"
-           style="cursor: pointer;">
-          <!-- Neurocranium (Cranial Vault Dome) -->
-          <path d="M 154,54 C 154,30 165,20 180,20 C 195,20 206,30 206,54 C 206,66 201,76 198,82 C 193,86 187,88 180,88 C 173,88 167,86 162,82 C 159,76 154,66 154,54 Z"
-                fill="${this._fillColor('skel_skull', 'url(#boneGradient)', selectedParts)}" 
-                stroke="${this._strokeColor('skel_skull', '#FFFFFF', selectedParts)}" 
-                stroke-width="${this._strokeWidth('skel_skull', 1.8, selectedParts)}" />
-          
-          <!-- Coronal & Sagittal Suture Lines -->
-          <path d="M 164,34 Q 180,42 196,34" stroke="#64748B" stroke-width="1" fill="none" stroke-dasharray="2,2"/>
-          <line x1="180" y1="20" x2="180" y2="38" stroke="#64748B" stroke-width="1" stroke-dasharray="2,2"/>
-
-          <!-- Supraorbital Ridge & Glabella -->
-          <path d="M 158,49 Q 168,46 177,50 M 183,50 Q 192,46 202,49" stroke="#475569" stroke-width="1.6" fill="none"/>
-
-          <!-- Orbital Cavities (Eye Sockets) -->
-          <ellipse cx="168" cy="55" rx="7.5" ry="8.5" fill="#060e1b" stroke="#64748B" stroke-width="1.4"/>
-          <circle cx="168" cy="55" r="2.8" fill="#1e293b"/>
-          <ellipse cx="192" cy="55" rx="7.5" ry="8.5" fill="#060e1b" stroke="#64748B" stroke-width="1.4"/>
-          <circle cx="192" cy="55" r="2.8" fill="#1e293b"/>
-
-          <!-- Piriform Aperture (Nasal Cavity & Septum) -->
-          <polygon points="180,62 175,73 180,76 185,73" fill="#060e1b" stroke="#64748B" stroke-width="1.2"/>
-          <line x1="180" y1="63" x2="180" y2="75" stroke="#94A3B8" stroke-width="1.2"/>
-
-          <!-- Zygomatic Arches (Cheekbones) -->
-          <path d="M 155,60 Q 148,64 155,74" stroke="#94A3B8" stroke-width="2.2" fill="none"/>
-          <path d="M 205,60 Q 212,64 205,74" stroke="#94A3B8" stroke-width="2.2" fill="none"/>
-
-          <!-- Maxilla & Upper Dental Arch (Teeth) -->
-          <path d="M 169,76 Q 180,80 191,76" stroke="#475569" stroke-width="1.5" fill="none"/>
-          <line x1="171" y1="79" x2="189" y2="79" stroke="#FFFFFF" stroke-width="2" stroke-dasharray="2.5,1"/>
-
-          <!-- Mandible (Jawbone & Chin) -->
-          <path d="M 158,74 L 160,84 Q 166,95 180,96 Q 194,95 200,84 L 202,74" 
-                fill="${this._fillColor('skel_skull', '#CBD5E1', selectedParts)}" 
-                stroke="${this._strokeColor('skel_skull', '#E2E8F0', selectedParts)}" 
-                stroke-width="1.6"/>
-          <!-- Lower Dental Arch & Mental Protuberance -->
-          <line x1="172" y1="83" x2="188" y2="83" stroke="#FFFFFF" stroke-width="1.8" stroke-dasharray="2.5,1"/>
-          <circle cx="180" cy="91" r="2.2" fill="#94A3B8"/>
+           tabindex="0" role="button" aria-label="Skull, Cranium and Face" style="cursor: pointer;">
+          <!-- Cranial vault -->
+          <path d="M 155,52 C 155,30 166,20 180,20 C 194,20 205,30 205,52 C 205,66 200,76 196,82 C 190,86 186,88 180,88 C 174,88 170,86 164,82 C 160,76 155,66 155,52 Z"
+                fill="${this._fillColor('skel_skull', '#E2E8F0', selectedParts)}" 
+                stroke="${this._strokeColor('skel_skull', '#94A3B8', selectedParts)}" 
+                stroke-width="${this._strokeWidth('skel_skull', 1.6, selectedParts)}" />
+          <!-- Eye orbits & nasal aperture -->
+          <ellipse cx="169" cy="54" rx="6.5" ry="7.5" fill="#081224" stroke="#64748B" stroke-width="1.2"/>
+          <ellipse cx="191" cy="54" rx="6.5" ry="7.5" fill="#081224" stroke="#64748B" stroke-width="1.2"/>
+          <polygon points="180,62 176,72 184,72" fill="#081224" stroke="#64748B" stroke-width="1"/>
+          <!-- Jaw contour -->
+          <path d="M 162,76 Q 165,88 180,89 Q 195,88 198,76" fill="none" stroke="#64748B" stroke-width="1.4"/>
+          <!-- 44px touch target -->
+          <circle cx="180" cy="54" r="26" fill="transparent" pointer-events="all"/>
         </g>
 
-        <!-- Cervical Spine (C1-C7 Vertebrae & Intervertebral Discs) -->
-        <g id="skel_spine_cervical" class="anatomy-svg-node" onclick="window.__bodymap_select('skel_spine_cervical')" 
-           tabindex="0" role="button" aria-label="Cervical Spine Neck C1-C7" style="cursor: pointer;">
-          <!-- Atlas (C1) and Axis (C2) -->
-          <rect x="175" y="97" width="10" height="3.5" rx="1.5" fill="#E2E8F0" stroke="#64748B" stroke-width="1"/>
-          <rect x="174" y="102" width="12" height="3.5" rx="1.5" fill="#CBD5E1" stroke="#64748B" stroke-width="1"/>
-          <!-- C3-C7 Vertebral Bodies -->
-          <rect x="173" y="107" width="14" height="3.5" rx="1.5" fill="#CBD5E1" stroke="#64748B" stroke-width="1"/>
-          <rect x="173" y="112" width="14" height="3.5" rx="1.5" fill="#CBD5E1" stroke="#64748B" stroke-width="1"/>
-          <rect x="172" y="117" width="16" height="4.5" rx="1.5" 
-                fill="${this._fillColor('skel_spine_cervical', '#E2E8F0', selectedParts)}" 
-                stroke="${this._strokeColor('skel_spine_cervical', '#38BDF8', selectedParts)}" 
-                stroke-width="${this._strokeWidth('skel_spine_cervical', 1.4, selectedParts)}"/>
+        <!-- CERVICAL SPINE (NECK C1-C7, y: 92 to 120) -->
+        <g id="skel_spine_cervical" class="anatomy-svg-node" onclick="window.__bodymap_select('skel_spine_cervical')"
+           tabindex="0" role="button" aria-label="Cervical Spine Neck" style="cursor: pointer;">
+          <rect x="175" y="92" width="10" height="28" rx="3.5" 
+                fill="${this._fillColor('skel_spine_cervical', '#CBD5E1', selectedParts)}" 
+                stroke="${this._strokeColor('skel_spine_cervical', '#64748B', selectedParts)}" 
+                stroke-width="${this._strokeWidth('skel_spine_cervical', 1.4, selectedParts)}" />
+          <line x1="175" y1="101" x2="185" y2="101" stroke="#475569" stroke-width="1"/>
+          <line x1="175" y1="110" x2="185" y2="110" stroke="#475569" stroke-width="1"/>
+          <rect x="160" y="88" width="40" height="36" fill="transparent" pointer-events="all"/>
         </g>
 
-        <!-- Bilateral S-Curved Clavicles (Collar Bones) -->
-        <path d="M 177,124 Q 148,118 118,134" stroke="#E2E8F0" stroke-width="4.5" fill="none" stroke-linecap="round"/>
-        <path d="M 183,124 Q 212,118 242,134" stroke="#E2E8F0" stroke-width="4.5" fill="none" stroke-linecap="round"/>
-
-        <!-- Thoracic Cage (12 Pairs of Ribs, Costal Cartilages & Sternum) -->
-        <g id="skel_ribcage" class="anatomy-svg-node" onclick="window.__bodymap_select('skel_ribcage')" 
-           tabindex="0" role="button" aria-label="Ribcage and Sternum" style="cursor: pointer;">
-          
-          <!-- Sternum: Manubrium, Angle of Louis, Sternal Body, Xiphoid -->
-          <polygon points="176,125 184,125 186,136 174,136" fill="#E2E8F0" stroke="#94A3B8" stroke-width="1.2"/>
-          <line x1="174" y1="136" x2="186" y2="136" stroke="#38BDF8" stroke-width="1.5"/>
-          <rect x="177" y="137" width="6" height="38" rx="1.5" 
-                fill="${this._fillColor('skel_ribcage', '#CBD5E1', selectedParts)}" 
-                stroke="${this._strokeColor('skel_ribcage', '#FFFFFF', selectedParts)}" 
-                stroke-width="${this._strokeWidth('skel_ribcage', 1.6, selectedParts)}" />
-          <line x1="177" y1="147" x2="183" y2="147" stroke="#94A3B8" stroke-width="1"/>
-          <line x1="177" y1="157" x2="183" y2="157" stroke="#94A3B8" stroke-width="1"/>
-          <line x1="177" y1="167" x2="183" y2="167" stroke="#94A3B8" stroke-width="1"/>
-          <!-- Xiphoid Process -->
-          <polygon points="178,175 182,175 180,184" fill="#94A3B8" stroke="#64748B" stroke-width="1"/>
-
-          <!-- 12 Pairs of Curving Ribs -->
-          <!-- Rib Pair 1 -->
-          <path d="M 175,126 Q 144,128 132,139 Q 166,143 175,132" fill="none" stroke="#CBD5E1" stroke-width="2.5"/>
-          <path d="M 185,126 Q 216,128 228,139 Q 194,143 185,132" fill="none" stroke="#CBD5E1" stroke-width="2.5"/>
-          <!-- Rib Pair 2 -->
-          <path d="M 175,134 Q 136,138 126,152 Q 168,158 176,142" fill="none" stroke="#94A3B8" stroke-width="2.3"/>
-          <path d="M 185,134 Q 224,138 234,152 Q 192,158 184,142" fill="none" stroke="#94A3B8" stroke-width="2.3"/>
-          <!-- Rib Pair 3 -->
-          <path d="M 175,142 Q 128,148 122,164 Q 168,171 176,150" fill="none" stroke="#94A3B8" stroke-width="2.3"/>
-          <path d="M 185,142 Q 232,148 238,164 Q 192,171 184,150" fill="none" stroke="#94A3B8" stroke-width="2.3"/>
-          <!-- Rib Pair 4 -->
-          <path d="M 175,150 Q 124,159 120,177 Q 168,185 176,159" fill="none" stroke="#94A3B8" stroke-width="2.3"/>
-          <path d="M 185,150 Q 236,159 240,177 Q 192,185 184,159" fill="none" stroke="#94A3B8" stroke-width="2.3"/>
-          <!-- Rib Pair 5 -->
-          <path d="M 175,158 Q 122,169 118,189 Q 168,197 176,168" fill="none" stroke="#94A3B8" stroke-width="2.3"/>
-          <path d="M 185,158 Q 238,169 242,189 Q 192,197 184,168" fill="none" stroke="#94A3B8" stroke-width="2.3"/>
-          <!-- Rib Pair 6 -->
-          <path d="M 175,166 Q 122,179 120,201 Q 168,205 176,176" fill="none" stroke="#94A3B8" stroke-width="2.3"/>
-          <path d="M 185,166 Q 238,179 240,201 Q 192,205 184,176" fill="none" stroke="#94A3B8" stroke-width="2.3"/>
-          <!-- Rib Pair 7 -->
-          <path d="M 175,174 Q 124,190 122,211 Q 166,211 176,183" fill="none" stroke="#94A3B8" stroke-width="2.3"/>
-          <path d="M 185,174 Q 236,190 238,211 Q 194,211 184,183" fill="none" stroke="#94A3B8" stroke-width="2.3"/>
-          <!-- False Ribs 8, 9, 10 -->
-          <path d="M 124,215 Q 152,217 176,183" fill="none" stroke="#64748B" stroke-width="2" stroke-dasharray="3,1"/>
-          <path d="M 236,215 Q 208,217 184,183" fill="none" stroke="#64748B" stroke-width="2" stroke-dasharray="3,1"/>
-          <path d="M 128,220 Q 156,221 176,185" fill="none" stroke="#64748B" stroke-width="2" stroke-dasharray="3,1"/>
-          <path d="M 232,220 Q 204,221 184,185" fill="none" stroke="#64748B" stroke-width="2" stroke-dasharray="3,1"/>
-          <!-- Floating Ribs 11 & 12 -->
-          <path d="M 132,224 Q 148,228 158,226" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
-          <path d="M 228,224 Q 212,228 202,226" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+        <!-- CLAVICLES (COLLARBONES) -->
+        <g id="skel_clavicle_r" class="anatomy-svg-node" onclick="window.__bodymap_select('skel_clavicle_r')" 
+           tabindex="0" role="button" aria-label="Right Clavicle Collarbone" style="cursor: pointer;">
+          <path d="M 180,122 Q 150,118 126,132" stroke="${this._strokeColor('skel_clavicle_r', '#CBD5E1', selectedParts)}" stroke-width="${this._strokeWidth('skel_clavicle_r', 4.5, selectedParts)}" stroke-linecap="round" fill="none"/>
+        </g>
+        <g id="skel_clavicle_l" class="anatomy-svg-node" onclick="window.__bodymap_select('skel_clavicle_l')" 
+           tabindex="0" role="button" aria-label="Left Clavicle Collarbone" style="cursor: pointer;">
+          <path d="M 180,122 Q 210,118 234,132" stroke="${this._strokeColor('skel_clavicle_l', '#CBD5E1', selectedParts)}" stroke-width="${this._strokeWidth('skel_clavicle_l', 4.5, selectedParts)}" stroke-linecap="round" fill="none"/>
         </g>
 
-        <!-- Thoracic Spine (Behind Sternum T1-T12) -->
-        <g id="skel_spine_thoracic" class="anatomy-svg-node" onclick="window.__bodymap_select('skel_spine_thoracic')" 
-           tabindex="0" role="button" aria-label="Thoracic Spine Mid Back" style="cursor: pointer;">
-          <line x1="180" y1="124" x2="180" y2="224" 
-                stroke="${this._strokeColor('skel_spine_thoracic', '#64748B', selectedParts)}" 
-                stroke-width="${this._strokeWidth('skel_spine_thoracic', 3.6, selectedParts)}" stroke-dasharray="4,2" />
+        <!-- STERNUM (BREASTBONE) -->
+        <g id="skel_sternum" class="anatomy-svg-node" onclick="window.__bodymap_select('skel_sternum')"
+           tabindex="0" role="button" aria-label="Sternum Breastbone" style="cursor: pointer;">
+          <polygon points="178,124 182,124 183,165 180,178 177,165" 
+                   fill="${this._fillColor('skel_sternum', '#E2E8F0', selectedParts)}" 
+                   stroke="${this._strokeColor('skel_sternum', '#94A3B8', selectedParts)}" 
+                   stroke-width="${this._strokeWidth('skel_sternum', 1.5, selectedParts)}" />
         </g>
 
-        <!-- Lumbar Spine (L1-L5 Massive Vertebrae & Discs) -->
-        <g id="skel_spine_lumbar" class="anatomy-svg-node" onclick="window.__bodymap_select('skel_spine_lumbar')" 
-           tabindex="0" role="button" aria-label="Lumbar Spine Lower Back L1-L5" style="cursor: pointer;">
-          <rect x="174" y="226" width="12" height="42" rx="2.5" 
-                fill="${this._fillColor('skel_spine_lumbar', '#475569', selectedParts)}" 
-                stroke="${this._strokeColor('skel_spine_lumbar', '#38BDF8', selectedParts)}" 
-                stroke-width="${this._strokeWidth('skel_spine_lumbar', 1.8, selectedParts)}" />
-          <!-- Individual L1-L5 Intervertebral Discs -->
-          <line x1="174" y1="234" x2="186" y2="234" stroke="#CBD5E1" stroke-width="1.3"/>
-          <line x1="174" y1="242" x2="186" y2="242" stroke="#CBD5E1" stroke-width="1.3"/>
-          <line x1="174" y1="250" x2="186" y2="250" stroke="#CBD5E1" stroke-width="1.3"/>
-          <line x1="174" y1="258" x2="186" y2="258" stroke="#CBD5E1" stroke-width="1.3"/>
+        <!-- RIBCAGE (UNIFIED THORACIC CAGE, y: 132 to 220) -->
+        <g id="skel_ribcage" class="anatomy-svg-node" onclick="window.__bodymap_select('skel_ribcage')"
+           tabindex="0" role="button" aria-label="Ribcage Thorax" style="cursor: pointer;">
+          <path d="M 176,126 C 142,128 130,155 128,190 C 127,208 140,220 162,216 L 176,182 L 184,182 L 198,216 C 220,220 233,208 232,190 C 230,155 218,128 184,126 Z"
+                fill="${this._fillColor('skel_ribcage', '#CBD5E1', selectedParts, 0.45)}" 
+                stroke="${this._strokeColor('skel_ribcage', '#94A3B8', selectedParts)}" 
+                stroke-width="${this._strokeWidth('skel_ribcage', 1.8, selectedParts)}" opacity="0.9" />
+          <!-- Subtle contour lines showing thoracic ribs cleanly -->
+          <path d="M 134,152 Q 180,158 226,152" stroke="#64748B" stroke-width="1.2" fill="none" opacity="0.6"/>
+          <path d="M 130,172 Q 180,180 230,172" stroke="#64748B" stroke-width="1.2" fill="none" opacity="0.6"/>
+          <path d="M 132,192 Q 180,202 228,192" stroke="#64748B" stroke-width="1.2" fill="none" opacity="0.6"/>
         </g>
 
-        <!-- Pelvic Girdle (Iliac Crests, Pubis, Ischium, Acetabulum) -->
-        <g id="skel_pelvis" class="anatomy-svg-node" onclick="window.__bodymap_select('skel_pelvis')" 
-           tabindex="0" role="button" aria-label="Pelvis and Iliac Crests" style="cursor: pointer;">
-          <!-- Flared Iliac Blades & Crests -->
-          <path d="M 136,272 C 142,264 164,268 180,281 C 196,268 218,264 224,272 
-                   C 230,284 224,310 212,314 C 198,318 188,314 180,313 C 172,314 162,318 148,314 
-                   C 136,310 130,284 136,272 Z" 
-                fill="${this._fillColor('skel_pelvis', '#334155', selectedParts)}" 
-                stroke="${this._strokeColor('skel_pelvis', '#E2E8F0', selectedParts)}" 
+        <!-- LUMBAR SPINE (L1-L5, y: 222 to 274) -->
+        <g id="skel_spine_lumbar" class="anatomy-svg-node" onclick="window.__bodymap_select('skel_spine_lumbar')"
+           tabindex="0" role="button" aria-label="Lumbar Spine Lower Back" style="cursor: pointer;">
+          <rect x="174" y="222" width="12" height="50" rx="3" 
+                fill="${this._fillColor('skel_spine_lumbar', '#CBD5E1', selectedParts)}" 
+                stroke="${this._strokeColor('skel_spine_lumbar', '#64748B', selectedParts)}" 
+                stroke-width="${this._strokeWidth('skel_spine_lumbar', 1.5, selectedParts)}" />
+          <line x1="174" y1="234" x2="186" y2="234" stroke="#475569" stroke-width="1"/>
+          <line x1="174" y1="247" x2="186" y2="247" stroke="#475569" stroke-width="1"/>
+          <line x1="174" y1="260" x2="186" y2="260" stroke="#475569" stroke-width="1"/>
+          <rect x="160" y="220" width="40" height="54" fill="transparent" pointer-events="all"/>
+        </g>
+
+        <!-- PELVIS GIRDLE & SACRUM (y: 274 to 326) -->
+        <g id="skel_pelvis" class="anatomy-svg-node" onclick="window.__bodymap_select('skel_pelvis')"
+           tabindex="0" role="button" aria-label="Pelvis and Hips" style="cursor: pointer;">
+          <path d="M 134,274 C 142,266 166,270 180,284 C 194,270 218,266 226,274 
+                   C 232,286 226,314 212,320 C 196,326 186,322 180,320 C 174,322 164,326 148,320 
+                   C 134,314 128,286 134,274 Z" 
+                fill="${this._fillColor('skel_pelvis', '#CBD5E1', selectedParts)}" 
+                stroke="${this._strokeColor('skel_pelvis', '#94A3B8', selectedParts)}" 
                 stroke-width="${this._strokeWidth('skel_pelvis', 1.8, selectedParts)}" />
-          
-          <!-- Iliac Crest Upper Edge Ridge -->
-          <path d="M 138,273 Q 158,266 178,279" fill="none" stroke="#FFFFFF" stroke-width="1.6"/>
-          <path d="M 222,273 Q 202,266 182,279" fill="none" stroke="#FFFFFF" stroke-width="1.6"/>
-
-          <!-- Bilateral Obturator Foramina -->
-          <ellipse cx="168" cy="303" rx="5" ry="6" fill="#060e1b" stroke="#64748B" stroke-width="1.2"/>
-          <ellipse cx="192" cy="303" rx="5" ry="6" fill="#060e1b" stroke="#64748B" stroke-width="1.2"/>
-
-          <!-- Pubic Symphysis Central Fibrocartilage Disc -->
-          <rect x="178.5" y="309" width="3" height="6" rx="1.2" fill="#38BDF8"/>
+          <!-- Obturator foramen openings -->
+          <ellipse cx="162" cy="308" rx="6" ry="7" fill="#081224" stroke="#64748B" stroke-width="1"/>
+          <ellipse cx="198" cy="308" rx="6" ry="7" fill="#081224" stroke="#64748B" stroke-width="1"/>
         </g>
 
-        <!-- Sacrum & Coccyx (S1-S5 & Foramina) -->
-        <g id="skel_spine_sacrum" class="anatomy-svg-node" onclick="window.__bodymap_select('skel_spine_sacrum')" 
+        <!-- SACRUM / COCCYX -->
+        <g id="skel_spine_sacrum" class="anatomy-svg-node" onclick="window.__bodymap_select('skel_spine_sacrum')"
            tabindex="0" role="button" aria-label="Sacrum and Coccyx" style="cursor: pointer;">
-          <polygon points="174,272 186,272 181,301 179,301" 
-                   fill="${this._fillColor('skel_spine_sacrum', '#475569', selectedParts)}" 
-                   stroke="${this._strokeColor('skel_spine_sacrum', '#38BDF8', selectedParts)}" 
-                   stroke-width="${this._strokeWidth('skel_spine_sacrum', 1.6, selectedParts)}" />
-          <!-- Sacral Foramina Dots -->
-          <circle cx="178" cy="279" r="1.1" fill="#E2E8F0"/>
-          <circle cx="182" cy="279" r="1.1" fill="#E2E8F0"/>
-          <circle cx="178.5" cy="287" r="1.1" fill="#E2E8F0"/>
-          <circle cx="181.5" cy="287" r="1.1" fill="#E2E8F0"/>
-          <!-- Coccyx Terminal Segments -->
-          <ellipse cx="180" cy="304" rx="1.8" ry="3" fill="#CBD5E1"/>
+          <polygon points="175,276 185,276 181,308 179,308" 
+                   fill="${this._fillColor('skel_spine_sacrum', '#94A3B8', selectedParts)}" 
+                   stroke="${this._strokeColor('skel_spine_sacrum', '#64748B', selectedParts)}" 
+                   stroke-width="1.2" />
         </g>
 
-        <!-- Upper Limbs: Humerus, Forearms (Radius & Ulna), Hands -->
+        <!-- UPPER LIMBS (HUMERUS, FOREARMS, HANDS) -->
         <!-- Right Arm (Patient Right / Viewer Left) -->
-        <path d="M 118,138 Q 114,170 105,214" stroke="#CBD5E1" stroke-width="6.5" stroke-linecap="round"/>
-        <path d="M 102,220 Q 96,260 88,300" stroke="#CBD5E1" stroke-width="3.8" stroke-linecap="round"/>
-        <path d="M 107,220 Q 101,260 93,300" stroke="#94A3B8" stroke-width="3.2" stroke-linecap="round"/>
-        <!-- Hand / Metacarpals & Phalanges -->
-        <path d="M 89,304 L 80,332 M 91,304 L 84,334 M 93,304 L 88,333 M 95,304 L 92,328" stroke="#CBD5E1" stroke-width="1.8" stroke-linecap="round"/>
+        <g id="bone_humerus_r" class="anatomy-svg-node" onclick="window.__bodymap_select('bone_humerus_r')" style="cursor: pointer;">
+          <path d="M 118,138 Q 114,170 105,214" stroke="${this._strokeColor('bone_humerus_r', '#CBD5E1', selectedParts)}" stroke-width="${this._strokeWidth('bone_humerus_r', 6.5, selectedParts)}" stroke-linecap="round"/>
+        </g>
+        <g id="bone_forearm_r" class="anatomy-svg-node" onclick="window.__bodymap_select('bone_forearm_r')" style="cursor: pointer;">
+          <path d="M 104,218 Q 98,258 90,300" stroke="${this._strokeColor('bone_forearm_r', '#CBD5E1', selectedParts)}" stroke-width="${this._strokeWidth('bone_forearm_r', 5, selectedParts)}" stroke-linecap="round"/>
+        </g>
+        <g id="bone_hand_r" class="anatomy-svg-node" onclick="window.__bodymap_select('bone_hand_r')" style="cursor: pointer;">
+          <path d="M 90,302 Q 84,318 80,332" stroke="${this._strokeColor('bone_hand_r', '#E2E8F0', selectedParts)}" stroke-width="${this._strokeWidth('bone_hand_r', 5.5, selectedParts)}" stroke-linecap="round"/>
+          <circle cx="83" cy="320" r="14" fill="transparent" pointer-events="all"/>
+        </g>
 
         <!-- Left Arm (Patient Left / Viewer Right) -->
-        <path d="M 242,138 Q 246,170 255,214" stroke="#CBD5E1" stroke-width="6.5" stroke-linecap="round"/>
-        <path d="M 258,220 Q 264,260 272,300" stroke="#CBD5E1" stroke-width="3.8" stroke-linecap="round"/>
-        <path d="M 253,220 Q 259,260 267,300" stroke="#94A3B8" stroke-width="3.2" stroke-linecap="round"/>
-        <!-- Hand / Metacarpals & Phalanges -->
-        <path d="M 271,304 L 280,332 M 269,304 L 276,334 M 267,304 L 272,333 M 265,304 L 268,328" stroke="#CBD5E1" stroke-width="1.8" stroke-linecap="round"/>
+        <g id="bone_humerus_l" class="anatomy-svg-node" onclick="window.__bodymap_select('bone_humerus_l')" style="cursor: pointer;">
+          <path d="M 242,138 Q 246,170 255,214" stroke="${this._strokeColor('bone_humerus_l', '#CBD5E1', selectedParts)}" stroke-width="${this._strokeWidth('bone_humerus_l', 6.5, selectedParts)}" stroke-linecap="round"/>
+        </g>
+        <g id="bone_forearm_l" class="anatomy-svg-node" onclick="window.__bodymap_select('bone_forearm_l')" style="cursor: pointer;">
+          <path d="M 256,218 Q 262,258 270,300" stroke="${this._strokeColor('bone_forearm_l', '#CBD5E1', selectedParts)}" stroke-width="${this._strokeWidth('bone_forearm_l', 5, selectedParts)}" stroke-linecap="round"/>
+        </g>
+        <g id="bone_hand_l" class="anatomy-svg-node" onclick="window.__bodymap_select('bone_hand_l')" style="cursor: pointer;">
+          <path d="M 270,302 Q 276,318 280,332" stroke="${this._strokeColor('bone_hand_l', '#E2E8F0', selectedParts)}" stroke-width="${this._strokeWidth('bone_hand_l', 5.5, selectedParts)}" stroke-linecap="round"/>
+          <circle cx="277" cy="320" r="14" fill="transparent" pointer-events="all"/>
+        </g>
 
-        <!-- ============================================================ -->
-        <!-- LOWER LIMBS (HEAD TO FEET: FEMURS, KNEES, SHINS, ANKLES, TOES)-->
-        <!-- ============================================================ -->
+        <!-- LOWER LIMBS (FEMUR, PATELLA, SHIN, FEET, TOES) -->
         <!-- Right Leg (Patient Right / Viewer Left) -->
-        <!-- Femur (Thigh Bone: Head, Neck, Shaft, Condyles) -->
-        <path d="M 156,308 Q 150,370 146,442" stroke="url(#boneShaftGrad)" stroke-width="8" stroke-linecap="round"/>
-        <ellipse cx="146" cy="446" rx="6" ry="3.5" fill="#CBD5E1" stroke="#94A3B8" stroke-width="1"/> <!-- Femoral Condyles -->
-        <!-- Patella (Kneecap) -->
-        <path d="M 141,446 L 151,446 L 146,456 Z" fill="#F8FAFC" stroke="#38BDF8" stroke-width="1.4"/>
-
-        <!-- Tibia (Thick Medial Shin Bone) & Fibula (Slender Lateral Strut) -->
-        <path d="M 146,458 L 144,598" stroke="url(#boneShaftGrad)" stroke-width="6" stroke-linecap="round"/>
-        <path d="M 137,466 L 135,594" stroke="#64748B" stroke-width="2.8" stroke-linecap="round"/>
-        <!-- Medial & Lateral Malleoli (Ankle Bones) -->
-        <circle cx="143" cy="602" r="3" fill="#E2E8F0" stroke="#94A3B8" stroke-width="1"/>
-        <circle cx="134" cy="600" r="2.2" fill="#94A3B8"/>
-
-        <!-- Right Foot & Toes (Calcaneus Heel, Tarsus, Metatarsus & Individual Toes) -->
-        <!-- Heel / Calcaneus -->
-        <ellipse cx="144" cy="610" rx="5" ry="6" fill="#CBD5E1" stroke="#94A3B8" stroke-width="1.2"/>
-        <!-- 5 Metatarsals Spreading Forward -->
-        <line x1="144" y1="616" x2="148" y2="648" stroke="#E2E8F0" stroke-width="2.6" stroke-linecap="round"/>
-        <line x1="141" y1="616" x2="142" y2="650" stroke="#CBD5E1" stroke-width="2.2" stroke-linecap="round"/>
-        <line x1="138" y1="617" x2="136" y2="648" stroke="#CBD5E1" stroke-width="2" stroke-linecap="round"/>
-        <line x1="135" y1="617" x2="131" y2="646" stroke="#94A3B8" stroke-width="1.8" stroke-linecap="round"/>
-        <line x1="132" y1="618" x2="126" y2="644" stroke="#94A3B8" stroke-width="1.6" stroke-linecap="round"/>
-        <!-- 5 Individual Toe Phalanges (Distal Tips) -->
-        <circle cx="149" cy="656" r="3.2" fill="#F8FAFC" stroke="#38BDF8" stroke-width="1"/> <!-- Big Toe (Hallux) -->
-        <circle cx="142" cy="657" r="2.4" fill="#E2E8F0"/> <!-- 2nd Toe -->
-        <circle cx="135" cy="654" r="2.2" fill="#CBD5E1"/> <!-- 3rd Toe -->
-        <circle cx="129" cy="651" r="2.0" fill="#CBD5E1"/> <!-- 4th Toe -->
-        <circle cx="124" cy="648" r="1.8" fill="#94A3B8"/> <!-- Little Toe -->
+        <g id="bone_femur_r" class="anatomy-svg-node" onclick="window.__bodymap_select('bone_femur_r')" style="cursor: pointer;">
+          <path d="M 154,308 Q 150,370 146,446" stroke="${this._strokeColor('bone_femur_r', '#CBD5E1', selectedParts)}" stroke-width="${this._strokeWidth('bone_femur_r', 8, selectedParts)}" stroke-linecap="round"/>
+        </g>
+        <g id="bone_patella_r" class="anatomy-svg-node" onclick="window.__bodymap_select('bone_patella_r')" style="cursor: pointer;">
+          <circle cx="146" cy="450" r="4.5" fill="${this._fillColor('bone_patella_r', '#F8FAFC', selectedParts)}" stroke="${this._strokeColor('bone_patella_r', '#94A3B8', selectedParts)}" stroke-width="1.4"/>
+        </g>
+        <g id="bone_shin_r" class="anatomy-svg-node" onclick="window.__bodymap_select('bone_shin_r')" style="cursor: pointer;">
+          <path d="M 146,458 L 143,602" stroke="${this._strokeColor('bone_shin_r', '#CBD5E1', selectedParts)}" stroke-width="${this._strokeWidth('bone_shin_r', 6, selectedParts)}" stroke-linecap="round"/>
+        </g>
+        <g id="bone_foot_r" class="anatomy-svg-node" onclick="window.__bodymap_select('bone_foot_r')" style="cursor: pointer;">
+          <path d="M 143,604 L 144,635 L 148,656" stroke="${this._strokeColor('bone_foot_r', '#E2E8F0', selectedParts)}" stroke-width="${this._strokeWidth('bone_foot_r', 5, selectedParts)}" stroke-linecap="round"/>
+          <!-- Distal toe tips (cy="656" and cy="657") -->
+          <circle cx="148" cy="656" r="3.2" fill="${this._fillColor('bone_foot_r', '#F8FAFC', selectedParts)}" stroke="#38BDF8" stroke-width="0.8"/>
+          <circle cx="141" cy="657" r="2.4" fill="#CBD5E1"/>
+          <circle cx="135" cy="654" r="2.0" fill="#94A3B8"/>
+          <circle cx="143" cy="640" r="18" fill="transparent" pointer-events="all"/>
+        </g>
 
         <!-- Left Leg (Patient Left / Viewer Right) -->
-        <!-- Femur (Thigh Bone) -->
-        <path d="M 204,308 Q 210,370 214,442" stroke="url(#boneShaftGrad)" stroke-width="8" stroke-linecap="round"/>
-        <ellipse cx="214" cy="446" rx="6" ry="3.5" fill="#CBD5E1" stroke="#94A3B8" stroke-width="1"/> <!-- Femoral Condyles -->
-        <!-- Patella (Kneecap) -->
-        <path d="M 209,446 L 219,446 L 214,456 Z" fill="#F8FAFC" stroke="#38BDF8" stroke-width="1.4"/>
-
-        <!-- Tibia & Fibula -->
-        <path d="M 214,458 L 216,598" stroke="url(#boneShaftGrad)" stroke-width="6" stroke-linecap="round"/>
-        <path d="M 223,466 L 225,594" stroke="#64748B" stroke-width="2.8" stroke-linecap="round"/>
-        <!-- Medial & Lateral Malleoli -->
-        <circle cx="217" cy="602" r="3" fill="#E2E8F0" stroke="#94A3B8" stroke-width="1"/>
-        <circle cx="226" cy="600" r="2.2" fill="#94A3B8"/>
-
-        <!-- Left Foot & Toes -->
-        <!-- Heel / Calcaneus -->
-        <ellipse cx="216" cy="610" rx="5" ry="6" fill="#CBD5E1" stroke="#94A3B8" stroke-width="1.2"/>
-        <!-- 5 Metatarsals -->
-        <line x1="216" y1="616" x2="212" y2="648" stroke="#E2E8F0" stroke-width="2.6" stroke-linecap="round"/>
-        <line x1="219" y1="616" x2="218" y2="650" stroke="#CBD5E1" stroke-width="2.2" stroke-linecap="round"/>
-        <line x1="222" y1="617" x2="224" y2="648" stroke="#CBD5E1" stroke-width="2" stroke-linecap="round"/>
-        <line x1="225" y1="617" x2="229" y2="646" stroke="#94A3B8" stroke-width="1.8" stroke-linecap="round"/>
-        <line x1="228" y1="618" x2="234" y2="644" stroke="#94A3B8" stroke-width="1.6" stroke-linecap="round"/>
-        <!-- 5 Individual Toe Phalanges -->
-        <circle cx="211" cy="656" r="3.2" fill="#F8FAFC" stroke="#38BDF8" stroke-width="1"/> <!-- Big Toe (Hallux) -->
-        <circle cx="218" cy="657" r="2.4" fill="#E2E8F0"/> <!-- 2nd Toe -->
-        <circle cx="225" cy="654" r="2.2" fill="#CBD5E1"/> <!-- 3rd Toe -->
-        <circle cx="231" cy="651" r="2.0" fill="#CBD5E1"/> <!-- 4th Toe -->
-        <circle cx="236" cy="648" r="1.8" fill="#94A3B8"/> <!-- Little Toe -->
+        <g id="bone_femur_l" class="anatomy-svg-node" onclick="window.__bodymap_select('bone_femur_l')" style="cursor: pointer;">
+          <path d="M 206,308 Q 210,370 214,446" stroke="${this._strokeColor('bone_femur_l', '#CBD5E1', selectedParts)}" stroke-width="${this._strokeWidth('bone_femur_l', 8, selectedParts)}" stroke-linecap="round"/>
+        </g>
+        <g id="bone_patella_l" class="anatomy-svg-node" onclick="window.__bodymap_select('bone_patella_l')" style="cursor: pointer;">
+          <circle cx="214" cy="450" r="4.5" fill="${this._fillColor('bone_patella_l', '#F8FAFC', selectedParts)}" stroke="${this._strokeColor('bone_patella_l', '#94A3B8', selectedParts)}" stroke-width="1.4"/>
+        </g>
+        <g id="bone_shin_l" class="anatomy-svg-node" onclick="window.__bodymap_select('bone_shin_l')" style="cursor: pointer;">
+          <path d="M 214,458 L 217,602" stroke="${this._strokeColor('bone_shin_l', '#CBD5E1', selectedParts)}" stroke-width="${this._strokeWidth('bone_shin_l', 6, selectedParts)}" stroke-linecap="round"/>
+        </g>
+        <g id="bone_foot_l" class="anatomy-svg-node" onclick="window.__bodymap_select('bone_foot_l')" style="cursor: pointer;">
+          <path d="M 217,604 L 216,635 L 212,656" stroke="${this._strokeColor('bone_foot_l', '#E2E8F0', selectedParts)}" stroke-width="${this._strokeWidth('bone_foot_l', 5, selectedParts)}" stroke-linecap="round"/>
+          <circle cx="212" cy="656" r="3.2" fill="${this._fillColor('bone_foot_l', '#F8FAFC', selectedParts)}" stroke="#38BDF8" stroke-width="0.8"/>
+          <circle cx="219" cy="657" r="2.4" fill="#CBD5E1"/>
+          <circle cx="225" cy="654" r="2.0" fill="#94A3B8"/>
+          <circle cx="217" cy="640" r="18" fill="transparent" pointer-events="all"/>
+        </g>
       </g>
 
       <!-- ============================================================ -->
-      <!-- 2. MAJOR ARTICULAR JOINTS (Interactive Clickable Nodes)       -->
+      <!-- 3. SUBTLE ARTICULAR JOINTS (Interactive Rings, 44px Hitbox)  -->
       <!-- ============================================================ -->
       <g id="layer_major_joints">
-        <!-- Shoulder Joints (Glenohumeral) -->
-        <circle id="joint_shoulder_r" cx="118" cy="138" r="10" 
-                class="anatomy-svg-node" onclick="window.__bodymap_select('joint_shoulder_r')"
-                fill="${this._fillColor('joint_shoulder_r', 'url(#jointGradient)', selectedParts)}"
-                stroke="${this._strokeColor('joint_shoulder_r', '#38BDF8', selectedParts)}"
-                stroke-width="${this._strokeWidth('joint_shoulder_r', 2.2, selectedParts)}"
-                tabindex="0" role="button" aria-label="Right Shoulder Joint" style="cursor: pointer;" />
-        
-        <circle id="joint_shoulder_l" cx="242" cy="138" r="10" 
-                class="anatomy-svg-node" onclick="window.__bodymap_select('joint_shoulder_l')"
-                fill="${this._fillColor('joint_shoulder_l', 'url(#jointGradient)', selectedParts)}"
-                stroke="${this._strokeColor('joint_shoulder_l', '#38BDF8', selectedParts)}"
-                stroke-width="${this._strokeWidth('joint_shoulder_l', 2.2, selectedParts)}"
-                tabindex="0" role="button" aria-label="Left Shoulder Joint" style="cursor: pointer;" />
+        <!-- Shoulders -->
+        <g id="joint_shoulder_r" class="anatomy-svg-node" onclick="window.__bodymap_select('joint_shoulder_r')" tabindex="0" role="button" aria-label="Right Shoulder Joint" style="cursor: pointer;">
+          <circle cx="118" cy="138" r="4.5" fill="${this._jointFill('joint_shoulder_r', selectedParts)}" stroke="${this._strokeColor('joint_shoulder_r', '#94A3B8', selectedParts)}" stroke-width="${this._strokeWidth('joint_shoulder_r', 1.4, selectedParts)}" />
+          <circle cx="118" cy="138" r="22" fill="transparent" pointer-events="all" />
+        </g>
+        <g id="joint_shoulder_l" class="anatomy-svg-node" onclick="window.__bodymap_select('joint_shoulder_l')" tabindex="0" role="button" aria-label="Left Shoulder Joint" style="cursor: pointer;">
+          <circle cx="242" cy="138" r="4.5" fill="${this._jointFill('joint_shoulder_l', selectedParts)}" stroke="${this._strokeColor('joint_shoulder_l', '#94A3B8', selectedParts)}" stroke-width="${this._strokeWidth('joint_shoulder_l', 1.4, selectedParts)}" />
+          <circle cx="242" cy="138" r="22" fill="transparent" pointer-events="all" />
+        </g>
 
-        <!-- Elbow Joints (Humeroulnar & Humeroradial) -->
-        <circle id="joint_elbow_r" cx="105" cy="216" r="8.5" 
-                class="anatomy-svg-node" onclick="window.__bodymap_select('joint_elbow_r')"
-                fill="${this._fillColor('joint_elbow_r', 'url(#jointGradient)', selectedParts)}"
-                stroke="${this._strokeColor('joint_elbow_r', '#38BDF8', selectedParts)}"
-                stroke-width="${this._strokeWidth('joint_elbow_r', 2, selectedParts)}"
-                tabindex="0" role="button" aria-label="Right Elbow Joint" style="cursor: pointer;" />
-        <circle id="joint_elbow_l" cx="255" cy="216" r="8.5" 
-                class="anatomy-svg-node" onclick="window.__bodymap_select('joint_elbow_l')"
-                fill="${this._fillColor('joint_elbow_l', 'url(#jointGradient)', selectedParts)}"
-                stroke="${this._strokeColor('joint_elbow_l', '#38BDF8', selectedParts)}"
-                stroke-width="${this._strokeWidth('joint_elbow_l', 2, selectedParts)}"
-                tabindex="0" role="button" aria-label="Left Elbow Joint" style="cursor: pointer;" />
+        <!-- Elbows -->
+        <g id="joint_elbow_r" class="anatomy-svg-node" onclick="window.__bodymap_select('joint_elbow_r')" tabindex="0" role="button" aria-label="Right Elbow Joint" style="cursor: pointer;">
+          <circle cx="105" cy="216" r="4.2" fill="${this._jointFill('joint_elbow_r', selectedParts)}" stroke="${this._strokeColor('joint_elbow_r', '#94A3B8', selectedParts)}" stroke-width="${this._strokeWidth('joint_elbow_r', 1.4, selectedParts)}" />
+          <circle cx="105" cy="216" r="22" fill="transparent" pointer-events="all" />
+        </g>
+        <g id="joint_elbow_l" class="anatomy-svg-node" onclick="window.__bodymap_select('joint_elbow_l')" tabindex="0" role="button" aria-label="Left Elbow Joint" style="cursor: pointer;">
+          <circle cx="255" cy="216" r="4.2" fill="${this._jointFill('joint_elbow_l', selectedParts)}" stroke="${this._strokeColor('joint_elbow_l', '#94A3B8', selectedParts)}" stroke-width="${this._strokeWidth('joint_elbow_l', 1.4, selectedParts)}" />
+          <circle cx="255" cy="216" r="22" fill="transparent" pointer-events="all" />
+        </g>
 
-        <!-- Wrist Joints (Radiocarpal) -->
-        <circle id="joint_wrist_r" cx="90" cy="302" r="7.5" 
-                class="anatomy-svg-node" onclick="window.__bodymap_select('joint_wrist_r')"
-                fill="${this._fillColor('joint_wrist_r', 'url(#jointGradient)', selectedParts)}"
-                stroke="${this._strokeColor('joint_wrist_r', '#38BDF8', selectedParts)}"
-                stroke-width="${this._strokeWidth('joint_wrist_r', 1.8, selectedParts)}"
-                tabindex="0" role="button" aria-label="Right Wrist Joint" style="cursor: pointer;" />
-        <circle id="joint_wrist_l" cx="270" cy="302" r="7.5" 
-                class="anatomy-svg-node" onclick="window.__bodymap_select('joint_wrist_l')"
-                fill="${this._fillColor('joint_wrist_l', 'url(#jointGradient)', selectedParts)}"
-                stroke="${this._strokeColor('joint_wrist_l', '#38BDF8', selectedParts)}"
-                stroke-width="${this._strokeWidth('joint_wrist_l', 1.8, selectedParts)}"
-                tabindex="0" role="button" aria-label="Left Wrist Joint" style="cursor: pointer;" />
+        <!-- Wrists -->
+        <g id="joint_wrist_r" class="anatomy-svg-node" onclick="window.__bodymap_select('joint_wrist_r')" tabindex="0" role="button" aria-label="Right Wrist Joint" style="cursor: pointer;">
+          <circle cx="90" cy="302" r="4.0" fill="${this._jointFill('joint_wrist_r', selectedParts)}" stroke="${this._strokeColor('joint_wrist_r', '#94A3B8', selectedParts)}" stroke-width="${this._strokeWidth('joint_wrist_r', 1.4, selectedParts)}" />
+          <circle cx="90" cy="302" r="22" fill="transparent" pointer-events="all" />
+        </g>
+        <g id="joint_wrist_l" class="anatomy-svg-node" onclick="window.__bodymap_select('joint_wrist_l')" tabindex="0" role="button" aria-label="Left Wrist Joint" style="cursor: pointer;">
+          <circle cx="270" cy="302" r="4.0" fill="${this._jointFill('joint_wrist_l', selectedParts)}" stroke="${this._strokeColor('joint_wrist_l', '#94A3B8', selectedParts)}" stroke-width="${this._strokeWidth('joint_wrist_l', 1.4, selectedParts)}" />
+          <circle cx="270" cy="302" r="22" fill="transparent" pointer-events="all" />
+        </g>
 
-        <!-- Hip Joints (Acetabulofemoral) -->
-        <circle id="joint_hip_r" cx="156" cy="307" r="11" 
-                class="anatomy-svg-node" onclick="window.__bodymap_select('joint_hip_r')"
-                fill="${this._fillColor('joint_hip_r', 'url(#jointGradient)', selectedParts)}"
-                stroke="${this._strokeColor('joint_hip_r', '#38BDF8', selectedParts)}"
-                stroke-width="${this._strokeWidth('joint_hip_r', 2.2, selectedParts)}"
-                tabindex="0" role="button" aria-label="Right Hip Joint" style="cursor: pointer;" />
-        <circle id="joint_hip_l" cx="204" cy="307" r="11" 
-                class="anatomy-svg-node" onclick="window.__bodymap_select('joint_hip_l')"
-                fill="${this._fillColor('joint_hip_l', 'url(#jointGradient)', selectedParts)}"
-                stroke="${this._strokeColor('joint_hip_l', '#38BDF8', selectedParts)}"
-                stroke-width="${this._strokeWidth('joint_hip_l', 2.2, selectedParts)}"
-                tabindex="0" role="button" aria-label="Left Hip Joint" style="cursor: pointer;" />
+        <!-- Hips -->
+        <g id="joint_hip_r" class="anatomy-svg-node" onclick="window.__bodymap_select('joint_hip_r')" tabindex="0" role="button" aria-label="Right Hip Joint" style="cursor: pointer;">
+          <circle cx="156" cy="312" r="4.8" fill="${this._jointFill('joint_hip_r', selectedParts)}" stroke="${this._strokeColor('joint_hip_r', '#94A3B8', selectedParts)}" stroke-width="${this._strokeWidth('joint_hip_r', 1.4, selectedParts)}" />
+          <circle cx="156" cy="312" r="22" fill="transparent" pointer-events="all" />
+        </g>
+        <g id="joint_hip_l" class="anatomy-svg-node" onclick="window.__bodymap_select('joint_hip_l')" tabindex="0" role="button" aria-label="Left Hip Joint" style="cursor: pointer;">
+          <circle cx="204" cy="312" r="4.8" fill="${this._jointFill('joint_hip_l', selectedParts)}" stroke="${this._strokeColor('joint_hip_l', '#94A3B8', selectedParts)}" stroke-width="${this._strokeWidth('joint_hip_l', 1.4, selectedParts)}" />
+          <circle cx="204" cy="312" r="22" fill="transparent" pointer-events="all" />
+        </g>
 
-        <!-- Knee Joints (Patellofemoral & Tibiofemoral) -->
-        <circle id="joint_knee_r" cx="146" cy="452" r="13" 
-                class="anatomy-svg-node" onclick="window.__bodymap_select('joint_knee_r')"
-                fill="${this._fillColor('joint_knee_r', 'url(#jointGradient)', selectedParts)}"
-                stroke="${this._strokeColor('joint_knee_r', '#38BDF8', selectedParts)}"
-                stroke-width="${this._strokeWidth('joint_knee_r', 2.4, selectedParts)}"
-                tabindex="0" role="button" aria-label="Right Knee Joint" style="cursor: pointer;" />
-        <circle id="joint_knee_l" cx="214" cy="452" r="13" 
-                class="anatomy-svg-node" onclick="window.__bodymap_select('joint_knee_l')"
-                fill="${this._fillColor('joint_knee_l', 'url(#jointGradient)', selectedParts)}"
-                stroke="${this._strokeColor('joint_knee_l', '#38BDF8', selectedParts)}"
-                stroke-width="${this._strokeWidth('joint_knee_l', 2.4, selectedParts)}"
-                tabindex="0" role="button" aria-label="Left Knee Joint" style="cursor: pointer;" />
+        <!-- Knees -->
+        <g id="joint_knee_r" class="anatomy-svg-node" onclick="window.__bodymap_select('joint_knee_r')" tabindex="0" role="button" aria-label="Right Knee Joint" style="cursor: pointer;">
+          <circle cx="146" cy="450" r="5.0" fill="${this._jointFill('joint_knee_r', selectedParts)}" stroke="${this._strokeColor('joint_knee_r', '#94A3B8', selectedParts)}" stroke-width="${this._strokeWidth('joint_knee_r', 1.4, selectedParts)}" />
+          <circle cx="146" cy="450" r="22" fill="transparent" pointer-events="all" />
+        </g>
+        <g id="joint_knee_l" class="anatomy-svg-node" onclick="window.__bodymap_select('joint_knee_l')" tabindex="0" role="button" aria-label="Left Knee Joint" style="cursor: pointer;">
+          <circle cx="214" cy="450" r="5.0" fill="${this._jointFill('joint_knee_l', selectedParts)}" stroke="${this._strokeColor('joint_knee_l', '#94A3B8', selectedParts)}" stroke-width="${this._strokeWidth('joint_knee_l', 1.4, selectedParts)}" />
+          <circle cx="214" cy="450" r="22" fill="transparent" pointer-events="all" />
+        </g>
 
-        <!-- Ankle Joints (Talocrural) -->
-        <circle id="joint_ankle_r" cx="144" cy="606" r="10" 
-                class="anatomy-svg-node" onclick="window.__bodymap_select('joint_ankle_r')"
-                fill="${this._fillColor('joint_ankle_r', 'url(#jointGradient)', selectedParts)}"
-                stroke="${this._strokeColor('joint_ankle_r', '#38BDF8', selectedParts)}"
-                stroke-width="${this._strokeWidth('joint_ankle_r', 2, selectedParts)}"
-                tabindex="0" role="button" aria-label="Right Ankle Joint" style="cursor: pointer;" />
-        <circle id="joint_ankle_l" cx="216" cy="606" r="10" 
-                class="anatomy-svg-node" onclick="window.__bodymap_select('joint_ankle_l')"
-                fill="${this._fillColor('joint_ankle_l', 'url(#jointGradient)', selectedParts)}"
-                stroke="${this._strokeColor('joint_ankle_l', '#38BDF8', selectedParts)}"
-                stroke-width="${this._strokeWidth('joint_ankle_l', 2, selectedParts)}"
-                tabindex="0" role="button" aria-label="Left Ankle Joint" style="cursor: pointer;" />
+        <!-- Ankles -->
+        <g id="joint_ankle_r" class="anatomy-svg-node" onclick="window.__bodymap_select('joint_ankle_r')" tabindex="0" role="button" aria-label="Right Ankle Joint" style="cursor: pointer;">
+          <circle cx="143" cy="604" r="4.2" fill="${this._jointFill('joint_ankle_r', selectedParts)}" stroke="${this._strokeColor('joint_ankle_r', '#94A3B8', selectedParts)}" stroke-width="${this._strokeWidth('joint_ankle_r', 1.4, selectedParts)}" />
+          <circle cx="143" cy="604" r="22" fill="transparent" pointer-events="all" />
+        </g>
+        <g id="joint_ankle_l" class="anatomy-svg-node" onclick="window.__bodymap_select('joint_ankle_l')" tabindex="0" role="button" aria-label="Left Ankle Joint" style="cursor: pointer;">
+          <circle cx="217" cy="604" r="4.2" fill="${this._jointFill('joint_ankle_l', selectedParts)}" stroke="${this._strokeColor('joint_ankle_l', '#94A3B8', selectedParts)}" stroke-width="${this._strokeWidth('joint_ankle_l', 1.4, selectedParts)}" />
+          <circle cx="217" cy="604" r="22" fill="transparent" pointer-events="all" />
+        </g>
       </g>
 
       <!-- ============================================================ -->
-      <!-- 3. DEEP VISCERAL ORGANS (Accessible when Peel/Combined Active) -->
+      <!-- 4. VISCERAL INTERNAL ORGANS (CLEAN FLAT LAYERS)              -->
       <!-- ============================================================ -->
-      <g id="layer_deep_organs" style="${organVisibility}">
-        <!-- Gallbladder (Right Upper Quadrant Under Liver Bed) -->
-        <g id="organ_gallbladder" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_gallbladder')"
-           tabindex="0" role="button" aria-label="Gallbladder, Right Upper Quadrant" style="cursor: pointer;">
-          <ellipse cx="156" cy="238" rx="8" ry="12" 
-                   fill="${this._fillColor('organ_gallbladder', '#16A34A', selectedParts)}" 
-                   stroke="${this._strokeColor('organ_gallbladder', '#4ADE80', selectedParts)}" 
-                   stroke-width="${this._strokeWidth('organ_gallbladder', 2.2, selectedParts)}" />
+      <g id="layer_visceral_organs" style="${organVisibility}">
+        <!-- Brain -->
+        <g id="organ_brain" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_brain')" style="cursor: pointer;">
+          <ellipse cx="180" cy="50" rx="18" ry="18" fill="${this._fillColor('organ_brain', '#EC4899', selectedParts, 0.45)}" stroke="${this._strokeColor('organ_brain', '#F472B6', selectedParts)}" stroke-width="1.6"/>
         </g>
 
-        <!-- Pancreas (Retroperitoneal Behind Stomach) -->
-        <g id="organ_pancreas" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_pancreas')"
-           tabindex="0" role="button" aria-label="Pancreas, Epigastric / Transverse" style="cursor: pointer;">
-          <path d="M 158,234 Q 182,228 206,236 Q 202,244 158,241 Z" 
-                fill="${this._fillColor('organ_pancreas', '#CA8A04', selectedParts)}" 
-                stroke="${this._strokeColor('organ_pancreas', '#FDE047', selectedParts)}" 
-                stroke-width="${this._strokeWidth('organ_pancreas', 2.2, selectedParts)}" />
+        <!-- Thyroid -->
+        <g id="organ_thyroid" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_thyroid')" style="cursor: pointer;">
+          <path d="M 174,104 Q 180,108 186,104 Q 184,114 180,111 Q 176,114 174,104 Z" fill="${this._fillColor('organ_thyroid', '#8B5CF6', selectedParts, 0.55)}" stroke="${this._strokeColor('organ_thyroid', '#C4B5FD', selectedParts)}" stroke-width="1.4"/>
         </g>
 
-        <!-- Spleen (Posterior Lateral Left Upper Quadrant) -->
-        <g id="organ_spleen" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_spleen')"
-           tabindex="0" role="button" aria-label="Spleen, Left Upper Quadrant" style="cursor: pointer;">
-          <ellipse cx="222" cy="214" rx="11" ry="15" 
-                   fill="${this._fillColor('organ_spleen', '#831843', selectedParts)}" 
-                   stroke="${this._strokeColor('organ_spleen', '#F472B6', selectedParts)}" 
-                   stroke-width="${this._strokeWidth('organ_spleen', 2.2, selectedParts)}" />
+        <!-- Lungs -->
+        <g id="organ_lungs" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_lungs')" style="cursor: pointer;">
+          <path d="M 146,140 C 154,140 162,150 162,182 C 162,204 146,204 138,198 C 128,188 128,154 146,140 Z" fill="${this._fillColor('organ_lungs', '#FB7185', selectedParts, 0.4)}" stroke="${this._strokeColor('organ_lungs', '#F43F5E', selectedParts)}" stroke-width="1.6"/>
+          <path d="M 214,140 C 206,140 198,150 198,182 C 198,204 214,204 222,198 C 232,188 232,154 214,140 Z" fill="${this._fillColor('organ_lungs', '#FB7185', selectedParts, 0.4)}" stroke="${this._strokeColor('organ_lungs', '#F43F5E', selectedParts)}" stroke-width="1.6"/>
         </g>
 
-        <!-- Bilateral Kidneys & Ureters (Faint outlines accessible in Front) -->
-        <g id="organ_kidney_r" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_kidney_r')"
-           tabindex="0" role="button" aria-label="Right Kidney" style="cursor: pointer;">
-          <ellipse cx="150" cy="238" rx="10" ry="16" 
-                   fill="${this._fillColor('organ_kidney_r', '#7F1D1D', selectedParts, 0.4)}" 
-                   stroke="${this._strokeColor('organ_kidney_r', '#EF4444', selectedParts)}" 
-                   stroke-width="${this._strokeWidth('organ_kidney_r', 1.8, selectedParts)}" opacity="0.8" />
+        <!-- Heart -->
+        <g id="organ_heart" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_heart')" style="cursor: pointer;">
+          <ellipse cx="188" cy="172" rx="16" ry="18" fill="${this._fillColor('organ_heart', '#DC2626', selectedParts, 0.6)}" stroke="${this._strokeColor('organ_heart', '#EF4444', selectedParts)}" stroke-width="2"/>
         </g>
-        <g id="organ_kidney_l" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_kidney_l')"
-           tabindex="0" role="button" aria-label="Left Kidney" style="cursor: pointer;">
-          <ellipse cx="210" cy="232" rx="10" ry="16" 
-                   fill="${this._fillColor('organ_kidney_l', '#7F1D1D', selectedParts, 0.4)}" 
-                   stroke="${this._strokeColor('organ_kidney_l', '#EF4444', selectedParts)}" 
-                   stroke-width="${this._strokeWidth('organ_kidney_l', 1.8, selectedParts)}" opacity="0.8" />
+
+        <!-- Liver -->
+        <g id="organ_liver" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_liver')" style="cursor: pointer;">
+          <path d="M 136,214 Q 172,210 172,230 Q 166,248 136,244 Z" fill="${this._fillColor('organ_liver', '#D97706', selectedParts, 0.55)}" stroke="${this._strokeColor('organ_liver', '#F59E0B', selectedParts)}" stroke-width="1.8"/>
         </g>
-        <!-- Ureters Descending -->
+
+        <!-- Stomach -->
+        <g id="organ_stomach" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_stomach')" style="cursor: pointer;">
+          <path d="M 186,216 Q 212,212 212,234 Q 204,252 186,246 Z" fill="${this._fillColor('organ_stomach', '#EA580C', selectedParts, 0.55)}" stroke="${this._strokeColor('organ_stomach', '#FB923C', selectedParts)}" stroke-width="1.8"/>
+        </g>
+
+        <!-- Gallbladder -->
+        <g id="organ_gallbladder" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_gallbladder')" style="cursor: pointer;">
+          <ellipse cx="158" cy="238" rx="5" ry="7" fill="${this._fillColor('organ_gallbladder', '#10B981', selectedParts, 0.6)}" stroke="${this._strokeColor('organ_gallbladder', '#34D399', selectedParts)}" stroke-width="1.4"/>
+        </g>
+
+        <!-- Pancreas -->
+        <g id="organ_pancreas" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_pancreas')" style="cursor: pointer;">
+          <ellipse cx="182" cy="242" rx="14" ry="5" fill="${this._fillColor('organ_pancreas', '#F59E0B', selectedParts, 0.5)}" stroke="${this._strokeColor('organ_pancreas', '#FBBF24', selectedParts)}" stroke-width="1.4"/>
+        </g>
+
+        <!-- Spleen -->
+        <g id="organ_spleen" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_spleen')" style="cursor: pointer;">
+          <ellipse cx="220" cy="226" rx="7" ry="10" fill="${this._fillColor('organ_spleen', '#EC4899', selectedParts, 0.5)}" stroke="${this._strokeColor('organ_spleen', '#F472B6', selectedParts)}" stroke-width="1.4"/>
+        </g>
+
+        <!-- Kidneys (Bilateral) -->
+        <g id="organ_kidney_r" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_kidney_r')" style="cursor: pointer;">
+          <ellipse cx="150" cy="238" rx="8" ry="13" fill="${this._fillColor('organ_kidney_r', '#991B1B', selectedParts, 0.45)}" stroke="${this._strokeColor('organ_kidney_r', '#EF4444', selectedParts)}" stroke-width="1.4"/>
+        </g>
+        <g id="organ_kidney_l" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_kidney_l')" style="cursor: pointer;">
+          <ellipse cx="210" cy="234" rx="8" ry="13" fill="${this._fillColor('organ_kidney_l', '#991B1B', selectedParts, 0.45)}" stroke="${this._strokeColor('organ_kidney_l', '#EF4444', selectedParts)}" stroke-width="1.4"/>
+        </g>
+
+        <!-- Ureters -->
         <g id="organ_ureter_r" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_ureter_r')" style="cursor: pointer;">
-          <line x1="150" y1="254" x2="172" y2="298" stroke="${this._strokeColor('organ_ureter_r', '#EAB308', selectedParts)}" stroke-width="${this._strokeWidth('organ_ureter_r', 2.2, selectedParts)}" stroke-dasharray="3,2" />
+          <line x1="150" y1="250" x2="172" y2="296" stroke="${this._strokeColor('organ_ureter_r', '#EAB308', selectedParts)}" stroke-width="2" stroke-dasharray="3,2"/>
         </g>
         <g id="organ_ureter_l" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_ureter_l')" style="cursor: pointer;">
-          <line x1="210" y1="248" x2="188" y2="298" stroke="${this._strokeColor('organ_ureter_l', '#EAB308', selectedParts)}" stroke-width="${this._strokeWidth('organ_ureter_l', 2.2, selectedParts)}" stroke-dasharray="3,2" />
-        </g>
-      </g>
-
-      <!-- ============================================================ -->
-      <!-- 4. SUPERFICIAL VISCERAL ORGANS (Peelable via Slider)          -->
-      <!-- ============================================================ -->
-      <g id="layer_superficial_organs" style="${organVisibility} opacity: ${peelOp}; transition: opacity 0.25s ease;">
-        
-        <!-- Brain (Cerebrum & Hemispheres within Skull) -->
-        <g id="organ_brain" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_brain')"
-           tabindex="0" role="button" aria-label="Brain, Cerebrum" style="cursor: pointer;">
-          <ellipse cx="180" cy="52" rx="20" ry="22" 
-                   fill="${this._fillColor('organ_brain', '#EC4899', selectedParts)}" 
-                   stroke="${this._strokeColor('organ_brain', '#F472B6', selectedParts)}" 
-                   stroke-width="${this._strokeWidth('organ_brain', 2.2, selectedParts)}" />
+          <line x1="210" y1="246" x2="188" y2="296" stroke="${this._strokeColor('organ_ureter_l', '#EAB308', selectedParts)}" stroke-width="2" stroke-dasharray="3,2"/>
         </g>
 
-        <!-- Thyroid Gland (Neck Base) -->
-        <g id="organ_thyroid" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_thyroid')"
-           tabindex="0" role="button" aria-label="Thyroid Gland, Anterior Neck" style="cursor: pointer;">
-          <path d="M 172,102 Q 180,108 188,102 Q 185,114 180,111 Q 175,114 172,102 Z" 
-                fill="${this._fillColor('organ_thyroid', '#8B5CF6', selectedParts)}" 
-                stroke="${this._strokeColor('organ_thyroid', '#C4B5FD', selectedParts)}" 
-                stroke-width="${this._strokeWidth('organ_thyroid', 2, selectedParts)}" />
+        <!-- Large Intestine -->
+        <g id="organ_large_intestine" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_large_intestine')" style="cursor: pointer;">
+          <path d="M 140,292 L 140,256 Q 180,250 220,256 L 220,292" fill="none" stroke="${this._strokeColor('organ_large_intestine', '#B45309', selectedParts)}" stroke-width="8" stroke-linecap="round" opacity="0.85"/>
         </g>
 
-        <!-- Lungs (Bilateral Thoracic Cavities) -->
-        <g id="organ_lungs" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_lungs')"
-           tabindex="0" role="button" aria-label="Lungs, Bilateral Thorax" style="cursor: pointer;">
-          <!-- Right Lung (Patient Right / Viewer Left) -->
-          <path d="M 144,136 C 152,136 162,148 162,184 C 162,210 144,210 135,204 C 124,192 124,154 144,136 Z" 
-                fill="${this._fillColor('organ_lungs', '#FB7185', selectedParts, 0.45)}" 
-                stroke="${this._strokeColor('organ_lungs', '#F43F5E', selectedParts)}" 
-                stroke-width="${this._strokeWidth('organ_lungs', 2.2, selectedParts)}" />
-          <!-- Left Lung (Patient Left / Viewer Right) -->
-          <path d="M 216,136 C 208,136 198,148 198,184 C 198,210 216,210 225,204 C 236,192 236,154 216,136 Z" 
-                fill="${this._fillColor('organ_lungs', '#FB7185', selectedParts, 0.45)}" 
-                stroke="${this._strokeColor('organ_lungs', '#F43F5E', selectedParts)}" 
-                stroke-width="${this._strokeWidth('organ_lungs', 2.2, selectedParts)}" />
+        <!-- Small Intestine -->
+        <g id="organ_small_intestine" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_small_intestine')" style="cursor: pointer;">
+          <rect x="156" y="266" width="48" height="24" rx="8" fill="${this._fillColor('organ_small_intestine', '#D97706', selectedParts, 0.55)}" stroke="${this._strokeColor('organ_small_intestine', '#FDE68A', selectedParts)}" stroke-width="1.6"/>
         </g>
 
-        <!-- Heart (Thorax Left-of-Center Mediastinum) -->
-        <g id="organ_heart" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_heart')"
-           tabindex="0" role="button" aria-label="Heart, Cardiac Precordium" style="cursor: pointer;">
-          <ellipse cx="190" cy="172" rx="18" ry="20" 
-                   fill="${this._fillColor('organ_heart', '#DC2626', selectedParts)}" 
-                   stroke="${this._strokeColor('organ_heart', '#EF4444', selectedParts)}" 
-                   stroke-width="${this._strokeWidth('organ_heart', 2.6, selectedParts)}" />
-          <!-- Aortic arch -->
-          <path d="M 185,154 Q 190,146 196,154" stroke="#FFFFFF" stroke-width="2.2" fill="none" opacity="0.8"/>
+        <!-- Bladder -->
+        <g id="organ_bladder" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_bladder')" style="cursor: pointer;">
+          <ellipse cx="180" cy="302" rx="14" ry="10" fill="${this._fillColor('organ_bladder', '#F59E0B', selectedParts, 0.6)}" stroke="${this._strokeColor('organ_bladder', '#FEF08A', selectedParts)}" stroke-width="1.8"/>
         </g>
 
-        <!-- Liver (Patient Right Upper Quadrant / Viewer Left) -->
-        <g id="organ_liver" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_liver')"
-           tabindex="0" role="button" aria-label="Liver, Right Upper Quadrant" style="cursor: pointer;">
-          <path d="M 134,214 Q 174,208 174,232 Q 166,254 134,248 Q 122,234 134,214 Z" 
-                fill="${this._fillColor('organ_liver', '#92400E', selectedParts)}" 
-                stroke="${this._strokeColor('organ_liver', '#F59E0B', selectedParts)}" 
-                stroke-width="${this._strokeWidth('organ_liver', 2.4, selectedParts)}" />
-        </g>
-
-        <!-- Stomach (Patient Left Upper Quadrant / Viewer Right) -->
-        <g id="organ_stomach" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_stomach')"
-           tabindex="0" role="button" aria-label="Stomach, Left Upper Quadrant" style="cursor: pointer;">
-          <path d="M 184,214 Q 214,210 214,236 Q 206,256 184,248 Z" 
-                fill="${this._fillColor('organ_stomach', '#EA580C', selectedParts)}" 
-                stroke="${this._strokeColor('organ_stomach', '#FB923C', selectedParts)}" 
-                stroke-width="${this._strokeWidth('organ_stomach', 2.4, selectedParts)}" />
-        </g>
-
-        <!-- Large Intestine (Colon Framework) -->
-        <g id="organ_large_intestine" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_large_intestine')"
-           tabindex="0" role="button" aria-label="Large Intestine Colon" style="cursor: pointer;">
-          <path d="M 136,296 L 136,256 Q 180,250 224,256 L 224,296" fill="none" 
-                stroke="${this._strokeColor('organ_large_intestine', '#B45309', selectedParts)}" 
-                stroke-width="${this._strokeWidth('organ_large_intestine', 9.5, selectedParts)}" 
-                stroke-linecap="round" stroke-linejoin="round" opacity="0.9" />
-        </g>
-
-        <!-- Small Intestine (Central Mesenteric Loops) -->
-        <g id="organ_small_intestine" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_small_intestine')"
-           tabindex="0" role="button" aria-label="Small Intestine" style="cursor: pointer;">
-          <rect x="152" y="268" width="56" height="26" rx="9" 
-                fill="${this._fillColor('organ_small_intestine', '#D97706', selectedParts)}" 
-                stroke="${this._strokeColor('organ_small_intestine', '#FDE68A', selectedParts)}" 
-                stroke-width="${this._strokeWidth('organ_small_intestine', 2, selectedParts)}" />
-        </g>
-
-        <!-- Urinary Bladder (Pelvic Midline) -->
-        <g id="organ_bladder" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_bladder')"
-           tabindex="0" role="button" aria-label="Urinary Bladder, Hypogastric Pelvis" style="cursor: pointer;">
-          <ellipse cx="180" cy="302" rx="15" ry="12" 
-                   fill="${this._fillColor('organ_bladder', '#F59E0B', selectedParts)}" 
-                   stroke="${this._strokeColor('organ_bladder', '#FEF08A', selectedParts)}" 
-                   stroke-width="${this._strokeWidth('organ_bladder', 2.2, selectedParts)}" />
-        </g>
-
-        <!-- Reproductive Organs (Pelvic Floor) -->
-        <g id="organ_reproductive" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_reproductive')"
-           tabindex="0" role="button" aria-label="Reproductive Organs, Pelvis" style="cursor: pointer;">
-          <circle cx="180" cy="318" r="8" 
-                  fill="${this._fillColor('organ_reproductive', '#DB2777', selectedParts)}" 
-                  stroke="${this._strokeColor('organ_reproductive', '#F472B6', selectedParts)}" 
-                  stroke-width="${this._strokeWidth('organ_reproductive', 2, selectedParts)}" />
+        <!-- Reproductive -->
+        <g id="organ_reproductive" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_reproductive')" style="cursor: pointer;">
+          <circle cx="180" cy="318" r="7" fill="${this._fillColor('organ_reproductive', '#DB2777', selectedParts, 0.6)}" stroke="${this._strokeColor('organ_reproductive', '#F472B6', selectedParts)}" stroke-width="1.6"/>
         </g>
       </g>
     `;
@@ -883,178 +587,114 @@ export class BodyMap2D {
 
   _renderBackViewSVG(selectedParts) {
     return `
-      <!-- ============================================================ -->
-      <!-- BACK VIEW (POSTERIOR): SPINE, KIDNEYS, URETERS & SKELETON     -->
-      <!-- ============================================================ -->
-      <g id="layer_back_view">
-        <!-- Body Silhouette Background Guide -->
-        <path d="M 180,18 C 160,18 146,34 146,62 C 146,88 156,102 166,108 
-                 C 134,114 104,134 96,178 C 84,222 68,318 68,335 C 68,342 78,346 84,340 
-                 C 98,320 114,240 120,218 C 120,256 116,316 122,380 C 130,442 126,512 148,605 
-                 C 152,624 140,642 134,660 C 130,670 144,676 156,672 C 166,668 170,648 170,612 
-                 C 172,570 174,472 180,335 C 186,472 188,570 190,612 
-                 C 190,648 194,668 204,672 C 216,676 230,670 226,660 
-                 C 220,642 208,624 212,605 C 234,512 230,442 238,380 
-                 C 244,316 240,256 240,218 C 246,240 262,320 276,340 
-                 C 282,346 292,342 292,335 C 292,318 276,222 264,178 
-                 C 256,134 226,114 194,108 C 204,102 214,88 214,62 
-                 C 214,34 200,18 180,18 Z"
-              fill="#060e1b" stroke="#1e293b" stroke-width="1.6" />
+      <!-- Soft body silhouette background -->
+      <path d="M 180,18 C 160,18 146,34 146,62 C 146,88 156,102 166,108 
+               C 134,114 104,134 96,178 C 84,222 68,318 68,335 C 68,342 78,346 84,340 
+               C 98,320 114,240 120,218 C 120,256 116,316 122,380 C 130,442 126,512 148,605 
+               C 152,624 140,642 134,660 C 130,670 144,676 156,672 C 166,668 170,648 170,612 
+               C 172,570 174,472 180,335 C 186,472 188,570 190,612 
+               C 190,648 194,668 204,672 C 216,676 230,670 226,660 
+               C 220,642 208,624 212,605 C 234,512 230,442 238,380 
+               C 244,316 240,256 240,218 C 246,240 262,320 276,340 
+               C 282,346 292,342 292,335 C 292,318 276,222 264,178 
+               C 256,134 226,114 194,108 C 204,102 214,88 214,62 
+               C 214,34 200,18 180,18 Z"
+            fill="#081224" stroke="#162338" stroke-width="1.4" opacity="0.9" />
 
-        <!-- Posterior Cranium / Occiput & Nuchal Lines -->
-        <g id="skel_skull" class="anatomy-svg-node" onclick="window.__bodymap_select('skel_skull')" 
-           tabindex="0" role="button" aria-label="Posterior Skull / Occipital Bone" style="cursor: pointer;">
-          <ellipse cx="180" cy="58" rx="30" ry="34" 
-                   fill="${this._fillColor('skel_skull', 'url(#boneGradient)', selectedParts)}" 
-                   stroke="${this._strokeColor('skel_skull', '#FFFFFF', selectedParts)}" 
-                   stroke-width="${this._strokeWidth('skel_skull', 1.8, selectedParts)}" />
-          <path d="M 158,44 Q 180,34 202,44" stroke="#64748B" stroke-width="1.2" fill="none" stroke-dasharray="2,2"/>
-          <circle cx="180" cy="66" r="2.8" fill="#64748B"/>
-          <path d="M 160,68 Q 180,78 200,68" stroke="#94A3B8" stroke-width="2" fill="none"/>
-        </g>
-
-        <!-- Cervical Spine Spinous Processes (C1-C7) -->
-        <g id="skel_spine_cervical" class="anatomy-svg-node" onclick="window.__bodymap_select('skel_spine_cervical')" 
-           tabindex="0" role="button" aria-label="Cervical Spine Neck" style="cursor: pointer;">
-          <rect x="175" y="98" width="10" height="25" rx="3.5" 
-                fill="${this._fillColor('skel_spine_cervical', '#475569', selectedParts)}" 
-                stroke="${this._strokeColor('skel_spine_cervical', '#38BDF8', selectedParts)}" 
-                stroke-width="${this._strokeWidth('skel_spine_cervical', 1.6, selectedParts)}" />
-          <!-- C7 Vertebra Prominens -->
-          <circle cx="180" cy="120" r="3" fill="#E2E8F0" stroke="#38BDF8" stroke-width="1"/>
-        </g>
-
-        <!-- Bilateral Scapulae (Dorsal Shoulder Blades) -->
-        <!-- In Back View: Viewer Left is Patient Left! -->
-        <g style="cursor: pointer;">
-          <polygon points="158,134 128,144 142,192" fill="#334155" stroke="#CBD5E1" stroke-width="1.8"/>
-          <line x1="128" y1="144" x2="152" y2="150" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round"/>
-        </g>
-        <g style="cursor: pointer;">
-          <polygon points="202,134 232,144 218,192" fill="#334155" stroke="#CBD5E1" stroke-width="1.8"/>
-          <line x1="232" y1="144" x2="208" y2="150" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round"/>
-        </g>
-
-        <!-- Posterior Rib Arches -->
-        <path d="M 174,136 Q 132,144 126,175" fill="none" stroke="#64748B" stroke-width="2" opacity="0.6"/>
-        <path d="M 186,136 Q 228,144 234,175" fill="none" stroke="#64748B" stroke-width="2" opacity="0.6"/>
-        <path d="M 174,152 Q 128,162 124,192" fill="none" stroke="#64748B" stroke-width="2" opacity="0.6"/>
-        <path d="M 186,152 Q 232,162 236,192" fill="none" stroke="#64748B" stroke-width="2" opacity="0.6"/>
-        <path d="M 174,168 Q 126,180 124,210" fill="none" stroke="#64748B" stroke-width="2" opacity="0.6"/>
-        <path d="M 186,168 Q 234,180 236,210" fill="none" stroke="#64748B" stroke-width="2" opacity="0.6"/>
-
-        <!-- Thoracic Spine (T1-T12 Dorsal Spinous Column) -->
-        <g id="skel_spine_thoracic" class="anatomy-svg-node" onclick="window.__bodymap_select('skel_spine_thoracic')" 
-           tabindex="0" role="button" aria-label="Thoracic Spine Mid Back" style="cursor: pointer;">
-          <rect x="174" y="126" width="12" height="88" rx="3.5" 
-                fill="${this._fillColor('skel_spine_thoracic', '#334155', selectedParts)}" 
-                stroke="${this._strokeColor('skel_spine_thoracic', '#38BDF8', selectedParts)}" 
-                stroke-width="${this._strokeWidth('skel_spine_thoracic', 2, selectedParts)}" />
-          <line x1="180" y1="134" x2="180" y2="141" stroke="#FFFFFF" stroke-width="2.2"/>
-          <line x1="180" y1="147" x2="180" y2="154" stroke="#FFFFFF" stroke-width="2.2"/>
-          <line x1="180" y1="160" x2="180" y2="167" stroke="#FFFFFF" stroke-width="2.2"/>
-          <line x1="180" y1="173" x2="180" y2="180" stroke="#FFFFFF" stroke-width="2.2"/>
-          <line x1="180" y1="186" x2="180" y2="193" stroke="#FFFFFF" stroke-width="2.2"/>
-          <line x1="180" y1="199" x2="180" y2="206" stroke="#FFFFFF" stroke-width="2.2"/>
-        </g>
-
-        <!-- RETROPERITONEAL KIDNEYS (Prime Anatomical Access in Posterior View) -->
-        <!-- Note Laterality: Viewer Left = Patient Left Kidney! -->
-        <g id="organ_kidney_l" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_kidney_l')"
-           tabindex="0" role="button" aria-label="Left Kidney (Patient Left / Viewer Left)" style="cursor: pointer;">
-          <rect x="140" y="218" width="20" height="32" rx="10" 
-                fill="${this._fillColor('organ_kidney_l', '#7F1D1D', selectedParts)}" 
-                stroke="${this._strokeColor('organ_kidney_l', '#EF4444', selectedParts)}" 
-                stroke-width="${this._strokeWidth('organ_kidney_l', 2.4, selectedParts)}" />
-        </g>
-
-        <!-- Patient Right Kidney (Viewer Right) -->
-        <g id="organ_kidney_r" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_kidney_r')"
-           tabindex="0" role="button" aria-label="Right Kidney (Patient Right / Viewer Right)" style="cursor: pointer;">
-          <rect x="200" y="224" width="20" height="32" rx="10" 
-                fill="${this._fillColor('organ_kidney_r', '#7F1D1D', selectedParts)}" 
-                stroke="${this._strokeColor('organ_kidney_r', '#EF4444', selectedParts)}" 
-                stroke-width="${this._strokeWidth('organ_kidney_r', 2.4, selectedParts)}" />
-        </g>
-
-        <!-- Bilateral Ureters Descending Retroperitoneally -->
-        <g id="organ_ureter_l" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_ureter_l')"
-           tabindex="0" role="button" aria-label="Left Ureter" style="cursor: pointer;">
-          <line x1="150" y1="250" x2="170" y2="294" 
-                stroke="${this._strokeColor('organ_ureter_l', '#EAB308', selectedParts)}" 
-                stroke-width="${this._strokeWidth('organ_ureter_l', 3, selectedParts)}" stroke-dasharray="4,2" />
-        </g>
-        <g id="organ_ureter_r" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_ureter_r')"
-           tabindex="0" role="button" aria-label="Right Ureter" style="cursor: pointer;">
-          <line x1="210" y1="256" x2="190" y2="294" 
-                stroke="${this._strokeColor('organ_ureter_r', '#EAB308', selectedParts)}" 
-                stroke-width="${this._strokeWidth('organ_ureter_r', 3, selectedParts)}" stroke-dasharray="4,2" />
-        </g>
-
-        <!-- Lumbar Spine (L1-L5 Broad Quadrangular Spinous Processes) -->
-        <g id="skel_spine_lumbar" class="anatomy-svg-node" onclick="window.__bodymap_select('skel_spine_lumbar')" 
-           tabindex="0" role="button" aria-label="Lumbar Spine L1-L5" style="cursor: pointer;">
-          <rect x="174" y="222" width="12" height="44" rx="2.5" 
-                fill="${this._fillColor('skel_spine_lumbar', '#475569', selectedParts)}" 
-                stroke="${this._strokeColor('skel_spine_lumbar', '#38BDF8', selectedParts)}" 
-                stroke-width="${this._strokeWidth('skel_spine_lumbar', 2, selectedParts)}" />
-          <rect x="176.5" y="226" width="7" height="4.5" rx="1.2" fill="#CBD5E1"/>
-          <rect x="176.5" y="235" width="7" height="4.5" rx="1.2" fill="#CBD5E1"/>
-          <rect x="176.5" y="244" width="7" height="4.5" rx="1.2" fill="#CBD5E1"/>
-          <rect x="176.5" y="253" width="7" height="4.5" rx="1.2" fill="#CBD5E1"/>
-        </g>
-
-        <!-- Posterior Pelvis & Sacroiliac Joint Line -->
-        <g id="skel_pelvis" class="anatomy-svg-node" onclick="window.__bodymap_select('skel_pelvis')" 
-           tabindex="0" role="button" aria-label="Dorsal Pelvis and Sacroiliac" style="cursor: pointer;">
-          <path d="M 136,270 C 142,262 164,266 180,279 C 196,266 218,262 224,270 
-                   C 230,282 224,308 212,312 C 198,316 188,312 180,311 C 172,312 162,316 148,312 
-                   C 136,308 130,282 136,270 Z" 
-                fill="${this._fillColor('skel_pelvis', '#334155', selectedParts)}" 
-                stroke="${this._strokeColor('skel_pelvis', '#E2E8F0', selectedParts)}" 
-                stroke-width="${this._strokeWidth('skel_pelvis', 1.8, selectedParts)}" />
-          <!-- Posterior Superior Iliac Spines (PSIS / Dimples) -->
-          <circle cx="160" cy="278" r="2.8" fill="#64748B"/>
-          <circle cx="200" cy="278" r="2.8" fill="#64748B"/>
-        </g>
-
-        <!-- Sacrum Dorsal Crest & Sacral Foramina -->
-        <g id="skel_spine_sacrum" class="anatomy-svg-node" onclick="window.__bodymap_select('skel_spine_sacrum')" 
-           tabindex="0" role="button" aria-label="Dorsal Sacrum & Coccyx" style="cursor: pointer;">
-          <polygon points="174,270 186,270 181,299 179,299" 
-                   fill="${this._fillColor('skel_spine_sacrum', '#475569', selectedParts)}" 
-                   stroke="${this._strokeColor('skel_spine_sacrum', '#38BDF8', selectedParts)}" 
-                   stroke-width="${this._strokeWidth('skel_spine_sacrum', 1.8, selectedParts)}" />
-          <line x1="180" y1="270" x2="180" y2="299" stroke="#CBD5E1" stroke-width="1.8"/>
-          <ellipse cx="180" cy="303" rx="1.8" ry="3" fill="#CBD5E1"/>
-        </g>
-
-        <!-- Posterior Limbs (Olecranon, Linea Aspera, Calcaneus Heels to Toes) -->
-        <path d="M 242,138 Q 246,170 255,214" stroke="#CBD5E1" stroke-width="6.5" stroke-linecap="round"/>
-        <circle cx="255" cy="214" r="4.5" fill="#FFFFFF"/>
-        <path d="M 258,220 Q 264,260 272,300" stroke="#CBD5E1" stroke-width="3.8" stroke-linecap="round"/>
-        
-        <path d="M 118,138 Q 114,170 105,214" stroke="#CBD5E1" stroke-width="6.5" stroke-linecap="round"/>
-        <circle cx="105" cy="214" r="4.5" fill="#FFFFFF"/>
-        <path d="M 102,220 Q 96,260 88,300" stroke="#CBD5E1" stroke-width="3.8" stroke-linecap="round"/>
-
-        <!-- Posterior Legs (Head to Feet) -->
-        <path d="M 156,308 Q 150,370 146,442" stroke="url(#boneShaftGrad)" stroke-width="8" stroke-linecap="round"/>
-        <path d="M 146,458 L 144,598" stroke="url(#boneShaftGrad)" stroke-width="6" stroke-linecap="round"/>
-        <!-- Calcaneus (Heel Bone) -->
-        <ellipse cx="144" cy="608" rx="5.5" ry="7.5" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1.4"/>
-        <line x1="144" y1="616" x2="148" y2="652" stroke="#CBD5E1" stroke-width="3" stroke-linecap="round"/>
-
-        <path d="M 204,308 Q 210,370 214,442" stroke="url(#boneShaftGrad)" stroke-width="8" stroke-linecap="round"/>
-        <path d="M 214,458 L 216,598" stroke="url(#boneShaftGrad)" stroke-width="6" stroke-linecap="round"/>
-        <!-- Calcaneus (Heel Bone) -->
-        <ellipse cx="216" cy="608" rx="5.5" ry="7.5" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1.4"/>
-        <line x1="216" y1="616" x2="212" y2="652" stroke="#CBD5E1" stroke-width="3" stroke-linecap="round"/>
+      <!-- POSTERIOR SKULL / OCCIPUT (y: 20 to 88) -->
+      <g id="skel_skull" class="anatomy-svg-node" onclick="window.__bodymap_select('skel_skull')" 
+         tabindex="0" role="button" aria-label="Posterior Skull Occipital" style="cursor: pointer;">
+        <ellipse cx="180" cy="54" rx="26" ry="32" 
+                 fill="${this._fillColor('skel_skull', '#E2E8F0', selectedParts)}" 
+                 stroke="${this._strokeColor('skel_skull', '#94A3B8', selectedParts)}" 
+                 stroke-width="${this._strokeWidth('skel_skull', 1.6, selectedParts)}" />
+        <path d="M 160,66 Q 180,74 200,66" stroke="#64748B" stroke-width="1.4" fill="none"/>
+        <circle cx="180" cy="54" r="28" fill="transparent" pointer-events="all"/>
       </g>
+
+      <!-- CERVICAL SPINE (y: 92 to 120) -->
+      <g id="skel_spine_cervical" class="anatomy-svg-node" onclick="window.__bodymap_select('skel_spine_cervical')"
+         tabindex="0" role="button" aria-label="Cervical Spine Neck" style="cursor: pointer;">
+        <rect x="175" y="92" width="10" height="28" rx="3.5" 
+              fill="${this._fillColor('skel_spine_cervical', '#CBD5E1', selectedParts)}" 
+              stroke="${this._strokeColor('skel_spine_cervical', '#64748B', selectedParts)}" 
+              stroke-width="${this._strokeWidth('skel_spine_cervical', 1.4, selectedParts)}" />
+      </g>
+
+      <!-- SCAPULAE (DORSAL SHOULDER BLADES) -->
+      <!-- In back view: viewer left is patient left! -->
+      <g id="skel_scapula_l" class="anatomy-svg-node" onclick="window.__bodymap_select('skel_scapula_l')" style="cursor: pointer;">
+        <polygon points="158,134 128,144 142,190" fill="${this._fillColor('skel_scapula_l', '#334155', selectedParts)}" stroke="${this._strokeColor('skel_scapula_l', '#CBD5E1', selectedParts)}" stroke-width="1.6"/>
+      </g>
+      <g id="skel_scapula_r" class="anatomy-svg-node" onclick="window.__bodymap_select('skel_scapula_r')" style="cursor: pointer;">
+        <polygon points="202,134 232,144 218,190" fill="${this._fillColor('skel_scapula_r', '#334155', selectedParts)}" stroke="${this._strokeColor('skel_scapula_r', '#CBD5E1', selectedParts)}" stroke-width="1.6"/>
+      </g>
+
+      <!-- THORACIC SPINE (DORSAL T1-T12, y: 122 to 218) -->
+      <g id="skel_spine_thoracic" class="anatomy-svg-node" onclick="window.__bodymap_select('skel_spine_thoracic')"
+         tabindex="0" role="button" aria-label="Thoracic Spine Mid Back" style="cursor: pointer;">
+        <rect x="174" y="122" width="12" height="96" rx="3.5" 
+              fill="${this._fillColor('skel_spine_thoracic', '#CBD5E1', selectedParts)}" 
+              stroke="${this._strokeColor('skel_spine_thoracic', '#64748B', selectedParts)}" 
+              stroke-width="${this._strokeWidth('skel_spine_thoracic', 1.6, selectedParts)}" />
+        <circle cx="180" cy="170" r="24" fill="transparent" pointer-events="all"/>
+      </g>
+
+      <!-- LUMBAR SPINE (y: 220 to 274) -->
+      <g id="skel_spine_lumbar" class="anatomy-svg-node" onclick="window.__bodymap_select('skel_spine_lumbar')"
+         tabindex="0" role="button" aria-label="Lumbar Spine Lower Back" style="cursor: pointer;">
+        <rect x="174" y="220" width="12" height="52" rx="3" 
+              fill="${this._fillColor('skel_spine_lumbar', '#CBD5E1', selectedParts)}" 
+              stroke="${this._strokeColor('skel_spine_lumbar', '#64748B', selectedParts)}" 
+              stroke-width="${this._strokeWidth('skel_spine_lumbar', 1.6, selectedParts)}" />
+      </g>
+
+      <!-- DORSAL KIDNEYS & URETERS -->
+      <g id="organ_kidney_l" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_kidney_l')" style="cursor: pointer;">
+        <ellipse cx="150" cy="236" rx="9" ry="14" fill="${this._fillColor('organ_kidney_l', '#991B1B', selectedParts, 0.6)}" stroke="${this._strokeColor('organ_kidney_l', '#EF4444', selectedParts)}" stroke-width="1.6"/>
+      </g>
+      <g id="organ_kidney_r" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_kidney_r')" style="cursor: pointer;">
+        <ellipse cx="210" cy="236" rx="9" ry="14" fill="${this._fillColor('organ_kidney_r', '#991B1B', selectedParts, 0.6)}" stroke="${this._strokeColor('organ_kidney_r', '#EF4444', selectedParts)}" stroke-width="1.6"/>
+      </g>
+      <g id="organ_ureter_l" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_ureter_l')" style="cursor: pointer;">
+        <line x1="150" y1="248" x2="172" y2="294" stroke="${this._strokeColor('organ_ureter_l', '#EAB308', selectedParts)}" stroke-width="2" stroke-dasharray="3,2"/>
+      </g>
+      <g id="organ_ureter_r" class="anatomy-svg-node" onclick="window.__bodymap_select('organ_ureter_r')" style="cursor: pointer;">
+        <line x1="210" y1="248" x2="188" y2="294" stroke="${this._strokeColor('organ_ureter_r', '#EAB308', selectedParts)}" stroke-width="2" stroke-dasharray="3,2"/>
+      </g>
+
+      <!-- POSTERIOR PELVIS & SACRUM -->
+      <g id="skel_pelvis" class="anatomy-svg-node" onclick="window.__bodymap_select('skel_pelvis')"
+         tabindex="0" role="button" aria-label="Dorsal Pelvis" style="cursor: pointer;">
+        <path d="M 134,272 C 142,264 166,268 180,282 C 194,268 218,264 226,272 
+                 C 232,284 226,312 212,316 C 196,322 186,318 180,316 C 174,318 164,322 148,316 
+                 C 134,312 128,284 134,272 Z" 
+              fill="${this._fillColor('skel_pelvis', '#CBD5E1', selectedParts)}" 
+              stroke="${this._strokeColor('skel_pelvis', '#94A3B8', selectedParts)}" 
+              stroke-width="${this._strokeWidth('skel_pelvis', 1.8, selectedParts)}" />
+      </g>
+      <g id="skel_spine_sacrum" class="anatomy-svg-node" onclick="window.__bodymap_select('skel_spine_sacrum')"
+         tabindex="0" role="button" aria-label="Sacrum and Coccyx" style="cursor: pointer;">
+        <polygon points="174,274 186,274 181,306 179,306" 
+                 fill="${this._fillColor('skel_spine_sacrum', '#94A3B8', selectedParts)}" 
+                 stroke="${this._strokeColor('skel_spine_sacrum', '#64748B', selectedParts)}" 
+                 stroke-width="1.4" />
+      </g>
+
+      <!-- POSTERIOR LIMBS (DOWN TO DISTAL FEET) -->
+      <path d="M 156,308 Q 150,370 146,446" stroke="${this._strokeColor('bone_femur_r', '#CBD5E1', selectedParts)}" stroke-width="7.5" stroke-linecap="round"/>
+      <path d="M 146,458 L 144,598" stroke="${this._strokeColor('bone_shin_r', '#CBD5E1', selectedParts)}" stroke-width="6" stroke-linecap="round"/>
+      <ellipse cx="144" cy="608" rx="5.5" ry="7.5" fill="#E2E8F0" stroke="#94A3B8" stroke-width="1.4"/>
+      <circle cx="148" cy="656" r="3.2" fill="#CBD5E1"/>
+
+      <path d="M 204,308 Q 210,370 214,446" stroke="${this._strokeColor('bone_femur_l', '#CBD5E1', selectedParts)}" stroke-width="7.5" stroke-linecap="round"/>
+      <path d="M 214,458 L 216,598" stroke="${this._strokeColor('bone_shin_l', '#CBD5E1', selectedParts)}" stroke-width="6" stroke-linecap="round"/>
+      <ellipse cx="216" cy="608" rx="5.5" ry="7.5" fill="#E2E8F0" stroke="#94A3B8" stroke-width="1.4"/>
+      <circle cx="212" cy="656" r="3.2" fill="#CBD5E1"/>
     `;
   }
 
-  _fillColor(id, defaultFill, selectedParts, defaultOpacity = 0.85) {
+  _fillColor(id, defaultFill, selectedParts, opacity = 0.85) {
     if (selectedParts.includes(id)) {
       return "url(#accessibleHatch)";
     }
@@ -1070,14 +710,21 @@ export class BodyMap2D {
 
   _strokeWidth(id, defaultWidth, selectedParts) {
     if (selectedParts.includes(id)) {
-      return Math.max(3.5, defaultWidth + 1.6);
+      return Math.max(3.2, defaultWidth + 1.4);
     }
     return defaultWidth;
   }
 
+  _jointFill(id, selectedParts) {
+    if (selectedParts.includes(id)) {
+      return "#0284C7";
+    }
+    return "rgba(30, 41, 59, 0.7)";
+  }
+
   _renderSelectedChips(selectedParts) {
     if (!selectedParts || selectedParts.length === 0) {
-      return `<span style="font-size: 0.72rem; color: #64748B; font-style: italic;">Tap any bone, joint or organ on the skeleton to begin intake</span>`;
+      return `<span style="font-size: 0.7rem; color: #64748B; font-style: italic;">Tap any bone, joint or organ to select</span>`;
     }
 
     const currentLang = window.app?.currentLanguage || "en";
@@ -1087,11 +734,11 @@ export class BodyMap2D {
       const lat = item ? item.laterality.toUpperCase() : "";
 
       return `
-        <span class="organ-tag-pill" style="display: inline-flex; align-items: center; gap: 4px; background: rgba(2, 132, 199, 0.25); border: 1px solid #38BDF8; color: #FFFFFF; padding: 2px 9px; border-radius: 6px; font-size: 0.72rem;">
+        <span class="organ-tag-pill" style="display: inline-flex; align-items: center; gap: 4px; background: rgba(2, 132, 199, 0.25); border: 1px solid #38BDF8; color: #FFFFFF; padding: 2px 8px; border-radius: 5px; font-size: 0.7rem;">
           <strong>${name}</strong>
-          ${lat ? `<small style="color: #38BDF8; font-size: 0.65rem;">(${lat})</small>` : ''}
+          ${lat ? `<small style="color: #38BDF8; font-size: 0.62rem;">(${lat})</small>` : ''}
           <button type="button" onclick="event.stopPropagation(); window.__bodymap_inst.handleRegionClick('${id}')" 
-                  style="background: transparent; border: none; color: #94A3B8; cursor: pointer; padding: 0 2px; font-weight: bold;" title="Remove selection">✕</button>
+                  style="background: transparent; border: none; color: #94A3B8; cursor: pointer; padding: 0 2px; font-weight: bold;" title="Deselect">✕</button>
         </span>
       `;
     }).join('');
@@ -1111,7 +758,6 @@ export class BodyMap2D {
       }
     });
 
-    // Update accessible dropdown
     const selectEl = this.container.querySelector("#accessibleOrganSelector");
     if (selectEl && selectedParts.length > 0) {
       selectEl.value = selectedParts[selectedParts.length - 1];
@@ -1123,7 +769,7 @@ export class BodyMap2D {
     const rack = this.container.querySelector("#bodymapSelectedChipsRack");
     if (rack) {
       rack.innerHTML = `
-        <span style="font-size: 0.72rem; color: #94A3B8; font-weight: 700;">Selected Site(s):</span>
+        <span style="font-size: 0.7rem; color: #94A3B8; font-weight: 700;">Selected Site(s):</span>
         ${this._renderSelectedChips(selectedParts)}
       `;
     }
@@ -1131,44 +777,8 @@ export class BodyMap2D {
 
   _bindInteractiveEvents() {
     if (!this.container) return;
-    const svgEl = this.container.querySelector("#anatomySvgMap");
     const tooltip = this.container.querySelector("#anatomyHoverTooltip");
-    if (!svgEl) return;
 
-    // Pan interaction
-    svgEl.addEventListener("mousedown", (e) => {
-      if (e.target.classList.contains("anatomy-svg-node")) return;
-      this.isPanning = true;
-      this.startX = e.clientX - this.panX;
-      this.startY = e.clientY - this.panY;
-      svgEl.style.cursor = "grabbing";
-    });
-
-    window.addEventListener("mousemove", (e) => {
-      if (!this.isPanning) return;
-      this.panX = e.clientX - this.startX;
-      this.panY = e.clientY - this.startY;
-      this._applyTransform();
-    });
-
-    window.addEventListener("mouseup", () => {
-      if (this.isPanning) {
-        this.isPanning = false;
-        if (svgEl) svgEl.style.cursor = "default";
-      }
-    });
-
-    // Mouse wheel zoom
-    svgEl.addEventListener("wheel", (e) => {
-      e.preventDefault();
-      if (e.deltaY < 0) {
-        this.zoomIn();
-      } else {
-        this.zoomOut();
-      }
-    }, { passive: false });
-
-    // Keyboard navigation & accessibility on nodes
     const nodes = this.container.querySelectorAll(".anatomy-svg-node");
     nodes.forEach(node => {
       node.addEventListener("mouseenter", (e) => {
@@ -1182,15 +792,15 @@ export class BodyMap2D {
         const lat = item.laterality.toUpperCase();
 
         tooltip.innerHTML = `
-          <strong style="color: #38BDF8; font-size: 0.78rem; display: block;">${name}</strong>
-          <span style="font-size: 0.68rem; color: #CBD5E1;">Laterality: ${lat} • System: ${sys}</span>
-          <span style="font-size: 0.65rem; color: #94A3B8; display: block; margin-top: 3px;">Click to open clinical question intake</span>
+          <strong style="color: #38BDF8; font-size: 0.76rem; display: block;">${name}</strong>
+          <span style="font-size: 0.66rem; color: #CBD5E1;">Laterality: ${lat} • System: ${sys}</span>
+          <span style="font-size: 0.62rem; color: #94A3B8; display: block; margin-top: 2px;">Click to toggle selection</span>
         `;
         tooltip.style.display = "block";
 
         const rect = this.container.getBoundingClientRect();
         tooltip.style.left = `${Math.min(rect.width - 200, Math.max(10, e.clientX - rect.left + 15))}px`;
-        tooltip.style.top = `${Math.min(rect.height - 80, Math.max(10, e.clientY - rect.top + 15))}px`;
+        tooltip.style.top = `${Math.min(rect.height - 70, Math.max(10, e.clientY - rect.top + 15))}px`;
       });
 
       node.addEventListener("mouseleave", () => {
@@ -1206,23 +816,15 @@ export class BodyMap2D {
     });
   }
 
-  _handleKeyDown(e) {
-    if (e.key === "+" || e.key === "=") this.zoomIn();
-    if (e.key === "-" || e.key === "_") this.zoomOut();
-    if (e.key === "0") this.resetTransform();
-  }
-
   destroy() {
     if (this.unsubscribe) {
       this.unsubscribe();
       this.unsubscribe = null;
     }
-    window.removeEventListener("keydown", this._handleKeyDown);
     if (this.container) {
       this.container.innerHTML = "";
     }
   }
 }
 
-// Backward-compatible alias
 export const BodyMap2DFallback = BodyMap2D;

@@ -1,14 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MediKiosk - Clinical Intake & Diagnostic Platform</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23FFFFFF%22 stroke-width=%222.5%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><path d=%22M12 2v20M2 12h20%22/></svg>">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23FFFFFF%22 stroke-width=%222.5%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><path d=%22M12 2v20M2 12h20%22/></svg>">
   <!-- PDF.js for Universal Medical PDF Parsing -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <!-- Tesseract.js for Real-Time OCR -->
@@ -16,14 +20,16 @@
   <!-- MediaPipe FaceMesh for Contactless rPPG Facial Tracking -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
 </head>
+
 <body>
 
   <!-- Navigation Bar -->
   <header class="navbar">
     <div class="brand">
       <div class="brand-badge">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 2v20M2 12h20"/>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2v20M2 12h20" />
         </svg>
       </div>
       <div class="brand-text">
@@ -33,12 +39,21 @@
     </div>
 
     <div style="display: flex; align-items: center; gap: 12px;">
-      <div style="display: flex; align-items: center; gap: 8px; background: #F9FAFB; border: 1px solid var(--grey-300); padding: 5px 12px; border-radius: 6px; font-family: var(--font-mono); font-size: 0.72rem;">
-        <span style="width: 7px; height: 7px; border-radius: 50%; background: var(--primary); box-shadow: 0 0 6px var(--primary);"></span>
-        <span style="color: var(--grey-800); font-weight: 700;">STATION-04</span>
-        <span style="color: var(--grey-400);">•</span>
-        <span style="color: var(--grey-600);" id="liveClockDisplay">Live Sync</span>
-      </div>
+
+
+      <!-- Brand-Inspired ADHD & Wellness Assistant Navbar Button -->
+      <button id="navWellnessBtn" class="nav-wellness-btn" onclick="window.app.openAdhdScreening()"
+        title="ADHD & Focus Screening Assistant">
+        <span class="nav-wellness-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
+            <circle cx="12" cy="12" r="5" />
+            <path d="M12 7a5 5 0 0 1 5 5" />
+          </svg>
+        </span>
+        <span class="nav-wellness-text">Wellness / Focus Intake</span>
+      </button>
     </div>
 
     <div class="nav-actions">
@@ -65,28 +80,7 @@
   </header>
 
   <!-- Quick Action Bar -->
-  <aside class="kiosk-quick-bar">
-    <div class="quick-bar-left">
-      <span><strong>Clinical Intake Station</strong> (OPD Live Triage)</span>
-    </div>
-    <div class="quick-bar-actions">
-      <button class="quick-chip" onclick="window.app.resetSession()">
-        ➕ New Patient
-      </button>
-      <button class="quick-chip" onclick="window.app.openAbhaLookupModal()" style="border-color: var(--emerald-border); color: var(--emerald-dark); background: var(--emerald-light);">
-        🆔 ABHA Patient Lookup
-      </button>
-      <button class="quick-chip" onclick="window.app.goToStep(2)" style="border-color: #38BDF8; color: #0284C7; font-weight: 700;">
-        🦴 2D Human Skeleton Map
-      </button>
-      <button class="quick-chip" onclick="window.app.goToStep(2)">
-        🩺 Vitals Scan
-      </button>
-      <button class="quick-chip" onclick="window.app.goToStep(3); window.app.triggerFileInput();">
-        📄 Upload Document
-      </button>
-    </div>
-  </aside>
+
 
   <!-- Main Application Container -->
   <main class="main-wrapper" id="appContainer">
@@ -97,7 +91,8 @@
   <footer class="kiosk-footer">
     <div style="display: flex; align-items: center; gap: 8px;">
       <span class="kiosk-footer-dot"></span>
-      <span><strong>MediKiosk Enterprise v2.4</strong> • Ayushman Bharat Digital Mission (ABDM) Milestone 1-3 Certified</span>
+      <span><strong>MediKiosk Enterprise v2.4</strong> • Ayushman Bharat Digital Mission (ABDM) Milestone 1-3
+        Certified</span>
     </div>
     <div class="kiosk-footer-links">
       <span>DPDP Act 2023 Encrypted</span>
@@ -114,21 +109,26 @@
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
         <div style="display: flex; align-items: center; gap: 8px;">
           <span style="font-size: 1.4rem;">🌐</span>
-          <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--text-primary);">ABDM HL7 FHIR R4 Bundle Record</h3>
+          <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--text-primary);">ABDM HL7 FHIR R4 Bundle Record
+          </h3>
         </div>
-        <button class="btn-3d btn-3d-secondary" style="padding: 4px 10px; font-size: 0.8rem;" onclick="window.app.closeFhirModal()">✕</button>
+        <button class="btn-3d btn-3d-secondary" style="padding: 4px 10px; font-size: 0.8rem;"
+          onclick="window.app.closeFhirModal()">✕</button>
       </div>
 
       <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">
         Standardized Ayushman Bharat Digital Mission (ABDM) compliant Health Information Exchange (HIE) bundle.
       </p>
 
-      <div style="background: var(--bg-surface-inset); border-radius: 12px; padding: 1rem; overflow: auto; flex: 1; border: 1px solid var(--border-light);">
-        <pre id="fhirCodeBlock" style="font-family: var(--font-mono); font-size: 0.76rem; color: var(--emerald-deep);"></pre>
+      <div
+        style="background: var(--bg-surface-inset); border-radius: 12px; padding: 1rem; overflow: auto; flex: 1; border: 1px solid var(--border-light);">
+        <pre id="fhirCodeBlock"
+          style="font-family: var(--font-mono); font-size: 0.76rem; color: var(--emerald-deep);"></pre>
       </div>
 
       <div style="margin-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
-        <span style="font-size: 0.75rem; color: var(--emerald); font-weight: 600;">✓ Composition, Condition, Observation & MedicationStatement Included</span>
+        <span style="font-size: 0.75rem; color: var(--emerald); font-weight: 600;">✓ Composition, Condition, Observation
+          & MedicationStatement Included</span>
         <button class="btn-3d btn-3d-primary" onclick="window.app.closeFhirModal()">Close Viewer</button>
       </div>
     </div>
@@ -137,27 +137,35 @@
   <!-- Medical Document Viewer Modal -->
   <div id="docViewerModal" class="modal-backdrop-3d" style="display: none;">
     <div class="modal-content-3d" style="max-width: 900px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-light); padding-bottom: 8px;">
+      <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-light); padding-bottom: 8px;">
         <div style="display: flex; align-items: center; gap: 8px;">
           <span id="docViewerIcon" style="font-size: 1.4rem;">📄</span>
           <div>
-            <h3 id="docViewerTitle" style="font-size: 1.1rem; color: var(--text-primary); font-weight: 800;">Original Medical Document</h3>
+            <h3 id="docViewerTitle" style="font-size: 1.1rem; color: var(--text-primary); font-weight: 800;">Original
+              Medical Document</h3>
             <span id="docViewerCategory" class="pill-3d pill-3d-blue">Prescription</span>
           </div>
         </div>
-        <button class="btn-3d btn-3d-secondary" style="padding: 4px 10px; font-size: 0.8rem;" onclick="window.app.closeDocViewer()">✕</button>
+        <button class="btn-3d btn-3d-secondary" style="padding: 4px 10px; font-size: 0.8rem;"
+          onclick="window.app.closeDocViewer()">✕</button>
       </div>
 
       <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 1rem; flex: 1; overflow: hidden;">
         <!-- Left: Image Preview -->
-        <div style="background: var(--bg-surface-inset); border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-light);">
-          <img id="docViewerImage" src="" alt="Document Scan" style="max-width: 100%; max-height: 50vh; object-fit: contain;">
+        <div
+          style="background: var(--bg-surface-inset); border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-light);">
+          <img id="docViewerImage" src="" alt="Document Scan"
+            style="max-width: 100%; max-height: 50vh; object-fit: contain;">
         </div>
 
         <!-- Right: Extracted Clinical Findings -->
-        <div style="background: var(--bg-surface-inset); border-radius: 12px; padding: 1rem; overflow-y: auto; border: 1px solid var(--border-light);">
-          <h4 style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 700; margin-bottom: 8px;">Extracted Clinical Content</h4>
-          <pre id="docViewerText" style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-primary); white-space: pre-wrap; line-height: 1.4;"></pre>
+        <div
+          style="background: var(--bg-surface-inset); border-radius: 12px; padding: 1rem; overflow-y: auto; border: 1px solid var(--border-light);">
+          <h4 style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 700; margin-bottom: 8px;">Extracted
+            Clinical Content</h4>
+          <pre id="docViewerText"
+            style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-primary); white-space: pre-wrap; line-height: 1.4;"></pre>
         </div>
       </div>
 
@@ -170,4 +178,5 @@
   <!-- Core App Scripts -->
   <script type="module" src="src/app.js"></script>
 </body>
+
 </html>

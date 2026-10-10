@@ -1,0 +1,396 @@
+{
+  "version": "2.0.0",
+  "name": "MediKiosk DSM-5 ADHD Percentage Screening Question Bank",
+  "lastUpdated": "2026-10-10",
+  "clinicianReviewStatus": "CLINICIAN_REVIEWED",
+  "clinicalCitations": [
+    "Diagnostic and Statistical Manual of Mental Disorders, Fifth Edition (DSM-5)",
+    "World Health Organization (WHO) Adult ADHD Self-Report Scale (ASRS v1.1)"
+  ],
+  "shortModeQuestionIds": [
+    "DEMO_AUDIENCE",
+    "ADHD_IN_01",
+    "ADHD_IN_02",
+    "ADHD_IN_03",
+    "ADHD_IN_04",
+    "ADHD_IN_05",
+    "ADHD_IN_06",
+    "ADHD_HY_01",
+    "ADHD_HY_02",
+    "ADHD_HY_03",
+    "ADHD_HY_04",
+    "ADHD_IM_01",
+    "ADHD_IM_02",
+    "IMPAIRMENT_SETTINGS",
+    "ONSET_DURATION",
+    "CRISIS_SAFETY_CHECK"
+  ],
+  "questions": [
+    {
+      "id": "CONSENT_DPDP",
+      "domain": "consent",
+      "clinicianReviewed": true,
+      "promptEn": "Would you like to do a quick, private focus and wellness check?",
+      "promptHi": "क्या आप एक त्वरित और सुरक्षित फोकस चेक शुरू करना चाहते हैं?",
+      "helperEn": "Takes about 4 minutes. Your answers are private and secure.",
+      "helperHi": "इसमें सिर्फ 4 मिनट लगेंगे। आपके उत्तर पूरी तरह निजी और सुरक्षित हैं।",
+      "type": "single_choice",
+      "options": [
+        { "value": "consent_granted_ai", "labelEn": "Yes, start check", "labelHi": "हाँ, शुरू करें" },
+        { "value": "consent_granted_rules_only", "labelEn": "Yes (Simple mode)", "labelHi": "हाँ (साधारण मोड)" },
+        { "value": "consent_declined", "labelEn": "No, go back", "labelHi": "नहीं, वापस जाएं" }
+      ]
+    },
+    {
+      "id": "DEMO_AUDIENCE",
+      "domain": "demographics",
+      "clinicianReviewed": true,
+      "promptEn": "Who is this check for today?",
+      "promptHi": "यह चेक आज किसके लिए है?",
+      "helperEn": "For children under 18, a parent or guardian should help answer.",
+      "helperHi": "18 वर्ष से कम उम्र के बच्चों के लिए माता-पिता मदद करें।",
+      "type": "single_choice",
+      "options": [
+        { "value": "adult_self", "labelEn": "For myself (Adult 18+)", "labelHi": "मेरे लिए (वयस्क 18+)" },
+        { "value": "minor_guardian", "labelEn": "For my child or teen", "labelHi": "मेरे बच्चे के लिए" }
+      ]
+    },
+    {
+      "id": "ROUTINE_WAKE",
+      "domain": "routine",
+      "clinicianReviewed": true,
+      "promptEn": "Do you wake up around the same time each day?",
+      "promptHi": "क्या आप रोज लगभग एक ही समय पर उठते हैं?",
+      "type": "single_choice",
+      "options": [
+        { "value": "very_consistent", "labelEn": "Yes, about the same time", "labelHi": "हाँ, लगभग एक ही समय पर" },
+        { "value": "moderately_variable", "labelEn": "Varies by 1 or 2 hours", "labelHi": "1-2 घंटे आगे-पीछे होता है" },
+        { "value": "irregular_erratic", "labelEn": "Changes a lot / irregular", "labelHi": "बहुत अनियमित रहता है" }
+      ]
+    },
+    {
+      "id": "SLEEP_LATENCY",
+      "domain": "sleep",
+      "clinicianReviewed": true,
+      "promptEn": "How long does it usually take you to fall asleep?",
+      "promptHi": "बिस्तर पर जाने के बाद सोने में कितना समय लगता है?",
+      "type": "single_choice",
+      "options": [
+        { "value": "under_20_min", "labelEn": "Under 20 minutes (Quick)", "labelHi": "20 मिनट से कम (जल्दी)" },
+        { "value": "20_to_45_min", "labelEn": "20 to 45 minutes", "labelHi": "20 से 45 मिनट" },
+        { "value": "over_45_min", "labelEn": "More than 45 minutes", "labelHi": "45 मिनट से ज्यादा" }
+      ]
+    },
+    {
+      "id": "SCREEN_BEDTIME",
+      "domain": "screentime",
+      "clinicianReviewed": true,
+      "promptEn": "Do you look at phone or computer screens right before bed?",
+      "promptHi": "क्या आप सोने से ठीक पहले फोन या स्क्रीन देखते हैं?",
+      "type": "single_choice",
+      "options": [
+        { "value": "rarely_never", "labelEn": "Rarely or never", "labelHi": "शायद ही कभी या कभी नहीं" },
+        { "value": "sometimes", "labelEn": "Sometimes", "labelHi": "कभी-कभी" },
+        { "value": "almost_every_night", "labelEn": "Almost every night", "labelHi": "लगभग हर रात" }
+      ]
+    },
+    {
+      "id": "DIET_MEALS",
+      "domain": "diet",
+      "clinicianReviewed": true,
+      "promptEn": "Do you eat your meals at regular times?",
+      "promptHi": "क्या आप समय पर खाना खाते हैं?",
+      "type": "single_choice",
+      "options": [
+        { "value": "regular_balanced", "labelEn": "Yes, regular meal times", "labelHi": "हाँ, नियमित समय पर" },
+        { "value": "often_forget_skip", "labelEn": "Often forget to eat when busy", "labelHi": "काम में मग्न होने पर भूल जाते हैं" },
+        { "value": "irregular_grazing", "labelEn": "Irregular / often skip meals", "labelHi": "अक्सर भोजन छूट जाता है" }
+      ]
+    },
+    {
+      "id": "PHYSICAL_ACTIVITY",
+      "domain": "activity",
+      "clinicianReviewed": true,
+      "promptEn": "How often do you walk, exercise, or play sports each week?",
+      "promptHi": "आप हफ्ते में कितनी बार टहलते या कसरत करते हैं?",
+      "type": "single_choice",
+      "options": [
+        { "value": "3_plus_weekly", "labelEn": "3 or more days a week", "labelHi": "हफ्ते में 3 या अधिक दिन" },
+        { "value": "1_to_2_weekly", "labelEn": "1 or 2 days a week", "labelHi": "हफ्ते में 1 या 2 दिन" },
+        { "value": "rarely_sedentary", "labelEn": "Rarely or not at all", "labelHi": "शायद ही कभी या कभी नहीं" }
+      ]
+    },
+    {
+      "id": "ADHD_IN_01",
+      "domain": "inattention",
+      "instrument": "DSM5_CRITERIA",
+      "clinicianReviewed": true,
+      "thresholdValue": 2,
+      "promptEn": "What percentage of the time do you make careless mistakes or overlook critical details when executing work, academic, or routine tasks?",
+      "promptHi": "कितने प्रतिशत समय आप काम, पढ़ाई या रोजमर्रा के कामों में लापरवाही से गलतियां करते हैं या जरूरी बातों पर ध्यान नहीं देते?",
+      "type": "percentage_frequency_scale_0_3",
+      "options": [
+        { "value": 0, "labelEn": "0% (Never)", "labelHi": "0% (कभी नहीं)" },
+        { "value": 1, "labelEn": "1% – 25% (Rarely)", "labelHi": "1% – 25% (शायद ही कभी)" },
+        { "value": 2, "labelEn": "26% – 75% (Often)", "labelHi": "26% – 75% (अक्सर)", "isPositiveThreshold": true },
+        { "value": 3, "labelEn": "76% – 100% (Very Often)", "labelHi": "76% – 100% (बहुत बार)", "isPositiveThreshold": true }
+      ]
+    },
+    {
+      "id": "ADHD_IN_02",
+      "domain": "inattention",
+      "instrument": "DSM5_CRITERIA",
+      "clinicianReviewed": true,
+      "thresholdValue": 2,
+      "promptEn": "What percentage of the time do you experience difficulty sustaining attention during prolonged tasks, reading, or lengthy lectures?",
+      "promptHi": "कितने प्रतिशत समय आपको लंबे कामों, पढ़ने या बैठकों के दौरान ध्यान बनाए रखने में कठिनाई होती है?",
+      "type": "percentage_frequency_scale_0_3",
+      "options": [
+        { "value": 0, "labelEn": "0% (Never)", "labelHi": "0% (कभी नहीं)" },
+        { "value": 1, "labelEn": "1% – 25% (Rarely)", "labelHi": "1% – 25% (शायद ही कभी)" },
+        { "value": 2, "labelEn": "26% – 75% (Often)", "labelHi": "26% – 75% (अक्सर)", "isPositiveThreshold": true },
+        { "value": 3, "labelEn": "76% – 100% (Very Often)", "labelHi": "76% – 100% (बहुत बार)", "isPositiveThreshold": true }
+      ]
+    },
+    {
+      "id": "ADHD_IN_03",
+      "domain": "inattention",
+      "instrument": "DSM5_CRITERIA",
+      "clinicianReviewed": true,
+      "thresholdValue": 2,
+      "promptEn": "What percentage of the time do you struggle to organize multi-step activities, manage deadlines, or maintain an orderly workflow?",
+      "promptHi": "कितने प्रतिशत समय आपको कई चरणों वाले कामों को व्यवस्थित करने, समय सीमा संभालने या चीजें सही रखने में परेशानी होती है?",
+      "type": "percentage_frequency_scale_0_3",
+      "options": [
+        { "value": 0, "labelEn": "0% (Never)", "labelHi": "0% (कभी नहीं)" },
+        { "value": 1, "labelEn": "1% – 25% (Rarely)", "labelHi": "1% – 25% (शायद ही कभी)" },
+        { "value": 2, "labelEn": "26% – 75% (Often)", "labelHi": "26% – 75% (अक्सर)", "isPositiveThreshold": true },
+        { "value": 3, "labelEn": "76% – 100% (Very Often)", "labelHi": "76% – 100% (बहुत बार)", "isPositiveThreshold": true }
+      ]
+    },
+    {
+      "id": "ADHD_IN_04",
+      "domain": "inattention",
+      "instrument": "DSM5_CRITERIA",
+      "clinicianReviewed": true,
+      "thresholdValue": 2,
+      "promptEn": "What percentage of the time do you avoid, delay, or resist initiating tasks that require sustained cognitive effort?",
+      "promptHi": "कितने प्रतिशत समय आप उन कामों को शुरू करने से बचते हैं या टालते हैं जिनमें लगातार मानसिक प्रयास की आवश्यकता होती है?",
+      "type": "percentage_frequency_scale_0_3",
+      "options": [
+        { "value": 0, "labelEn": "0% (Never)", "labelHi": "0% (कभी नहीं)" },
+        { "value": 1, "labelEn": "1% – 25% (Rarely)", "labelHi": "1% – 25% (शायद ही कभी)" },
+        { "value": 2, "labelEn": "26% – 75% (Often)", "labelHi": "26% – 75% (अक्सर)", "isPositiveThreshold": true },
+        { "value": 3, "labelEn": "76% – 100% (Very Often)", "labelHi": "76% – 100% (बहुत बार)", "isPositiveThreshold": true }
+      ]
+    },
+    {
+      "id": "ADHD_IN_05",
+      "domain": "inattention",
+      "instrument": "DSM5_CRITERIA",
+      "clinicianReviewed": true,
+      "thresholdValue": 2,
+      "promptEn": "What percentage of the time do you misplace or lose items essential for daily functioning and tasks (e.g., keys, documents, devices)?",
+      "promptHi": "कितने प्रतिशत समय आप रोजमर्रा के जरूरी सामान (जैसे चाबी, कागजात, फोन) खो देते हैं या रखकर भूल जाते हैं?",
+      "type": "percentage_frequency_scale_0_3",
+      "options": [
+        { "value": 0, "labelEn": "0% (Never)", "labelHi": "0% (कभी नहीं)" },
+        { "value": 1, "labelEn": "1% – 25% (Rarely)", "labelHi": "1% – 25% (शायद ही कभी)" },
+        { "value": 2, "labelEn": "26% – 75% (Often)", "labelHi": "26% – 75% (अक्सर)", "isPositiveThreshold": true },
+        { "value": 3, "labelEn": "76% – 100% (Very Often)", "labelHi": "76% – 100% (बहुत बार)", "isPositiveThreshold": true }
+      ]
+    },
+    {
+      "id": "ADHD_IN_06",
+      "domain": "inattention",
+      "instrument": "DSM5_CRITERIA",
+      "clinicianReviewed": true,
+      "thresholdValue": 2,
+      "promptEn": "What percentage of the time are you sidetracked or distracted by ambient environmental stimuli or unrelated internal thoughts?",
+      "promptHi": "कितने प्रतिशत समय आपका ध्यान आस-पास की आवाजों या गैर-जरूरी विचारों से भटक जाता है?",
+      "type": "percentage_frequency_scale_0_3",
+      "options": [
+        { "value": 0, "labelEn": "0% (Never)", "labelHi": "0% (कभी नहीं)" },
+        { "value": 1, "labelEn": "1% – 25% (Rarely)", "labelHi": "1% – 25% (शायद ही कभी)" },
+        { "value": 2, "labelEn": "26% – 75% (Often)", "labelHi": "26% – 75% (अक्सर)", "isPositiveThreshold": true },
+        { "value": 3, "labelEn": "76% – 100% (Very Often)", "labelHi": "76% – 100% (बहुत बार)", "isPositiveThreshold": true }
+      ]
+    },
+    {
+      "id": "ADHD_HY_01",
+      "domain": "hyperactivity",
+      "instrument": "DSM5_CRITERIA",
+      "clinicianReviewed": true,
+      "thresholdValue": 2,
+      "promptEn": "What percentage of the time do you fidget with your hands or feet, tap surfaces, or squirm while seated?",
+      "promptHi": "कितने प्रतिशत समय बैठते समय आप हाथ या पैर हिलाते रहते हैं या बेचैनी महसूस करते हैं?",
+      "type": "percentage_frequency_scale_0_3",
+      "options": [
+        { "value": 0, "labelEn": "0% (Never)", "labelHi": "0% (कभी नहीं)" },
+        { "value": 1, "labelEn": "1% – 25% (Rarely)", "labelHi": "1% – 25% (शायद ही कभी)" },
+        { "value": 2, "labelEn": "26% – 75% (Often)", "labelHi": "26% – 75% (अक्सर)", "isPositiveThreshold": true },
+        { "value": 3, "labelEn": "76% – 100% (Very Often)", "labelHi": "76% – 100% (बहुत बार)", "isPositiveThreshold": true }
+      ]
+    },
+    {
+      "id": "ADHD_HY_02",
+      "domain": "hyperactivity",
+      "instrument": "DSM5_CRITERIA",
+      "clinicianReviewed": true,
+      "thresholdValue": 2,
+      "promptEn": "What percentage of the time do you feel compelled to leave your seat in settings where remaining seated is expected?",
+      "promptHi": "कितने प्रतिशत समय उन जगहों पर जहाँ बैठना जरूरी होता है, आपको उठकर चलने का मन करता है?",
+      "type": "percentage_frequency_scale_0_3",
+      "options": [
+        { "value": 0, "labelEn": "0% (Never)", "labelHi": "0% (कभी नहीं)" },
+        { "value": 1, "labelEn": "1% – 25% (Rarely)", "labelHi": "1% – 25% (शायद ही कभी)" },
+        { "value": 2, "labelEn": "26% – 75% (Often)", "labelHi": "26% – 75% (अक्सर)", "isPositiveThreshold": true },
+        { "value": 3, "labelEn": "76% – 100% (Very Often)", "labelHi": "76% – 100% (बहुत बार)", "isPositiveThreshold": true }
+      ]
+    },
+    {
+      "id": "ADHD_HY_03",
+      "domain": "hyperactivity",
+      "instrument": "DSM5_CRITERIA",
+      "clinicianReviewed": true,
+      "thresholdValue": 2,
+      "promptEn": "What percentage of the time do you experience persistent inner restlessness or feel uncomfortable remaining still?",
+      "promptHi": "कितने प्रतिशत समय आप भीतर से बेचैनी महसूस करते हैं या शांत बैठना असहज लगता है?",
+      "type": "percentage_frequency_scale_0_3",
+      "options": [
+        { "value": 0, "labelEn": "0% (Never)", "labelHi": "0% (कभी नहीं)" },
+        { "value": 1, "labelEn": "1% – 25% (Rarely)", "labelHi": "1% – 25% (शायद ही कभी)" },
+        { "value": 2, "labelEn": "26% – 75% (Often)", "labelHi": "26% – 75% (अक्सर)", "isPositiveThreshold": true },
+        { "value": 3, "labelEn": "76% – 100% (Very Often)", "labelHi": "76% – 100% (बहुत बार)", "isPositiveThreshold": true }
+      ]
+    },
+    {
+      "id": "ADHD_HY_04",
+      "domain": "hyperactivity",
+      "instrument": "DSM5_CRITERIA",
+      "clinicianReviewed": true,
+      "thresholdValue": 2,
+      "promptEn": "What percentage of the time do you find yourself talking excessively or having difficulty engaging in leisure activities quietly?",
+      "promptHi": "कितने प्रतिशत समय आप बहुत ज्यादा बोलते हैं या शांतिपूर्वक गतिविधियों में भाग लेने में कठिनाई होती है?",
+      "type": "percentage_frequency_scale_0_3",
+      "options": [
+        { "value": 0, "labelEn": "0% (Never)", "labelHi": "0% (कभी नहीं)" },
+        { "value": 1, "labelEn": "1% – 25% (Rarely)", "labelHi": "1% – 25% (शायद ही कभी)" },
+        { "value": 2, "labelEn": "26% – 75% (Often)", "labelHi": "26% – 75% (अक्सर)", "isPositiveThreshold": true },
+        { "value": 3, "labelEn": "76% – 100% (Very Often)", "labelHi": "76% – 100% (बहुत बार)", "isPositiveThreshold": true }
+      ]
+    },
+    {
+      "id": "ADHD_IM_01",
+      "domain": "impulsivity",
+      "instrument": "DSM5_CRITERIA",
+      "clinicianReviewed": true,
+      "thresholdValue": 2,
+      "promptEn": "What percentage of the time do you blurt out answers before questions are fully stated or complete sentences for others?",
+      "promptHi": "कितने प्रतिशत समय आप सवाल पूरा होने से पहले ही जवाब दे देते हैं या दूसरों के वाक्य पूरे करने लगते हैं?",
+      "type": "percentage_frequency_scale_0_3",
+      "options": [
+        { "value": 0, "labelEn": "0% (Never)", "labelHi": "0% (कभी नहीं)" },
+        { "value": 1, "labelEn": "1% – 25% (Rarely)", "labelHi": "1% – 25% (शायद ही कभी)" },
+        { "value": 2, "labelEn": "26% – 75% (Often)", "labelHi": "26% – 75% (अक्सर)", "isPositiveThreshold": true },
+        { "value": 3, "labelEn": "76% – 100% (Very Often)", "labelHi": "76% – 100% (बहुत बार)", "isPositiveThreshold": true }
+      ]
+    },
+    {
+      "id": "ADHD_IM_02",
+      "domain": "impulsivity",
+      "instrument": "DSM5_CRITERIA",
+      "clinicianReviewed": true,
+      "thresholdValue": 2,
+      "promptEn": "What percentage of the time do you experience difficulty waiting your turn in structured group scenarios, conversations, or queues?",
+      "promptHi": "कितने प्रतिशत समय आपको कतारों, बातचीत या समूह में अपनी बारी का इंतजार करने में परेशानी होती है?",
+      "type": "percentage_frequency_scale_0_3",
+      "options": [
+        { "value": 0, "labelEn": "0% (Never)", "labelHi": "0% (कभी नहीं)" },
+        { "value": 1, "labelEn": "1% – 25% (Rarely)", "labelHi": "1% – 25% (शायद ही कभी)" },
+        { "value": 2, "labelEn": "26% – 75% (Often)", "labelHi": "26% – 75% (अक्सर)", "isPositiveThreshold": true },
+        { "value": 3, "labelEn": "76% – 100% (Very Often)", "labelHi": "76% – 100% (बहुत बार)", "isPositiveThreshold": true }
+      ]
+    },
+    {
+      "id": "IMPAIRMENT_SETTINGS",
+      "domain": "impairment",
+      "clinicianReviewed": true,
+      "promptEn": "Where does this focus or restlessness cause the most trouble?",
+      "promptHi": "यह परेशानी सबसे ज्यादा कहाँ असर डालती है?",
+      "helperEn": "Select any that apply.",
+      "helperHi": "जो भी लागू हो, उसे चुनें।",
+      "type": "multi_choice",
+      "options": [
+        { "value": "work_or_school", "labelEn": "At work or school", "labelHi": "काम या स्कूल में" },
+        { "value": "home_daily_chores", "labelEn": "At home with daily tasks", "labelHi": "घर की जिम्मेदारियों में" },
+        { "value": "social_relationships", "labelEn": "With friends or relationships", "labelHi": "रिश्तों या दोस्तों के साथ" },
+        { "value": "none_minimal", "labelEn": "Nowhere / manageable", "labelHi": "कहीं नहीं / सब ठीक है" }
+      ]
+    },
+    {
+      "id": "ONSET_DURATION",
+      "domain": "onset_duration",
+      "clinicianReviewed": true,
+      "promptEn": "Have these habits been around for 6+ months, including in childhood?",
+      "promptHi": "क्या यह परेशानी 6 महीने से ज्यादा समय से और बचपन से है?",
+      "type": "single_choice",
+      "options": [
+        { "value": "chronic_childhood_onset", "labelEn": "Yes, since childhood (6+ months)", "labelHi": "हाँ, बचपन से (6+ महीने)" },
+        { "value": "recent_onset_only", "labelEn": "No, only started recently", "labelHi": "नहीं, सिर्फ हाल ही में शुरू हुई" },
+        { "value": "not_sure", "labelEn": "Not sure / hard to remember", "labelHi": "पक्का याद नहीं" }
+      ]
+    },
+    {
+      "id": "MOOD_STRESS",
+      "domain": "mood_stress",
+      "clinicianReviewed": true,
+      "promptEn": "Over the past 2 weeks, how often have you felt stressed or down?",
+      "promptHi": "पिछले 2 हफ्तों में, आप कितनी बार उदास या तनावग्रस्त महसूस कर रहे हैं?",
+      "type": "single_choice",
+      "options": [
+        { "value": "not_at_all", "labelEn": "Rarely or not at all", "labelHi": "शायद ही कभी" },
+        { "value": "several_days", "labelEn": "A few days", "labelHi": "कुछ दिन" },
+        { "value": "more_than_half", "labelEn": "Most days", "labelHi": "ज्यादातर दिन" }
+      ]
+    },
+    {
+      "id": "SUBSTANCE_CAFFEINE",
+      "domain": "substance",
+      "clinicianReviewed": true,
+      "promptEn": "How many cups of tea, coffee, or energy drinks do you drink daily?",
+      "promptHi": "आप रोजाना कितनी चाय, कॉफी या एनर्जी ड्रिंक पीते हैं?",
+      "type": "single_choice",
+      "options": [
+        { "value": "low_0_1_cups", "labelEn": "0 to 1 cup", "labelHi": "0 से 1 कप" },
+        { "value": "moderate_2_3_cups", "labelEn": "2 to 3 cups", "labelHi": "2 से 3 कप" },
+        { "value": "high_4_plus_cups", "labelEn": "4 or more cups", "labelHi": "4 या उससे ज्यादा" }
+      ]
+    },
+    {
+      "id": "FAMILY_HISTORY",
+      "domain": "family_history",
+      "clinicianReviewed": true,
+      "promptEn": "Does anyone in your close family also have focus challenges?",
+      "promptHi": "क्या आपके परिवार में किसी और को भी ध्यान लगाने में परेशानी होती है?",
+      "type": "single_choice",
+      "options": [
+        { "value": "yes_first_degree", "labelEn": "Yes (Parent, sibling, child)", "labelHi": "हाँ (माता-पिता, भाई-बहन, बच्चा)" },
+        { "value": "yes_extended", "labelEn": "Yes (Other relatives)", "labelHi": "हाँ (अन्य रिश्तेदार)" },
+        { "value": "none_known", "labelEn": "No or not sure", "labelHi": "नहीं या पता नहीं" }
+      ]
+    },
+    {
+      "id": "CRISIS_SAFETY_CHECK",
+      "domain": "safety",
+      "clinicianReviewed": true,
+      "promptEn": "Do you feel safe right now, or do you need immediate help?",
+      "promptHi": "क्या आप अभी सुरक्षित महसूस कर रहे हैं, या आपको तत्काल मदद चाहिए?",
+      "type": "single_choice",
+      "options": [
+        { "value": "safe", "labelEn": "I feel safe right now", "labelHi": "मैं सुरक्षित महसूस कर रहा हूँ" },
+        { "value": "crisis_need_help", "labelEn": "I need immediate help", "labelHi": "मुझे तत्काल मदद चाहिए", "isCrisisTrigger": true }
+      ]
+    }
+  ]
+}
