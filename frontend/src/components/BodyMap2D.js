@@ -52,7 +52,7 @@ export class BodyMap2D {
     this.multiSelect = !this.multiSelect;
     const btn = this.container?.querySelector("#btnMultiSelectToggle");
     if (btn) {
-      btn.innerHTML = this.multiSelect ? "☑ Multi-Select ON" : "☐ Multi-Select";
+      btn.innerHTML = this.multiSelect ? " Multi-Select ON" : " Multi-Select";
       btn.style.color = this.multiSelect ? "#38BDF8" : "#94A3B8";
       btn.style.borderColor = this.multiSelect ? "#38BDF8" : "rgba(255,255,255,0.15)";
       btn.style.background = this.multiSelect ? "rgba(2,132,199,0.25)" : "transparent";
@@ -121,13 +121,13 @@ export class BodyMap2D {
                       onclick="window.__bodymap_inst.setView('front')" 
                       aria-pressed="${isFront ? 'true' : 'false'}"
                       style="padding: 3px 9px; font-size: 0.72rem; font-weight: 700; border-radius: 5px; border: none; cursor: pointer; transition: all 0.15s ease; ${isFront ? 'background: #0284C7; color: #FFFFFF;' : 'background: transparent; color: #94A3B8;'}">
-                🦴 Anterior (Front)
+                 Anterior (Front)
               </button>
               <button type="button" class="view-toggle-btn ${!isFront ? 'active' : ''}" 
                       onclick="window.__bodymap_inst.setView('back')" 
                       aria-pressed="${!isFront ? 'true' : 'false'}"
                       style="padding: 3px 9px; font-size: 0.72rem; font-weight: 700; border-radius: 5px; border: none; cursor: pointer; transition: all 0.15s ease; ${!isFront ? 'background: #0284C7; color: #FFFFFF;' : 'background: transparent; color: #94A3B8;'}">
-                🦴 Posterior (Back)
+                 Posterior (Back)
               </button>
             </div>
 
@@ -152,7 +152,7 @@ export class BodyMap2D {
                     title="Toggle multi-area selection"
                     aria-pressed="${this.multiSelect ? 'true' : 'false'}"
                     style="padding: 3px 8px; font-size: 0.7rem; font-weight: 600; border-radius: 5px; border: 1px solid ${this.multiSelect ? '#38BDF8' : 'rgba(255,255,255,0.15)'}; background: ${this.multiSelect ? 'rgba(2,132,199,0.3)' : 'transparent'}; color: ${this.multiSelect ? '#38BDF8' : '#94A3B8'}; cursor: pointer;">
-              ${this.multiSelect ? '☑ Multi-Select ON' : '☐ Multi-Select'}
+              ${this.multiSelect ? ' Multi-Select ON' : ' Multi-Select'}
             </button>
 
             <button type="button" onclick="window.__bodymap_inst.clearAll()" 
@@ -164,7 +164,7 @@ export class BodyMap2D {
             <button type="button" onclick="window.__bodymap_inst.toggleListDrawer()" 
                     title="Toggle accessible body part dropdown"
                     style="padding: 3px 7px; font-size: 0.7rem; font-weight: 600; border-radius: 5px; border: 1px solid rgba(255,255,255,0.12); background: rgba(30,41,59,0.8); color: #94A3B8; cursor: pointer;">
-              ☰ List
+               List
             </button>
           </div>
         </div>
@@ -738,7 +738,7 @@ export class BodyMap2D {
           <strong>${name}</strong>
           ${lat ? `<small style="color: #38BDF8; font-size: 0.62rem;">(${lat})</small>` : ''}
           <button type="button" onclick="event.stopPropagation(); window.__bodymap_inst.handleRegionClick('${id}')" 
-                  style="background: transparent; border: none; color: #94A3B8; cursor: pointer; padding: 0 2px; font-weight: bold;" title="Deselect">✕</button>
+                  style="background: transparent; border: none; color: #94A3B8; cursor: pointer; padding: 0 2px; font-weight: bold;" title="Deselect"></button>
         </span>
       `;
     }).join('');

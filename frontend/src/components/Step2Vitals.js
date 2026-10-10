@@ -77,19 +77,19 @@ export function renderStep2VitalsAndIntake(app, i18n) {
           <!-- Alignment checklist -->
           <div class="checklist-pill-bar">
             <div class="pill-check ${app.patient.rppgVitals || checks.faceDetected ? 'pass' : ''}">
-              <span>${app.patient.rppgVitals || checks.faceDetected ? '✓' : '○'}</span> Face
+              <span>${app.patient.rppgVitals || checks.faceDetected ? '' : '○'}</span> Face
             </div>
             <div class="pill-check ${app.patient.rppgVitals || checks.isCentered ? 'pass' : ''}">
-              <span>${app.patient.rppgVitals || checks.isCentered ? '✓' : '○'}</span> Center
+              <span>${app.patient.rppgVitals || checks.isCentered ? '' : '○'}</span> Center
             </div>
             <div class="pill-check ${app.patient.rppgVitals || checks.isOptimalDistance ? 'pass' : ''}">
-              <span>${app.patient.rppgVitals || checks.isOptimalDistance ? '✓' : '○'}</span> Distance
+              <span>${app.patient.rppgVitals || checks.isOptimalDistance ? '' : '○'}</span> Distance
             </div>
             <div class="pill-check ${app.patient.rppgVitals || checks.isStill ? 'pass' : ''}">
-              <span>${app.patient.rppgVitals || checks.isStill ? '✓' : '○'}</span> Still
+              <span>${app.patient.rppgVitals || checks.isStill ? '' : '○'}</span> Still
             </div>
             <div class="pill-check ${app.patient.rppgVitals || checks.hasValidROIs ? 'pass' : ''}">
-              <span>${app.patient.rppgVitals || checks.hasValidROIs ? '✓' : '○'}</span> Skin ROI
+              <span>${app.patient.rppgVitals || checks.hasValidROIs ? '' : '○'}</span> Skin ROI
             </div>
           </div>
         </div>
@@ -129,7 +129,7 @@ export function renderStep2VitalsAndIntake(app, i18n) {
               <div class="oscilloscope-legend">
                 <span>Live Photoplethysmogram Oscilloscope (Pulse Waveform)</span>
                 <span style="color: ${app.isRppgScanning ? 'var(--emerald)' : (app.patient.rppgVitals ? 'var(--cyan)' : 'var(--text-muted)')}; font-family: var(--font-mono); font-weight: 700;">
-                  ${app.isRppgScanning ? '● SAMPLING 30 FPS' : (app.patient.rppgVitals ? '✓ CAPTURE LOCKED' : '○ STANDBY')}
+                  ${app.isRppgScanning ? '● SAMPLING 30 FPS' : (app.patient.rppgVitals ? ' CAPTURE LOCKED' : '○ STANDBY')}
                 </span>
               </div>
               <canvas id="rppgOscilloscopeCanvas" width="480" height="52" class="oscilloscope-canvas-3d"></canvas>
@@ -243,7 +243,7 @@ export function renderStep2VitalsAndIntake(app, i18n) {
           <div style="display: flex; flex-wrap: wrap; gap: 6px;">
             ${(app.patient.ayushHerbs || []).map((h, hIdx) => `
               <span class="pill-3d pill-3d-emerald" style="cursor: pointer;" onclick="window.app.removeHerb(${hIdx})">
-                ${h.name} ✕
+                ${h.name} 
               </span>
             `).join('')}
             ${(!app.patient.ayushHerbs || app.patient.ayushHerbs.length === 0) ? `

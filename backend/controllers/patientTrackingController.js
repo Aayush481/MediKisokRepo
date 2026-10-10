@@ -74,7 +74,7 @@ export class PatientTrackingController {
         </head>
         <body>
           <div class="card">
-            <h2>⚠️ Link Expired or Invalid</h2>
+            <h2> Link Expired or Invalid</h2>
             <p>${verification.reason || 'This secure tracking link has expired.'}</p>
             <p>Please check the reception counter or request a new SMS update.</p>
           </div>
@@ -91,7 +91,7 @@ export class PatientTrackingController {
     const isCalled = token.status === 'CALLED';
     const isAlmostDue = token.status === 'ALMOST_DUE';
     const statusColor = isCalled ? '#ef4444' : (isAlmostDue ? '#f59e0b' : '#10b981');
-    const statusBadge = isCalled ? '🚨 YOUR TURN NOW' : (isAlmostDue ? '⚡ ALMOST YOUR TURN' : '⏳ IN QUEUE');
+    const statusBadge = isCalled ? ' YOUR TURN NOW' : (isAlmostDue ? ' ALMOST YOUR TURN' : '⏳ IN QUEUE');
 
     const html = `
       <!DOCTYPE html>
@@ -128,7 +128,7 @@ export class PatientTrackingController {
       <body>
         <div class="tracker-card">
           <div class="header">
-            <div class="brand">🏥 MediKiosk OPD</div>
+            <div class="brand"> MediKiosk OPD</div>
             <div class="badge">${statusBadge}</div>
           </div>
           <div class="token-hero">

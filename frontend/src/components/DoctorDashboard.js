@@ -479,7 +479,7 @@ ${p.neuroAssessment.summary?.sbarClinicalSummary || 'Intake summary recorded.'}
                         <td><code style="font-size: 0.72rem; color: var(--indigo-light); background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.3); padding: 2px 6px; border-radius: 4px;">${snomed}</code></td>
                         <td><span class="pill-3d ${schedule === 'OTC' ? 'pill-3d-emerald' : 'pill-3d-amber'}" style="font-size: 0.68rem;">${schedule}</span></td>
                         <td style="font-size: 0.72rem; color: var(--text-muted); max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${source}</td>
-                        <td><span class="pill-3d pill-3d-emerald" style="font-size: 0.68rem;">✓ ${status}</span></td>
+                        <td><span class="pill-3d pill-3d-emerald" style="font-size: 0.68rem;"> ${status}</span></td>
                       </tr>
                     `;
                   }).join('') : `

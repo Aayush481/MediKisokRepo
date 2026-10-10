@@ -61,7 +61,7 @@ export function renderStep4Summary(app, i18n) {
         <div style="display: inline-flex; align-items: center; gap: 6px; background: var(--green-subtle); border: 1px solid var(--green-border); border-radius: 20px; padding: 4px 14px; margin-bottom: 8px;">
           <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--primary);"></span>
           <span style="font-size: 0.74rem; font-family: var(--font-mono); font-weight: 700; color: var(--green-darkest); text-transform: uppercase;">
-            Triage Encounter Complete • Token Assigned
+            Triage Encounter Complete &bull; Token Assigned
           </span>
         </div>
         <h2 style="font-size: 1.6rem; font-weight: 800; color: var(--text-primary); letter-spacing: -0.01em;">
@@ -179,10 +179,12 @@ export function renderStep4Summary(app, i18n) {
           <!-- Action buttons -->
           <div class="ticket-actions-row">
             <button class="btn-3d btn-3d-primary" style="padding: 12px; font-weight: 800; font-size: 0.92rem;" onclick="window.print()">
-              🖨️ ${i18n.t("btn_print_slip")}
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:5px"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+              ${i18n.t("btn_print_slip")}
             </button>
             <button class="btn-3d btn-3d-secondary" style="padding: 12px; font-weight: 700; font-size: 0.88rem;" onclick="window.app.resetSession()">
-              ➕ ${i18n.t("btn_next_patient")}
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:5px"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+              ${i18n.t("btn_next_patient")}
             </button>
           </div>
         </div>
@@ -265,10 +267,12 @@ export function renderStep4Summary(app, i18n) {
             </div>
             <div style="display: flex; gap: 6px; margin-top: 10px;">
               <button class="quick-chip" style="flex: 1;" onclick="window.app.sendSmsConfirmation()">
-                📱 Send SMS Copy
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:4px"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                Send SMS Copy
               </button>
               <button class="quick-chip" style="flex: 1;" onclick="window.print()">
-                📥 Export PDF
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:4px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
+                Export PDF
               </button>
             </div>
           </div>

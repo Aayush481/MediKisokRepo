@@ -55,11 +55,11 @@ if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL && !process.env.NETLI
   server.listen(PORT, () => {
     console.log(`
 ======================================================
-🏥 MediKiosk MERN Clinical Server Live: http://localhost:${PORT}
-⚡ Socket.IO Real-Time Gateway: ACTIVE
-📲 Event-Driven SMS Notification Pipeline: READY
-👁️ Python Face Detector & Optical rPPG Service: CONNECTED
-🤖 Gemini Multimodal Clinical Vision: ACTIVE
+ MediKiosk MERN Clinical Server Live: http://localhost:${PORT}
+ Socket.IO Real-Time Gateway: ACTIVE
+ Event-Driven SMS Notification Pipeline: READY
+ Python Face Detector & Optical rPPG Service: CONNECTED
+ Gemini Multimodal Clinical Vision: ACTIVE
 ======================================================
 `);
   });

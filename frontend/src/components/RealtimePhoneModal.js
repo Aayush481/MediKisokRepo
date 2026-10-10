@@ -36,7 +36,7 @@ export class RealtimePhoneModal {
         token: 'A-24',
         doctor: 'Dr. Sharma',
         cabin: 'OPD Cabin 3',
-        text: '🏥 MediKiosk AI OPD: Dear Patient, Token #A-24 is confirmed. Currently 3 members are ahead of you in line. Your estimated appointment time is 10:45 AM (~22 mins wait) with Dr. Sharma at OPD Cabin 3. Please be seated in Waiting Zone B.'
+        text: ' MediKiosk AI OPD: Dear Patient, Token #A-24 is confirmed. Currently 3 members are ahead of you in line. Your estimated appointment time is 10:45 AM (~22 mins wait) with Dr. Sharma at OPD Cabin 3. Please be seated in Waiting Zone B.'
       }
     ];
   }
@@ -163,15 +163,15 @@ export class RealtimePhoneModal {
               <div class="phone-network-icons">
                 <span style="font-size: 0.68rem; font-weight: 700; letter-spacing: -0.5px;">Jio 5G</span>
                 <span class="signal-bars">●●●●</span>
-                <span style="font-size: 0.72rem;">📶</span>
-                <span style="font-size: 0.72rem;">🔋 98%</span>
+                <span style="font-size: 0.72rem;"></span>
+                <span style="font-size: 0.72rem;"> 98%</span>
               </div>
             </div>
 
             <!-- Floating Slide-Down Push Notification Banner -->
             <div class="phone-push-banner" id="phoneLiveBanner">
               <div style="display: flex; align-items: flex-start; gap: 8px;">
-                <div class="push-app-icon">💬</div>
+                <div class="push-app-icon"></div>
                 <div style="flex: 1; min-width: 0;">
                   <div style="display: flex; justify-content: space-between; align-items: center;">
                     <strong class="push-app-title" id="phoneBannerTitle">MEDIKIOSK • Token #A-24</strong>
@@ -186,12 +186,12 @@ export class RealtimePhoneModal {
 
             <!-- In-App Header (SMS Messages App) -->
             <div class="phone-app-header">
-              <button class="phone-app-back-btn" onclick="window.realtimePhoneModal.close()">✕</button>
+              <button class="phone-app-back-btn" onclick="window.realtimePhoneModal.close()"></button>
               <div class="phone-contact-info">
-                <div class="phone-contact-avatar">🏥</div>
+                <div class="phone-contact-avatar"></div>
                 <div>
                   <div class="phone-contact-name">
-                    MEDIKIOSK-GOV <span class="verified-tick">✓</span>
+                    MEDIKIOSK-GOV <span class="verified-tick"></span>
                   </div>
                   <div class="phone-contact-sub">Ayushman Bharat OPD Gateway</div>
                 </div>
@@ -227,16 +227,16 @@ export class RealtimePhoneModal {
               <div style="display: flex; gap: 6px; margin-bottom: 8px;">
                 <input type="tel" id="phoneQuickTestNumber" class="input-text-3d" style="flex: 1; padding: 6px 10px; font-size: 0.75rem; border-radius: 8px; background: rgba(255,255,255,0.9);" placeholder="Enter Registered Mobile" value="${p.mobile || '+91 98765 43210'}">
                 <button type="button" class="btn-3d btn-3d-primary" style="padding: 6px 12px; font-size: 0.74rem; white-space: nowrap;" onclick="window.realtimePhoneModal.sendTestSmsFromInput()">
-                  ⚡ Send SMS
+                   Send SMS
                 </button>
               </div>
 
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
                 <button type="button" class="btn-3d btn-3d-secondary" style="padding: 6px 8px; font-size: 0.72rem; display: flex; align-items: center; justify-content: center; gap: 4px;" onclick="window.realtimePhoneModal.simulateAdvanceQueue()">
-                  ⏭️ Advance Queue (-1)
+                  ⏭ Advance Queue (-1)
                 </button>
                 <button type="button" class="btn-3d btn-3d-secondary" style="padding: 6px 8px; font-size: 0.72rem; display: flex; align-items: center; justify-content: center; gap: 4px;" onclick="window.realtimePhoneModal.copyLastMessage()">
-                  📋 Copy SMS
+                   Copy SMS
                 </button>
               </div>
             </div>
@@ -249,7 +249,7 @@ export class RealtimePhoneModal {
         <!-- Floating Close Pill -->
         <div style="text-align: center; margin-top: 10px;">
           <button class="btn-3d btn-3d-secondary" style="padding: 6px 16px; font-size: 0.8rem; background: rgba(15, 23, 42, 0.8); color: #FFFFFF; border-color: rgba(255,255,255,0.2);" onclick="window.realtimePhoneModal.close()">
-            ✕ Close Phone Preview
+             Close Phone Preview
           </button>
         </div>
 
@@ -294,16 +294,16 @@ export class RealtimePhoneModal {
           <div class="sms-bubble ${isCall ? 'call-now' : ''}">
             <!-- SMS Card Header -->
             <div class="sms-header">
-              <span class="sms-sender">🏥 MEDIKIOSK AI OPD</span>
+              <span class="sms-sender"> MEDIKIOSK AI OPD</span>
               <span class="sms-badge ${isCall ? 'badge-emergency' : isNext ? 'badge-next' : 'badge-token'}">
-                ${isCall ? '🚨 CALL IN' : isNext ? '⚡ NEXT IN LINE' : 'TOKEN #' + msg.token}
+                ${isCall ? ' CALL IN' : isNext ? ' NEXT IN LINE' : 'TOKEN #' + msg.token}
               </span>
             </div>
 
             <!-- Highlighted Queue Info Box -->
             <div class="sms-queue-card">
               <div class="sms-queue-row">
-                <span class="sms-lbl">👥 Members Next in Line:</span>
+                <span class="sms-lbl"> Members Next in Line:</span>
                 <strong class="sms-val" style="color: ${isCall ? '#DC2626' : isNext ? '#D97706' : '#059669'};">
                   ${isCall ? 'Doctor Calling Now!' : msg.membersAhead + ' Ahead of You'}
                 </strong>
@@ -315,7 +315,7 @@ export class RealtimePhoneModal {
                 </strong>
               </div>
               <div class="sms-queue-row">
-                <span class="sms-lbl">👨‍⚕️ Cabin:</span>
+                <span class="sms-lbl">‍ Cabin:</span>
                 <span class="sms-val">${msg.doctor} • ${msg.cabin}</span>
               </div>
             </div>
@@ -328,7 +328,7 @@ export class RealtimePhoneModal {
             <!-- Delivery Receipt Footer -->
             <div class="sms-footer">
               <span>Delivered via Airtel/Jio SMS Gateway</span>
-              <span>✓✓ Received</span>
+              <span> Received</span>
             </div>
           </div>
         </div>
@@ -377,7 +377,7 @@ export class RealtimePhoneModal {
     if (numEl) numEl.textContent = mobile;
 
     if (window.app && typeof window.app.showDoctorToast === 'function') {
-      window.app.showDoctorToast(`📲 Real-time message dispatched to ${mobile} (${membersAhead} members ahead, Appt: ${estTime})`);
+      window.app.showDoctorToast(` Real-time message dispatched to ${mobile} (${membersAhead} members ahead, Appt: ${estTime})`);
     }
   }
 
@@ -426,7 +426,7 @@ export class RealtimePhoneModal {
     if (navigator.clipboard) {
       navigator.clipboard.writeText(text).then(() => {
         if (window.app && typeof window.app.showDoctorToast === 'function') {
-          window.app.showDoctorToast('📋 SMS message text copied to clipboard.');
+          window.app.showDoctorToast(' SMS message text copied to clipboard.');
         } else {
           alert('Copied SMS message to clipboard:\n\n' + text);
         }

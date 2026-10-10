@@ -145,22 +145,22 @@ export class SmsNotificationService {
 
       let msgText = '';
       if (isCall) {
-        msgText = `🚨 [NOW CALLING] Dear ${patientName}, Dr. Sharma is ready for your consultation! Token #${tokenNumber}. Please enter ${cabin} immediately.`;
+        msgText = ` [NOW CALLING] Dear ${patientName}, Dr. Sharma is ready for your consultation! Token #${tokenNumber}. Please enter ${cabin} immediately.`;
       } else if (isNext) {
-        msgText = `⚡ [PRIORITY ALERT] Dear ${patientName}, you are NEXT in line! Only 1 member ahead. Your appointment with ${doctorName} (${cabin}) is at ${calculatedApptTime}. Please proceed directly to the door of ${cabin}. Token: #${tokenNumber}.`;
+        msgText = ` [PRIORITY ALERT] Dear ${patientName}, you are NEXT in line! Only 1 member ahead. Your appointment with ${doctorName} (${cabin}) is at ${calculatedApptTime}. Please proceed directly to the door of ${cabin}. Token: #${tokenNumber}.`;
       } else if (is30Min) {
-        msgText = `⏱️ [30-MIN APPOINTMENT REMINDER] Namaste ${patientName}! Token #${tokenNumber}. Your appointment with ${doctorName} (${cabin}) is approaching in ~${calculatedWaitMin || 30} mins at ${calculatedApptTime}. Queue Status: ${membersAhead} member(s) ahead. Please be present in OPD Waiting Zone B.`;
+        msgText = `⏱ [30-MIN APPOINTMENT REMINDER] Namaste ${patientName}! Token #${tokenNumber}. Your appointment with ${doctorName} (${cabin}) is approaching in ~${calculatedWaitMin || 30} mins at ${calculatedApptTime}. Queue Status: ${membersAhead} member(s) ahead. Please be present in OPD Waiting Zone B.`;
       } else if (isToken) {
-        msgText = `🏥 [OPD APPOINTMENT CONFIRMED] Dear ${patientName}, your Token #${tokenNumber} is generated. There are ${membersAhead} members ahead of you in queue. Your estimated appointment time is ${calculatedApptTime} (~${calculatedWaitMin} mins wait) with ${doctorName} at ${cabin}. Waiting Area: Zone B. Live Tracker: https://medikiosk.gov.in/q/${tokenNumber}`;
+        msgText = ` [OPD APPOINTMENT CONFIRMED] Dear ${patientName}, your Token #${tokenNumber} is generated. There are ${membersAhead} members ahead of you in queue. Your estimated appointment time is ${calculatedApptTime} (~${calculatedWaitMin} mins wait) with ${doctorName} at ${cabin}. Waiting Area: Zone B. Live Tracker: https://medikiosk.gov.in/q/${tokenNumber}`;
       } else {
         const memberText = membersAhead === 1 ? '1 member ahead' : `${membersAhead} members ahead`;
-        msgText = `📲 [LIVE QUEUE UPDATE] Dear ${patientName}, your appointment with ${doctorName} (${cabin}) is scheduled at approx ${calculatedApptTime} (in ~${calculatedWaitMin} mins). Queue Status: ${memberText} of you in line. Token: #${tokenNumber}. Please be ready near Waiting Zone B.`;
+        msgText = ` [LIVE QUEUE UPDATE] Dear ${patientName}, your appointment with ${doctorName} (${cabin}) is scheduled at approx ${calculatedApptTime} (in ~${calculatedWaitMin} mins). Queue Status: ${memberText} of you in line. Token: #${tokenNumber}. Please be ready near Waiting Zone B.`;
       }
 
       dispatchResult = {
         success: true,
         messageSid: 'SM' + Math.random().toString(36).substring(2, 10).toUpperCase(),
-        status: 'Delivered ✓',
+        status: 'Delivered ',
         deliveryLatencyMs: 160,
         recipient: {
           mobile: formattedMobile,
@@ -190,7 +190,7 @@ export class SmsNotificationService {
       patientsAhead: membersAhead,
       scheduledTime: calculatedApptTime,
       dispatchTimestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      status: 'Delivered ✓',
+      status: 'Delivered ',
       channel: 'SMS Gateway + WhatsApp Cloud API',
       message: dispatchResult.message,
       eventType

@@ -111,9 +111,9 @@ export class NotificationClientService {
         cabinNumber: appt.cabin || payload.cabinNumber || 'Cabin 3',
         department: payload.department || 'General Medicine',
         alertType: payload.alertType || payload.eventType || 'update',
-        message: d.message || payload.customMessage || `📋 [MediKiosk Alert] Token #${payload.tokenNumber || 'TK-101'}. There are ${payload.membersNext ?? 0} member(s) ahead. Est appointment: ${payload.appointmentTime || '11:00 AM'}.`,
+        message: d.message || payload.customMessage || ` [MediKiosk Alert] Token #${payload.tokenNumber || 'TK-101'}. There are ${payload.membersNext ?? 0} member(s) ahead. Est appointment: ${payload.appointmentTime || '11:00 AM'}.`,
         dispatchTimestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        status: d.status || 'DELIVERED ✓',
+        status: d.status || 'DELIVERED ',
         channel: 'SMS Gateway + WhatsApp Cloud API'
       };
     } else {
@@ -130,9 +130,9 @@ export class NotificationClientService {
         cabinNumber: payload.cabinNumber || 'Cabin 3',
         department: payload.department || 'General Medicine',
         alertType: payload.alertType || 'update',
-        message: payload.customMessage || `📲 [MediKiosk Alert] Token #${payload.tokenNumber || 'TK-101'}. Queue Status: ${payload.membersNext ?? 0} members ahead. Appt: ${payload.appointmentTime || '11:00 AM'}. Doctor: Dr. Sharma (Cabin 3).`,
+        message: payload.customMessage || ` [MediKiosk Alert] Token #${payload.tokenNumber || 'TK-101'}. Queue Status: ${payload.membersNext ?? 0} members ahead. Appt: ${payload.appointmentTime || '11:00 AM'}. Doctor: Dr. Sharma (Cabin 3).`,
         dispatchTimestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        status: 'DELIVERED ✓',
+        status: 'DELIVERED ',
         channel: 'SMS Gateway + WhatsApp Cloud API'
       };
     }
@@ -181,7 +181,7 @@ export class NotificationClientService {
               appointmentTime: (item.appointmentDetails && item.appointmentDetails.appointmentTime) || item.appointmentTime || '11:00 AM',
               message: item.message || 'Queue update notification delivered.',
               dispatchTimestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-              status: 'DELIVERED ✓',
+              status: 'DELIVERED ',
               channel: 'SMS Gateway + WhatsApp Cloud API'
             };
             this.logs.unshift(formattedItem);
@@ -227,16 +227,16 @@ export class NotificationClientService {
 
     const is30Min = logItem.alertType === '30min' || logItem.alertType === '30MIN_REMINDER' || (logItem.message && logItem.message.includes('30-Min'));
     const membersLabel = is30Min
-      ? '⏱️ 30-Min Advance Reminder'
+      ? '⏱ 30-Min Advance Reminder'
       : (logItem.membersNext === 0 
-        ? '🔔 Turn Now: In Cabin' 
+        ? ' Turn Now: In Cabin' 
         : logItem.membersNext === 1 
-          ? '⚠️ Next in Line! (1 Ahead)' 
-          : `👥 ${logItem.membersNext} Members Next`);
+          ? ' Next in Line! (1 Ahead)' 
+          : ` ${logItem.membersNext} Members Next`);
 
     banner.innerHTML = `
       <div class="banner-inner" onclick="window.app && window.app.togglePhoneSimulator(true)">
-        <div class="banner-app-icon">💬</div>
+        <div class="banner-app-icon"></div>
         <div class="banner-content">
           <div class="banner-header">
             <span class="banner-title">MESSAGES • MediKiosk OPD</span>
@@ -248,8 +248,8 @@ export class NotificationClientService {
           </div>
           <div class="banner-tags">
             <span class="banner-tag highlight">${membersLabel}</span>
-            <span class="banner-tag">⏱️ Est: ${logItem.appointmentTime}</span>
-            <span class="banner-tag tap-hint">Tap to view Phone 📱</span>
+            <span class="banner-tag">⏱ Est: ${logItem.appointmentTime}</span>
+            <span class="banner-tag tap-hint">Tap to view Phone </span>
           </div>
         </div>
       </div>

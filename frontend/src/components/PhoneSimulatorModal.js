@@ -83,20 +83,20 @@ export class PhoneSimulatorModal {
             <span class="phone-time" id="phoneClock">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
             <div class="phone-icons">
               <span title="5G Carrier Signal">5G</span>
-              <span title="Wi-Fi Connected">📶</span>
-              <span title="98% Battery">98% 🔋</span>
+              <span title="Wi-Fi Connected"></span>
+              <span title="98% Battery">98% </span>
             </div>
           </div>
 
           <!-- Messages App Header -->
           <div class="phone-app-header">
             <div style="display: flex; align-items: center; gap: 8px;">
-              <button class="phone-back-btn" onclick="window.app && window.app.togglePhoneSimulator(false)" title="Close Phone">✕</button>
-              <div class="phone-avatar">🏥</div>
+              <button class="phone-back-btn" onclick="window.app && window.app.togglePhoneSimulator(false)" title="Close Phone"></button>
+              <div class="phone-avatar"></div>
               <div>
                 <div class="phone-contact-name">MediKiosk OPD Alert</div>
                 <div class="phone-registered-badge">
-                  <span>📱 Reg:</span>
+                  <span> Reg:</span>
                   <strong id="phoneActiveMobile">${this.customMobile}</strong>
                 </div>
               </div>
@@ -119,7 +119,7 @@ export class PhoneSimulatorModal {
             <div class="phone-input-row">
               <input type="tel" id="simulatorMobileInput" class="phone-mini-input" placeholder="Change Mobile (+91...)" value="${this.customMobile}">
               <button type="button" class="phone-send-test-btn" onclick="window.app && window.app.sendTestSmsFromSimulator()">
-                📲 Send Live SMS
+                 Send Live SMS
               </button>
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.68rem; color: #64748b; margin-top: 4px;">
@@ -179,7 +179,7 @@ export class PhoneSimulatorModal {
         <div class="phone-metric-box">
           <span class="phone-metric-label">Members Next:</span>
           <span class="phone-metric-val ${membersNext === 0 ? 'urgent' : ''}">
-            ${membersNext === 0 ? '🟢 In Cabin Now' : (membersNext === 1 ? '⚠️ 1 (You Are Next!)' : `${membersNext} Members Ahead`)}
+            ${membersNext === 0 ? ' In Cabin Now' : (membersNext === 1 ? ' 1 (You Are Next!)' : `${membersNext} Members Ahead`)}
           </span>
         </div>
         <div class="phone-metric-box">
@@ -195,7 +195,7 @@ export class PhoneSimulatorModal {
     if (!logs || logs.length === 0) {
       return `
         <div class="phone-empty-thread">
-          <div style="font-size: 2.2rem; margin-bottom: 6px;">💬</div>
+          <div style="font-size: 2.2rem; margin-bottom: 6px;"></div>
           <p style="font-weight: 700; color: #1e293b; margin: 0 0 4px 0;">No Messages Yet</p>
           <p style="font-size: 0.74rem; color: #64748b; margin: 0; line-height: 1.4;">
             When you register or the queue updates, real-time SMS messages will appear on this handset with members next & appointment times.
@@ -213,16 +213,16 @@ export class PhoneSimulatorModal {
           <div class="phone-bubble-timestamp">${msg.dispatchTimestamp || 'Just now'} • SMS Delivery</div>
           <div class="phone-sms-bubble ${isUrgent ? 'urgent' : ''} ${isNext ? 'next-alert' : ''}">
             <div class="phone-bubble-header">
-              <span class="phone-sender-tag">🏥 MEDIKIOSK-OPD</span>
-              <span class="phone-status-tag">${msg.status || 'Delivered ✓'}</span>
+              <span class="phone-sender-tag"> MEDIKIOSK-OPD</span>
+              <span class="phone-status-tag">${msg.status || 'Delivered '}</span>
             </div>
             <div class="phone-bubble-text">
               ${msg.message}
             </div>
             <div class="phone-bubble-pills">
-              <span class="phone-pill">👥 ${msg.membersNext === 0 ? 'Your Turn' : `${msg.membersNext} Next`}</span>
-              <span class="phone-pill">⏱️ ${msg.appointmentTime}</span>
-              <span class="phone-pill">🎟️ #${msg.tokenNumber}</span>
+              <span class="phone-pill"> ${msg.membersNext === 0 ? 'Your Turn' : `${msg.membersNext} Next`}</span>
+              <span class="phone-pill">⏱ ${msg.appointmentTime}</span>
+              <span class="phone-pill"> #${msg.tokenNumber}</span>
             </div>
           </div>
         </div>

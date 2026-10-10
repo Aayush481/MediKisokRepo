@@ -185,7 +185,7 @@ export class SymptomQuestionEngine {
             </h3>
           </div>
           <button class="btn-3d btn-3d-secondary" style="padding: 4px 12px; font-size: 0.74rem;" onclick="window.__restart_intake()">
-            🔄 Edit Answers
+             Edit Answers
           </button>
         </div>
 
@@ -229,7 +229,7 @@ export class SymptomQuestionEngine {
       this.container.innerHTML = `
         <div class="followup-questions-card">
           <div class="question-empty-state-card">
-            <div style="font-size: 2.2rem; margin-bottom: 8px;">🩺</div>
+            <div style="font-size: 2.2rem; margin-bottom: 8px;"></div>
             <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--text-primary, #0F172A); margin: 0 0 6px 0;">Follow-Up Questions</h3>
             <p style="font-size: 0.88rem; color: var(--text-muted, #64748B); margin: 0 auto; max-width: 480px;">
               Select a body part or describe your symptom to begin.
@@ -265,7 +265,7 @@ export class SymptomQuestionEngine {
         ${isRedAlert ? `
           <div class="emergency-red-flag-banner" role="alert" aria-live="assertive">
             <div style="display: flex; align-items: center; gap: 12px;">
-              <span style="font-size: 1.75rem;">⚠️</span>
+              <span style="font-size: 1.75rem;"></span>
               <div>
                 <strong style="font-size: 0.95rem; display: block; letter-spacing: 0.3px;">Important Health Alert</strong>
                 <span style="font-size: 0.82rem; color: #7F1D1D;">Based on your answers, please inform hospital staff for quick evaluation.</span>
@@ -288,7 +288,7 @@ export class SymptomQuestionEngine {
                   const name = item ? item.displayName.en : pId;
                   return `
                     <button type="button" class="pill-3d pill-3d-blue" style="font-size: 0.72rem; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" onclick="window.__qe_remove_part('${pId}')" title="Remove ${name}">
-                      ${name} <span style="font-weight: 900; opacity: 0.8;">✕</span>
+                      ${name} <span style="font-weight: 900; opacity: 0.8;"></span>
                     </button>
                   `;
                 }).join('')}
@@ -357,7 +357,7 @@ export class SymptomQuestionEngine {
                   ` : ''}
                 </div>
                 <div style="width: 26px; height: 26px; border-radius: ${currentQ.type === 'multi_choice' ? '6px' : '50%'}; border: 2px solid ${isSelected ? 'var(--emerald, #059669)' : 'var(--border-medium, #CBD5E1)'}; background: ${isSelected ? 'var(--emerald, #059669)' : 'transparent'}; display: flex; align-items: center; justify-content: center; color: #FFFFFF; font-size: 0.82rem; font-weight: bold; flex-shrink: 0;">
-                  ${isSelected ? (currentQ.type === 'multi_choice' ? '✓' : '●') : ''}
+                  ${isSelected ? (currentQ.type === 'multi_choice' ? '' : '●') : ''}
                 </div>
               </div>
             `;

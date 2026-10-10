@@ -8,6 +8,7 @@ import intakeRoutes from './intakeRoutes.js';
 import notificationRoutes from './notificationRoutes.js';
 import queueRoutes from './queueRoutes.js';
 import neuroWellnessRoutes from './neuroWellnessRoutes.js';
+import encounterRoutes from './encounterRoutes.js';
 import { SmsWebhookController } from '../controllers/smsWebhookController.js';
 import { setupQueueNotificationBridge } from '../services/queueNotificationBridge.js';
 
@@ -53,6 +54,9 @@ router.use('/intake', intakeRoutes);
 
 // Neurodevelopmental & ADHD Wellness Assistant
 router.use('/neuro-wellness', neuroWellnessRoutes);
+
+// Clinical Encounter Summaries & OPD Token Passes (MERN Stack)
+router.use('/encounters', encounterRoutes);
 
 // Face Detector Bridge
 router.get('/face-detector-status', FaceDetectorController.getStatus);

@@ -21,7 +21,7 @@ export class EmergencyAlertModal {
       <div class="modal-content-3d emergency-modal-critical" style="max-width: 640px; border: 2.5px solid #EF4444; background: #0b0f19; box-shadow: 0 0 40px rgba(239, 68, 68, 0.4);">
         <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 1.2rem; border-bottom: 1px solid rgba(239,68,68,0.3); padding-bottom: 12px;">
           <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(239,68,68,0.2); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; border: 2px solid #EF4444; animation: pulse 1.5s infinite;">
-            🚨
+            
           </div>
           <div>
             <h2 style="font-size: 1.25rem; font-weight: 900; color: #EF4444; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">
@@ -35,7 +35,7 @@ export class EmergencyAlertModal {
 
         <div style="background: rgba(239, 68, 68, 0.08); border-left: 4px solid #EF4444; border-radius: 8px; padding: 14px; margin-bottom: 1.2rem;">
           <strong style="color: #F87171; font-size: 0.88rem; display: block; margin-bottom: 6px;">
-            ⚠️ Clinical Red-Flag Triggered:
+             Clinical Red-Flag Triggered:
           </strong>
           <div style="font-size: 0.84rem; color: #FEE2E2; line-height: 1.5;">
             ${reasonText}
@@ -44,15 +44,15 @@ export class EmergencyAlertModal {
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1.2rem;">
           <a href="tel:112" class="btn-3d" style="background: #DC2626; color: #FFFFFF; font-weight: 800; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; font-size: 0.95rem; border: 1px solid #EF4444; border-radius: 8px;">
-            📞 Call National 112
+             Call National 112
           </a>
           <a href="tel:108" class="btn-3d" style="background: #B91C1C; color: #FFFFFF; font-weight: 800; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; font-size: 0.95rem; border: 1px solid #F87171; border-radius: 8px;">
-            🚑 Call Ambulance 108
+             Call Ambulance 108
           </a>
         </div>
 
         <div style="background: #1e293b; border-radius: 8px; padding: 12px; margin-bottom: 1.2rem; font-size: 0.78rem; color: #CBD5E1; line-height: 1.4;">
-          🏥 <strong>Hospital Kiosk Action:</strong> Please inform the nearest triage nurse, OPD reception, or security desk immediately for emergency room fast-tracking. Do not leave the facility unattended.
+           <strong>Hospital Kiosk Action:</strong> Please inform the nearest triage nurse, OPD reception, or security desk immediately for emergency room fast-tracking. Do not leave the facility unattended.
         </div>
 
         <div style="display: flex; justify-content: space-between; align-items: center;">

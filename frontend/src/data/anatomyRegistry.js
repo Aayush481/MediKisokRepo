@@ -1281,15 +1281,15 @@ export const ANATOMY_REGISTRY = [
 ];
 
 export const ANATOMY_SYSTEMS = [
-  { id: "all", label: "All Layers", icon: "🌐" },
-  { id: "muscular", label: "Muscles & Torso", icon: "💪" },
-  { id: "skeletal", label: "Skeleton & Joints", icon: "🦴" },
-  { id: "circulatory", label: "Circulatory / Heart", icon: "🫀" },
-  { id: "digestive", label: "Digestive / GI", icon: "🥘" },
-  { id: "urinary", label: "Urinary / Renal", icon: "💧" },
-  { id: "respiratory", label: "Respiratory / Lungs", icon: "🫁" },
-  { id: "nervous", label: "Nervous / Brain", icon: "🧠" },
-  { id: "endocrine", label: "Endocrine / Thyroid", icon: "🦋" }
+  { id: "all", label: "All Layers", icon: "" },
+  { id: "muscular", label: "Muscles & Torso", icon: "" },
+  { id: "skeletal", label: "Skeleton & Joints", icon: "" },
+  { id: "circulatory", label: "Circulatory / Heart", icon: "" },
+  { id: "digestive", label: "Digestive / GI", icon: "" },
+  { id: "urinary", label: "Urinary / Renal", icon: "" },
+  { id: "respiratory", label: "Respiratory / Lungs", icon: "" },
+  { id: "nervous", label: "Nervous / Brain", icon: "" },
+  { id: "endocrine", label: "Endocrine / Thyroid", icon: "" }
 ];
 
 /**

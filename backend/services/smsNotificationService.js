@@ -32,23 +32,23 @@ export class SmsNotificationService {
     const timeStr = appointmentTime || new Date(Date.now() + Math.max(5, waitMinutes) * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     if (alertType === "cabin_call" || membersNext === 0) {
-      return `🔔 [MediKiosk OPD URGENT] Token #${tokenNumber} (${cleanName}): It is YOUR TURN now! Please enter ${cabinNumber} for your consultation with ${doctorName} (${department}).`;
+      return ` [MediKiosk OPD URGENT] Token #${tokenNumber} (${cleanName}): It is YOUR TURN now! Please enter ${cabinNumber} for your consultation with ${doctorName} (${department}).`;
     }
 
     if (alertType === "urgent_next" || membersNext === 1) {
-      return `⚠️ [MediKiosk Priority Alert] Namaste ${cleanName}! Token #${tokenNumber}. You are NEXT in line! (Only 1 member ahead of you). Your consultation with ${doctorName} (${cabinNumber}) will begin at approx ${timeStr} (~${waitMinutes || 7} mins). Please be seated right outside ${cabinNumber}.`;
+      return ` [MediKiosk Priority Alert] Namaste ${cleanName}! Token #${tokenNumber}. You are NEXT in line! (Only 1 member ahead of you). Your consultation with ${doctorName} (${cabinNumber}) will begin at approx ${timeStr} (~${waitMinutes || 7} mins). Please be seated right outside ${cabinNumber}.`;
     }
 
     if (alertType === "registration") {
-      return `🏥 [MediKiosk OPD Registration] Namaste ${cleanName}! Your OPD Token #${tokenNumber} is confirmed. There are ${membersNext} member(s) ahead of you in queue. Your estimated appointment time is ${timeStr} (in ~${waitMinutes} mins) with ${doctorName} in ${cabinNumber}. You will receive real-time SMS updates as the queue moves.`;
+      return ` [MediKiosk OPD Registration] Namaste ${cleanName}! Your OPD Token #${tokenNumber} is confirmed. There are ${membersNext} member(s) ahead of you in queue. Your estimated appointment time is ${timeStr} (in ~${waitMinutes} mins) with ${doctorName} in ${cabinNumber}. You will receive real-time SMS updates as the queue moves.`;
     }
 
     if (alertType === "30min" || alertType === "30MIN_REMINDER" || alertType === "REMINDER_30_MIN") {
-      return `⏱️ [MediKiosk 30-Min Reminder] Namaste ${cleanName}! Token #${tokenNumber}. Your appointment with ${doctorName} (${cabinNumber}) is approaching in ~${waitMinutes || 30} mins at ${timeStr}. There are currently ${membersNext} member(s) ahead of you. Please proceed towards Waiting Zone B.`;
+      return `⏱ [MediKiosk 30-Min Reminder] Namaste ${cleanName}! Token #${tokenNumber}. Your appointment with ${doctorName} (${cabinNumber}) is approaching in ~${waitMinutes || 30} mins at ${timeStr}. There are currently ${membersNext} member(s) ahead of you. Please proceed towards Waiting Zone B.`;
     }
 
     // Default queue progression update
-    return `📋 [MediKiosk Real-Time Queue Update] Namaste ${cleanName}! Token #${tokenNumber}. Queue progress update: There are now ${membersNext} member(s) ahead of you. Your estimated appointment time is ${timeStr} (in ~${waitMinutes} mins) with ${doctorName} in ${cabinNumber}.`;
+    return ` [MediKiosk Real-Time Queue Update] Namaste ${cleanName}! Token #${tokenNumber}. Queue progress update: There are now ${membersNext} member(s) ahead of you. Your estimated appointment time is ${timeStr} (in ~${waitMinutes} mins) with ${doctorName} in ${cabinNumber}.`;
   }
 
   /**
@@ -91,7 +91,7 @@ export class SmsNotificationService {
     const logId = `SMS-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`;
 
     let gatewayProvider = "Simulated Telecom Gateway (TRAI / DND Compliant)";
-    let deliveryStatus = "DELIVERED ✓";
+    let deliveryStatus = "DELIVERED ";
     let externalMsgId = `SIM-${Date.now()}`;
 
     // 1. Check Twilio Credentials
@@ -118,7 +118,7 @@ export class SmsNotificationService {
           const twilioData = await resp.json();
           gatewayProvider = "Twilio Live SMS Gateway";
           externalMsgId = twilioData.sid || externalMsgId;
-          deliveryStatus = "DELIVERED_CARRIER ✓";
+          deliveryStatus = "DELIVERED_CARRIER ";
         } else {
           console.warn("[Twilio] Carrier dispatch returned status:", resp.status);
           gatewayProvider = "Twilio Fallback (Simulated)";
@@ -151,7 +151,7 @@ export class SmsNotificationService {
           const fastData = await resp.json();
           gatewayProvider = "Fast2SMS India Route";
           externalMsgId = (fastData.request_id || externalMsgId).toString();
-          deliveryStatus = "DELIVERED_CARRIER ✓";
+          deliveryStatus = "DELIVERED_CARRIER ";
         }
       } catch (err) {
         console.warn("[Fast2SMS Error]", err.message);

@@ -217,7 +217,7 @@ export class AbhaLookupModal {
               </p>
             </div>
           </div>
-          <button id="closeAbhaModalBtn" class="btn-3d btn-3d-secondary" style="padding: 4px 10px; font-size: 0.8rem;">✕</button>
+          <button id="closeAbhaModalBtn" class="btn-3d btn-3d-secondary" style="padding: 4px 10px; font-size: 0.8rem;"></button>
         </div>
 
         <!-- Progress Steps -->
@@ -266,7 +266,7 @@ export class AbhaLookupModal {
     // Error Alert Banner
     const errorHtml = this.errorMessage ? `
       <div class="abha-alert-error" role="alert">
-        <span style="font-size: 1rem;">⚠️</span>
+        <span style="font-size: 1rem;"></span>
         <span style="font-size: 0.82rem; line-height: 1.4;">${this.errorMessage}</span>
       </div>
     ` : '';
@@ -320,7 +320,7 @@ export class AbhaLookupModal {
           </div>
 
           <div class="abha-dpdp-notice">
-            <span>🔒</span>
+            <span></span>
             <span style="font-size: 0.75rem; color: var(--emerald-deep);">
               <strong>DPDP Act 2023 Consent:</strong> Patient authentication occurs directly via ABDM secure gateway. Credentials & OTPs are never stored in plain text.
             </span>
@@ -348,7 +348,7 @@ export class AbhaLookupModal {
               <button id="abhaChangeNumberBtn" class="btn-3d btn-3d-secondary" style="font-size: 0.75rem; padding: 4px 10px;">Change</button>
             </div>
             <p style="margin: 6px 0 0; font-size: 0.76rem; color: var(--emerald-dark);">
-              ✓ OTP sent to mobile registered with ${this.otpSystem === 'aadhaar' ? 'UIDAI (Aadhaar)' : 'ABDM'}.
+               OTP sent to mobile registered with ${this.otpSystem === 'aadhaar' ? 'UIDAI (Aadhaar)' : 'ABDM'}.
             </p>
           </div>
 
@@ -383,7 +383,7 @@ export class AbhaLookupModal {
           <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
             <button id="abhaBackBtn" class="btn-3d btn-3d-secondary" ${this.isLoading ? 'disabled' : ''}>← Back</button>
             <button id="abhaVerifyBtn" class="btn-3d btn-3d-primary" ${this.isLoading ? 'disabled' : ''}>
-              ${this.isLoading ? '<span class="abha-spinner"></span> Verifying with ABDM...' : 'Verify OTP & Fetch Profile ✓'}
+              ${this.isLoading ? '<span class="abha-spinner"></span> Verifying with ABDM...' : 'Verify OTP & Fetch Profile '}
             </button>
           </div>
         </div>
@@ -402,7 +402,7 @@ export class AbhaLookupModal {
               <div style="flex: 1;">
                 <div style="display: flex; align-items: center; gap: 8px;">
                   <h4 style="margin: 0; font-size: 1.15rem; color: var(--text-primary); font-weight: 800;">${p.name || 'ABHA Patient'}</h4>
-                  <span class="pill-3d pill-3d-emerald" style="font-size: 0.7rem; padding: 2px 8px;">✓ ABDM VERIFIED</span>
+                  <span class="pill-3d pill-3d-emerald" style="font-size: 0.7rem; padding: 2px 8px;"> ABDM VERIFIED</span>
                 </div>
                 <div style="display: flex; gap: 12px; margin-top: 4px; font-size: 0.8rem; color: var(--emerald-dark); font-family: var(--font-mono);">
                   <span>ABHA: ${p.abhaNumber || 'N/A'}</span>
@@ -443,7 +443,7 @@ export class AbhaLookupModal {
           <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px;">
             <button id="abhaCloseFinishedBtn" class="btn-3d btn-3d-secondary">Cancel</button>
             <button id="abhaUseProfileBtn" class="btn-3d btn-3d-primary" ${this.isLoading ? 'disabled' : ''}>
-              ${this.isLoading ? '<span class="abha-spinner"></span> Saving Record...' : 'Auto-Fill & Link Patient Record ➔'}
+              ${this.isLoading ? '<span class="abha-spinner"></span> Saving Record...' : 'Auto-Fill & Link Patient Record '}
             </button>
           </div>
         </div>

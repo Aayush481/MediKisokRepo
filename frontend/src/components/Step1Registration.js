@@ -72,7 +72,7 @@ export function renderStep1Registration(app, i18n) {
               </label>
               ${isVerified ? `
                 <span class="pill-3d pill-3d-emerald" style="font-size: 0.66rem; padding: 2px 8px;">
-                  ✓ Verified & Linked
+                   Verified & Linked
                 </span>
               ` : `
                 <span style="font-size: 0.68rem; font-family: var(--font-mono); color: var(--grey-500);">
@@ -135,7 +135,7 @@ export function renderStep1Registration(app, i18n) {
                 </div>
               </div>
               <span class="pill-3d pill-3d-emerald" style="font-size: 0.64rem; font-weight: 800;">
-                ✓ e-KYC VERIFIED
+                 e-KYC VERIFIED
               </span>
             </div>
 
@@ -192,7 +192,7 @@ export function renderStep1Registration(app, i18n) {
                 </div>
               </div>
               <button type="button" class="btn-unlink-abha" onclick="window.app.resetAbhaVerification()">
-                🔄 Unlink / Re-verify
+                 Unlink / Re-verify
               </button>
             </div>
           </div>
@@ -231,7 +231,7 @@ export function renderStep1Registration(app, i18n) {
                   <strong class="sync-action-title">2. Scan Physical / Mobile ABHA QR</strong>
                   <span class="sync-action-desc">Optical scan from Ayushman Bharat app or Cowin document</span>
                 </div>
-                <span class="sync-action-arrow">⚡</span>
+                <span class="sync-action-arrow"></span>
               </div>
 
               <div class="sync-action-tile sync-action-test" onclick="window.app.verifyAbhaRecord('91-8274-1923-0194')">

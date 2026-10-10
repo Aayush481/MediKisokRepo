@@ -60,13 +60,13 @@ export function renderStep3Records(app, i18n) {
               Try Sample Records:
             </span>
             <button type="button" class="sample-doc-btn" onclick="window.app.loadSampleDoc('rx')">
-              📄 Prescription Rx
+               Prescription Rx
             </button>
             <button type="button" class="sample-doc-btn" onclick="window.app.loadSampleDoc('lab')">
-              🔬 Pathology Lab
+               Pathology Lab
             </button>
             <button type="button" class="sample-doc-btn" onclick="window.app.loadSampleDoc('xray')">
-              🦴 Knee X-Ray
+               Knee X-Ray
             </button>
           </div>
 

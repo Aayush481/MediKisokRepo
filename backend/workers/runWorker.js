@@ -9,10 +9,10 @@ import { processSmsJob } from './smsWorker.js';
 
 console.log(`
 ======================================================
-⚙️  MediKiosk Standalone SMS BullMQ Worker Initialized
-📡  Carrier Gateway: ${process.env.SMS_PROVIDER || 'Auto-Detected / Sandbox Fallback'}
-⏱️  Concurrency: 5 | Retry Backoff: Exponential with Jitter
-🔒  DPDP Act 2023 Masking: ACTIVE
+  MediKiosk Standalone SMS BullMQ Worker Initialized
+  Carrier Gateway: ${process.env.SMS_PROVIDER || 'Auto-Detected / Sandbox Fallback'}
+⏱  Concurrency: 5 | Retry Backoff: Exponential with Jitter
+  DPDP Act 2023 Masking: ACTIVE
 ======================================================
 `);
 

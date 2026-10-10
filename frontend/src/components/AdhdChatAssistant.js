@@ -363,7 +363,7 @@ export class AdhdChatAssistant {
                 <h2 style="margin: 0; font-size: 1.25rem; color: #0F172A;">${isHi ? '2-सप्ताह अनुवर्ती चेक-इन' : '2-Week Clinical Follow-Up'}</h2>
                 <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: #64748B;">${isHi ? 'आपकी प्रगति की समीक्षा' : 'Review your daily routine and symptom progression'}</p>
               </div>
-              <button class="adhd-close-btn" onclick="window.adhdAssistant.closeCheckInModal()">✕</button>
+              <button class="adhd-close-btn" onclick="window.adhdAssistant.closeCheckInModal()"></button>
             </div>
             <div class="adhd-question-body">
               <p style="font-size: 0.9rem; line-height: 1.5; color: #334155; margin-bottom: 1.25rem;">
@@ -373,7 +373,7 @@ export class AdhdChatAssistant {
               </p>
               <div class="adhd-options-grid">
                 <button class="adhd-option-btn" onclick="window.adhdAssistant.submitCheckIn({ routineAdherence: 'improved', escalationRequested: false })">
-                  <span class="option-check">✓</span>
+                  <span class="option-check"></span>
                   <span class="option-label">${isHi ? 'काफी सुधार हुआ है (दैनिक आदतें मददगार रहीं)' : 'Significantly Improved (Habits were effective)'}</span>
                 </button>
                 <button class="adhd-option-btn" onclick="window.adhdAssistant.submitCheckIn({ routineAdherence: 'same', escalationRequested: false })">
@@ -477,7 +477,7 @@ export class AdhdChatAssistant {
                     : (isHi ? 'दैनिक आदतों के लिए सरल सुझाव' : 'Simple daily habits to help you stay on track')}
                 </p>
               </div>
-              <button class="adhd-close-btn" onclick="window.adhdAssistant.close()">✕</button>
+              <button class="adhd-close-btn" onclick="window.adhdAssistant.close()"></button>
             </div>
 
             <!-- Patient-facing plain language summary -->
@@ -659,7 +659,7 @@ export class AdhdChatAssistant {
               </button>
 
               <!-- Close -->
-              <button class="adhd-close-btn" onclick="window.adhdAssistant.close()">✕</button>
+              <button class="adhd-close-btn" onclick="window.adhdAssistant.close()"></button>
             </div>
           </div>
 
@@ -682,7 +682,7 @@ export class AdhdChatAssistant {
                   <button 
                     class="adhd-option-btn ${isSelected ? 'selected' : ''}" 
                     onclick="window.adhdAssistant.recordAnswer('${currentQ.id}', ${typeof opt.value === 'number' ? opt.value : `'${opt.value}'`})">
-                    <span class="option-check">${isSelected ? '✓' : '○'}</span>
+                    <span class="option-check">${isSelected ? '' : '○'}</span>
                     <span class="option-label">${label}</span>
                   </button>
                 `;

@@ -37,7 +37,7 @@ class SmsService {
         cabin: 'OPD Cabin 3',
         eventType: 'QUEUE_UPDATE',
         channel: 'SMS Gateway + WhatsApp Cloud API',
-        status: 'Delivered ✓',
+        status: 'Delivered ',
         latencyMs: 184,
         timestamp: new Date(Date.now() - 15 * 60000).toISOString(),
         message: 'Dear Priya Patel, your appointment with Dr. Sharma (OPD Cabin 3) is confirmed. Queue Status: 3 members ahead of you. Estimated Appointment Time: 10:45 AM (approx 22 mins). Token: #A-24. Please proceed to Waiting Zone B.'
@@ -95,25 +95,25 @@ class SmsService {
     const nameStr = patientName.trim() || 'Patient';
     
     if (eventType === 'CABIN_CALL' || membersAhead === 0) {
-      return `🚨 [NOW CALLING] Dear ${nameStr}, Dr. Sharma is ready for your consultation! Token #${tokenNumber}. Please enter ${cabin} immediately. (MediKiosk AI OPD)`;
+      return ` [NOW CALLING] Dear ${nameStr}, Dr. Sharma is ready for your consultation! Token #${tokenNumber}. Please enter ${cabin} immediately. (MediKiosk AI OPD)`;
     }
 
     if (eventType === 'NEXT_IN_LINE' || membersAhead === 1) {
-      return `⚡ [PRIORITY ALERT] Dear ${nameStr}, you are NEXT in line! Only 1 member ahead of you. Your appointment with ${doctorName} (${cabin}) is at ${appointmentTime}. Please proceed directly to the door of ${cabin}. Token: #${tokenNumber}.`;
+      return ` [PRIORITY ALERT] Dear ${nameStr}, you are NEXT in line! Only 1 member ahead of you. Your appointment with ${doctorName} (${cabin}) is at ${appointmentTime}. Please proceed directly to the door of ${cabin}. Token: #${tokenNumber}.`;
     }
 
     if (eventType === '30MIN_REMINDER' || eventType === '30min' || eventType === 'REMINDER_30_MIN') {
       const waitStr = waitMinutes ? `~${waitMinutes} mins` : 'approx 30 mins';
-      return `⏱️ [30-MIN APPOINTMENT REMINDER] Namaste ${nameStr}! Token #${tokenNumber}. Your appointment with ${doctorName} (${cabin}) is scheduled in ${waitStr} at ${appointmentTime}. Queue Status: ${membersAhead} patient(s) ahead of you. Please be present in OPD Waiting Zone B.`;
+      return `⏱ [30-MIN APPOINTMENT REMINDER] Namaste ${nameStr}! Token #${tokenNumber}. Your appointment with ${doctorName} (${cabin}) is scheduled in ${waitStr} at ${appointmentTime}. Queue Status: ${membersAhead} patient(s) ahead of you. Please be present in OPD Waiting Zone B.`;
     }
 
     if (eventType === 'TOKEN_ISSUED') {
-      return `🏥 [OPD APPOINTMENT CONFIRMED] Dear ${nameStr}, your Token #${tokenNumber} is generated. There are ${membersAhead} members ahead of you in queue. Your estimated appointment time is ${appointmentTime} (~${waitMinutes} mins wait) with ${doctorName} at ${cabin}. Waiting Area: Zone B. Live Tracker: https://medikiosk.gov.in/q/${tokenNumber}`;
+      return ` [OPD APPOINTMENT CONFIRMED] Dear ${nameStr}, your Token #${tokenNumber} is generated. There are ${membersAhead} members ahead of you in queue. Your estimated appointment time is ${appointmentTime} (~${waitMinutes} mins wait) with ${doctorName} at ${cabin}. Waiting Area: Zone B. Live Tracker: https://medikiosk.gov.in/q/${tokenNumber}`;
     }
 
     // Default real-time queue update & 30-min window
     const memberText = membersAhead === 1 ? '1 member ahead' : `${membersAhead} members ahead`;
-    return `📲 [LIVE QUEUE UPDATE] Dear ${nameStr}, your appointment with ${doctorName} (${cabin}) is scheduled at approx ${appointmentTime} (in ~${waitMinutes} mins). Queue Status: ${memberText} of you in line. Token: #${tokenNumber}. Please be ready near Waiting Zone B.`;
+    return ` [LIVE QUEUE UPDATE] Dear ${nameStr}, your appointment with ${doctorName} (${cabin}) is scheduled at approx ${appointmentTime} (in ~${waitMinutes} mins). Queue Status: ${memberText} of you in line. Token: #${tokenNumber}. Please be ready near Waiting Zone B.`;
   }
 
   /**
@@ -199,7 +199,7 @@ class SmsService {
       eventType,
       provider: providerUsed,
       channel: 'SMS Gateway + WhatsApp Cloud API',
-      status: 'Delivered ✓',
+      status: 'Delivered ',
       latencyMs: simulatedLatency,
       timestamp: new Date().toISOString(),
       displayTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
@@ -213,12 +213,12 @@ class SmsService {
       this.dispatchLogs = this.dispatchLogs.slice(0, 100);
     }
 
-    console.log(`📲 [SmsService] Real-Time SMS Dispatched to ${normalizedMobile} (Token ${tokenNumber}) - ${membersAhead} members ahead, Appt: ${appointmentTime}`);
+    console.log(` [SmsService] Real-Time SMS Dispatched to ${normalizedMobile} (Token ${tokenNumber}) - ${membersAhead} members ahead, Appt: ${appointmentTime}`);
 
     return {
       success: true,
       messageSid,
-      status: 'Delivered ✓',
+      status: 'Delivered ',
       deliveryLatencyMs: simulatedLatency,
       recipient: {
         mobile: normalizedMobile,
