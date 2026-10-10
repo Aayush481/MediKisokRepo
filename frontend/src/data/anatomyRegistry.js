@@ -1,0 +1,1349 @@
+/**
+ * MediKiosk Anatomy Registry Client Module
+ * Maps 3D Mesh names, SNOMED-CT Body Structure IDs, Laterality, Systems, and Multilingual labels.
+ */
+
+export const ANATOMY_REGISTRY = [
+  {
+    id: "organ_heart",
+    meshName: "Mesh_Organ_Heart",
+    displayName: {
+      en: "Heart",
+      hi: "हृदय / दिल",
+      bn: "হৃদপিণ্ড",
+      ta: "இதயம்",
+      te: "గుండె",
+      mr: "हृदय"
+    },
+    system: "circulatory",
+    laterality: "midline",
+    parentRegion: "thorax",
+    snomedBodyStructure: {
+      code: "80891009",
+      display: "Heart structure (body structure)"
+    },
+    icd11Topography: "XA4003",
+    position: [-0.12, 1.45, 0.18],
+    scale: [0.24, 0.26, 0.24],
+    color: "#DC2626",
+    emissive: "#EF4444",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT International / Gray's Anatomy 42nd Ed."
+  },
+  {
+    id: "organ_liver",
+    meshName: "Mesh_Organ_Liver",
+    displayName: {
+      en: "Liver",
+      hi: "यकृत / जिगर",
+      bn: "যকৃৎ",
+      ta: "கல்லீரல்",
+      te: "కాలేయం",
+      mr: "यकृत"
+    },
+    system: "digestive",
+    laterality: "right",
+    parentRegion: "abdomen_pelvis",
+    snomedBodyStructure: {
+      code: "181268008",
+      display: "Entire liver (body structure)"
+    },
+    icd11Topography: "XA5E21",
+    position: [0.32, 1.15, 0.2],
+    scale: [0.38, 0.28, 0.3],
+    color: "#92400E",
+    emissive: "#B45309",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT International / ACG Clinical Guidelines"
+  },
+  {
+    id: "organ_kidney_l",
+    meshName: "Mesh_Organ_Kidney_L",
+    displayName: {
+      en: "Left Kidney",
+      hi: "बायाँ गुर्दा (किडनी)",
+      bn: "বাম বৃক্ক",
+      ta: "இடது சிறுநீரகம்",
+      te: "ఎడమ మూత్రపిండము",
+      mr: "डावे मूत्रपिंड"
+    },
+    system: "urinary",
+    laterality: "left",
+    parentRegion: "abdomen_pelvis",
+    snomedBodyStructure: {
+      code: "18639004",
+      display: "Left kidney structure (body structure)"
+    },
+    icd11Topography: "XA74W2",
+    position: [-0.36, 0.95, -0.15],
+    scale: [0.18, 0.24, 0.16],
+    color: "#7F1D1D",
+    emissive: "#991B1B",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT International / KDIGO Guidelines"
+  },
+  {
+    id: "organ_kidney_r",
+    meshName: "Mesh_Organ_Kidney_R",
+    displayName: {
+      en: "Right Kidney",
+      hi: "दायाँ गुर्दा (किडनी)",
+      bn: "ডান বৃক্ক",
+      ta: "வலது சிறுநீரகம்",
+      te: "కుడి మూత్రపిండము",
+      mr: "उजवे मूत्रपिंड"
+    },
+    system: "urinary",
+    laterality: "right",
+    parentRegion: "abdomen_pelvis",
+    snomedBodyStructure: {
+      code: "23451007",
+      display: "Right kidney structure (body structure)"
+    },
+    icd11Topography: "XA80M1",
+    position: [0.36, 0.9, -0.15],
+    scale: [0.18, 0.24, 0.16],
+    color: "#7F1D1D",
+    emissive: "#991B1B",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT International / KDIGO Guidelines"
+  },
+  {
+    id: "organ_lungs",
+    meshName: "Mesh_Organ_Lungs",
+    displayName: {
+      en: "Lungs (Bilateral)",
+      hi: "फेफड़े",
+      bn: "ফুসফুস",
+      ta: "நுரையீரல்",
+      te: "ఊపిరితిత్తులు",
+      mr: "फुफ्फुसे"
+    },
+    system: "respiratory",
+    laterality: "bilateral",
+    parentRegion: "thorax",
+    snomedBodyStructure: {
+      code: "39607008",
+      display: "Lung structure (body structure)"
+    },
+    icd11Topography: "XA1K89",
+    position: [0.0, 1.48, 0.05],
+    scale: [0.65, 0.5, 0.38],
+    color: "#F472B6",
+    emissive: "#FB7185",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT / BTS Guidelines"
+  },
+  {
+    id: "organ_stomach",
+    meshName: "Mesh_Organ_Stomach",
+    displayName: {
+      en: "Stomach",
+      hi: "आमाशय / पेट",
+      bn: "পাকস্থলী",
+      ta: "இரைப்பை",
+      te: "జీర్ణాశయం",
+      mr: "जठर"
+    },
+    system: "digestive",
+    laterality: "left",
+    parentRegion: "abdomen_pelvis",
+    snomedBodyStructure: {
+      code: "69695003",
+      display: "Stomach structure (body structure)"
+    },
+    icd11Topography: "XA23P1",
+    position: [-0.18, 1.15, 0.18],
+    scale: [0.26, 0.28, 0.2],
+    color: "#EA580C",
+    emissive: "#F97316",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT / ACG"
+  },
+  {
+    id: "organ_pancreas",
+    meshName: "Mesh_Organ_Pancreas",
+    displayName: {
+      en: "Pancreas",
+      hi: "अग्न्याशय",
+      bn: "অগ্ন্যাশয়",
+      ta: "கணையம்",
+      te: "క్లోమము",
+      mr: "स्वादुपिंड"
+    },
+    system: "digestive",
+    laterality: "midline",
+    parentRegion: "abdomen_pelvis",
+    snomedBodyStructure: {
+      code: "15776009",
+      display: "Pancreas structure (body structure)"
+    },
+    icd11Topography: "XA59N4",
+    position: [-0.05, 1.05, 0.05],
+    scale: [0.32, 0.12, 0.14],
+    color: "#CA8A04",
+    emissive: "#EAB308",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT / APA Guidelines"
+  },
+  {
+    id: "organ_spleen",
+    meshName: "Mesh_Organ_Spleen",
+    displayName: {
+      en: "Spleen",
+      hi: "तिल्ली / प्लीहा",
+      bn: "প্লীহা",
+      ta: "மண்ணீரல்",
+      te: "ప్లీహము",
+      mr: "प्लीहा"
+    },
+    system: "circulatory",
+    laterality: "left",
+    parentRegion: "abdomen_pelvis",
+    snomedBodyStructure: {
+      code: "78961009",
+      display: "Splenic structure (body structure)"
+    },
+    icd11Topography: "XA66T9",
+    position: [-0.48, 1.18, 0.02],
+    scale: [0.18, 0.2, 0.16],
+    color: "#831843",
+    emissive: "#9D174D",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT International"
+  },
+  {
+    id: "organ_gallbladder",
+    meshName: "Mesh_Organ_Gallbladder",
+    displayName: {
+      en: "Gallbladder",
+      hi: "पित्ताशय",
+      bn: "পিত্তথলি",
+      ta: "பித்தப்பை",
+      te: "పిత్తాశయం",
+      mr: "पित्ताशय"
+    },
+    system: "digestive",
+    laterality: "right",
+    parentRegion: "abdomen_pelvis",
+    snomedBodyStructure: {
+      code: "28231008",
+      display: "Gallbladder structure (body structure)"
+    },
+    icd11Topography: "XA34D1",
+    position: [0.28, 1.05, 0.18],
+    scale: [0.12, 0.14, 0.12],
+    color: "#16A34A",
+    emissive: "#22C55E",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT International"
+  },
+  {
+    id: "organ_bladder",
+    meshName: "Mesh_Organ_Bladder",
+    displayName: {
+      en: "Urinary Bladder",
+      hi: "मूत्राशय",
+      bn: "মূত্রথলি",
+      ta: "சிறுநீர்ப்பை",
+      te: "మూత్రాశయం",
+      mr: "मूत्राशय"
+    },
+    system: "urinary",
+    laterality: "midline",
+    parentRegion: "abdomen_pelvis",
+    snomedBodyStructure: {
+      code: "89837001",
+      display: "Urinary bladder structure (body structure)"
+    },
+    icd11Topography: "XA2L90",
+    position: [0.0, 0.48, 0.16],
+    scale: [0.22, 0.2, 0.2],
+    color: "#D97706",
+    emissive: "#F59E0B",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT / EAU"
+  },
+  {
+    id: "organ_intestines",
+    meshName: "Mesh_Organ_Intestines",
+    displayName: {
+      en: "Intestines (Small & Large)",
+      hi: "आंतें (छोटी व बड़ी आंत)",
+      bn: "অন্ত্র",
+      ta: "குடல்",
+      te: "ప్రేగులు",
+      mr: "आतडे"
+    },
+    system: "digestive",
+    laterality: "midline",
+    parentRegion: "abdomen_pelvis",
+    snomedBodyStructure: {
+      code: "113276009",
+      display: "Intestinal structure (body structure)"
+    },
+    icd11Topography: "XA06K8",
+    position: [0.0, 0.8, 0.18],
+    scale: [0.45, 0.35, 0.28],
+    color: "#D97706",
+    emissive: "#F59E0B",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT International"
+  },
+  {
+    id: "organ_brain",
+    meshName: "Mesh_Organ_Brain",
+    displayName: {
+      en: "Brain",
+      hi: "मस्तिष्क / दिमाग",
+      bn: "মস্তিষ্ক",
+      ta: "மூளை",
+      te: "మెదడు",
+      mr: "मेंदू"
+    },
+    system: "nervous",
+    laterality: "axial",
+    parentRegion: "head_neck",
+    snomedBodyStructure: {
+      code: "12738006",
+      display: "Brain structure (body structure)"
+    },
+    icd11Topography: "XA80G2",
+    position: [0.0, 2.35, 0.0],
+    scale: [0.35, 0.38, 0.42],
+    color: "#EC4899",
+    emissive: "#F472B6",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT / WHO"
+  },
+  {
+    id: "organ_thyroid",
+    meshName: "Mesh_Organ_Thyroid",
+    displayName: {
+      en: "Thyroid Gland",
+      hi: "थायराइड ग्रंथि",
+      bn: "থাইরয়েড গ্রন্থি",
+      ta: "தைராய்டு சுரப்பி",
+      te: "థైరాయిడ్ గ్రంథి",
+      mr: "थायरॉईड ग्रंथी"
+    },
+    system: "endocrine",
+    laterality: "midline",
+    parentRegion: "head_neck",
+    snomedBodyStructure: {
+      code: "69748006",
+      display: "Thyroid gland structure (body structure)"
+    },
+    icd11Topography: "XA96N2",
+    position: [0.0, 1.92, 0.2],
+    scale: [0.18, 0.14, 0.12],
+    color: "#8B5CF6",
+    emissive: "#A78BFA",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT / ATA Guidelines"
+  },
+  {
+    id: "skel_skull",
+    meshName: "Mesh_Skel_Skull",
+    displayName: {
+      en: "Skull (Cranium & Facial Bones)",
+      hi: "खोपड़ी / कपाल",
+      bn: "মাথার খুলি",
+      ta: "மண்டை ஓடு",
+      te: "పుర్రె",
+      mr: "कवटी"
+    },
+    system: "skeletal",
+    laterality: "axial",
+    parentRegion: "head_neck",
+    snomedBodyStructure: {
+      code: "89546000",
+      display: "Bone structure of cranium (body structure)"
+    },
+    icd11Topography: "XA66A2",
+    position: [0.0, 2.35, 0.0],
+    scale: [0.4, 0.45, 0.46],
+    color: "#E2E8F0",
+    emissive: "#FFFFFF",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT International"
+  },
+  {
+    id: "skel_spine_cervical",
+    meshName: "Mesh_Skel_Spine_Cervical",
+    displayName: {
+      en: "Cervical Spine (Neck C1-C7)",
+      hi: "गर्दन की रीढ़ (सर्वाइकल C1-C7)",
+      bn: "সার্ভিকাল মেরুদণ্ড",
+      ta: "கழுத்து முதுகெலும்பு",
+      te: "మెడ వెన్నెముక",
+      mr: "मानेचा मणका"
+    },
+    system: "skeletal",
+    laterality: "axial",
+    parentRegion: "spine",
+    snomedBodyStructure: {
+      code: "122494005",
+      display: "Structure of cervical spine (body structure)"
+    },
+    icd11Topography: "XA45N8",
+    position: [0.0, 1.88, -0.05],
+    scale: [0.12, 0.22, 0.12],
+    color: "#E2E8F0",
+    emissive: "#FFFFFF",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT International"
+  },
+  {
+    id: "skel_spine_thoracic",
+    meshName: "Mesh_Skel_Spine_Thoracic",
+    displayName: {
+      en: "Thoracic Spine (Mid-Back T1-T12)",
+      hi: "मध्य पीठ की रीढ़ (थोरेसिक T1-T12)",
+      bn: "বক্ষদেশীয় মেরুদণ্ড",
+      ta: "மார்பு முதுகெலும்பு",
+      te: "రొమ్ము వెన్నెముక",
+      mr: "छातीचा मणका"
+    },
+    system: "skeletal",
+    laterality: "axial",
+    parentRegion: "spine",
+    snomedBodyStructure: {
+      code: "122495006",
+      display: "Structure of thoracic spine (body structure)"
+    },
+    icd11Topography: "XA3840",
+    position: [0.0, 1.45, -0.1],
+    scale: [0.14, 0.45, 0.14],
+    color: "#E2E8F0",
+    emissive: "#FFFFFF",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT International"
+  },
+  {
+    id: "skel_spine_lumbar",
+    meshName: "Mesh_Skel_Spine_Lumbar",
+    displayName: {
+      en: "Lumbar Spine (Lower Back L1-L5)",
+      hi: "निचली पीठ की रीढ़ (लम्बर L1-L5)",
+      bn: "কটিদেশীয় মেরুদণ্ড",
+      ta: "இடுப்பு முதுகெலும்பு",
+      te: "నడుము వెన్నెముక",
+      mr: "कंबरेचा मणका"
+    },
+    system: "skeletal",
+    laterality: "axial",
+    parentRegion: "spine",
+    snomedBodyStructure: {
+      code: "122496007",
+      display: "Structure of lumbar spine (body structure)"
+    },
+    icd11Topography: "XA1623",
+    position: [0.0, 0.95, -0.1],
+    scale: [0.16, 0.35, 0.16],
+    color: "#E2E8F0",
+    emissive: "#FFFFFF",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT / NASS"
+  },
+  {
+    id: "skel_ribcage",
+    meshName: "Mesh_Skel_Ribcage",
+    displayName: {
+      en: "Ribcage & Sternum",
+      hi: "पसलियां व उरोस्थि",
+      bn: "পাঁজর",
+      ta: "விலா எலும்புக்கூடு",
+      te: "పక్కటెముకల గూడు",
+      mr: "बरगड्यांची चौकट"
+    },
+    system: "skeletal",
+    laterality: "bilateral",
+    parentRegion: "thorax",
+    snomedBodyStructure: {
+      code: "113197003",
+      display: "Rib cage structure (body structure)"
+    },
+    icd11Topography: "XA77J1",
+    position: [0.0, 1.45, 0.02],
+    scale: [0.72, 0.55, 0.42],
+    color: "#E2E8F0",
+    emissive: "#CBD5E1",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT International"
+  },
+  {
+    id: "skel_pelvis",
+    meshName: "Mesh_Skel_Pelvis",
+    displayName: {
+      en: "Pelvis & Sacrum",
+      hi: "श्रोणि व त्रिकास्थि (पेल्विस)",
+      bn: "শ্রোণীচক্র",
+      ta: "இடுப்பெலும்பு",
+      te: "కటి వలయం",
+      mr: "ओटीपोट हाड"
+    },
+    system: "skeletal",
+    laterality: "midline",
+    parentRegion: "abdomen_pelvis",
+    snomedBodyStructure: {
+      code: "272672001",
+      display: "Pelvic bone structure (body structure)"
+    },
+    icd11Topography: "XA8P53",
+    position: [0.0, 0.45, 0.0],
+    scale: [0.65, 0.3, 0.36],
+    color: "#E2E8F0",
+    emissive: "#CBD5E1",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT International"
+  },
+  {
+    id: "joint_shoulder_l",
+    meshName: "Mesh_Joint_Shoulder_L",
+    displayName: {
+      en: "Left Shoulder Joint",
+      hi: "बायाँ कंधा जोड़",
+      bn: "বাম কাঁধের জয়েন্ট",
+      ta: "இடது தோள்பட்டை மூட்டு",
+      te: "ఎడమ భుజం కీలు",
+      mr: "डावा खांदा सांधा"
+    },
+    system: "skeletal",
+    laterality: "left",
+    parentRegion: "upper_extremity",
+    snomedBodyStructure: {
+      code: "91724006",
+      display: "Structure of left shoulder region (body structure)"
+    },
+    icd11Topography: "XA96F4",
+    position: [-0.62, 1.62, 0.0],
+    scale: [0.18, 0.18, 0.18],
+    color: "#E2E8F0",
+    emissive: "#60A5FA",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT International"
+  },
+  {
+    id: "joint_shoulder_r",
+    meshName: "Mesh_Joint_Shoulder_R",
+    displayName: {
+      en: "Right Shoulder Joint",
+      hi: "दायाँ कंधा जोड़",
+      bn: "ডান কাঁধের জয়েন্ট",
+      ta: "வலது தோள்பட்டை மூட்டு",
+      te: "కుడి భుజం కీలు",
+      mr: "उजवा खांदा सांधा"
+    },
+    system: "skeletal",
+    laterality: "right",
+    parentRegion: "upper_extremity",
+    snomedBodyStructure: {
+      code: "36856001",
+      display: "Structure of right shoulder region (body structure)"
+    },
+    icd11Topography: "XA96F5",
+    position: [0.62, 1.62, 0.0],
+    scale: [0.18, 0.18, 0.18],
+    color: "#E2E8F0",
+    emissive: "#60A5FA",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT International"
+  },
+  {
+    id: "joint_knee_l",
+    meshName: "Mesh_Joint_Knee_L",
+    displayName: {
+      en: "Left Knee Joint",
+      hi: "बायाँ घुटना जोड़",
+      bn: "বাম হাঁটুর জয়েন্ট",
+      ta: "இடது முழங்கால் மூட்டு",
+      te: "ఎడమ మోకాలి కీలు",
+      mr: "डावा गुडघा सांधा"
+    },
+    system: "skeletal",
+    laterality: "left",
+    parentRegion: "lower_extremity",
+    snomedBodyStructure: {
+      code: "82167005",
+      display: "Structure of left knee joint (body structure)"
+    },
+    icd11Topography: "XA1941",
+    position: [-0.32, -0.65, 0.04],
+    scale: [0.18, 0.2, 0.18],
+    color: "#E2E8F0",
+    emissive: "#60A5FA",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT / OARSI Guidelines"
+  },
+  {
+    id: "joint_knee_r",
+    meshName: "Mesh_Joint_Knee_R",
+    displayName: {
+      en: "Right Knee Joint",
+      hi: "दायाँ घुटना जोड़",
+      bn: "ডান হাঁটুর জয়েন্ট",
+      ta: "வலது முழங்கால் மூட்டு",
+      te: "కుడి మోకాలి కీలు",
+      mr: "उजवा गुडघा सांधा"
+    },
+    system: "skeletal",
+    laterality: "right",
+    parentRegion: "lower_extremity",
+    snomedBodyStructure: {
+      code: "6757004",
+      display: "Structure of right knee joint (body structure)"
+    },
+    icd11Topography: "XA1942",
+    position: [0.32, -0.65, 0.04],
+    scale: [0.18, 0.2, 0.18],
+    color: "#E2E8F0",
+    emissive: "#60A5FA",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT / OARSI Guidelines"
+  },
+  {
+    id: "organ_ureter_l",
+    meshName: "Mesh_Organ_Ureter_L",
+    displayName: {
+      en: "Left Ureter",
+      hi: "बाईं मूत्रवाहिनी",
+      bn: "বাম মূত্রনালী",
+      ta: "இடது சிறுநீர்க்குழாய்",
+      te: "ఎడమ మూత్రనాళం",
+      mr: "डावी मूत्रवाहिनी"
+    },
+    system: "urinary",
+    laterality: "left",
+    parentRegion: "abdomen_pelvis",
+    snomedBodyStructure: {
+      code: "11062000",
+      display: "Structure of left ureter (body structure)"
+    },
+    icd11Topography: "XA8V22",
+    position: [-0.22, 0.72, -0.05],
+    scale: [0.06, 0.35, 0.06],
+    color: "#EAB308",
+    emissive: "#FACC15",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT / EAU Guidelines"
+  },
+  {
+    id: "organ_ureter_r",
+    meshName: "Mesh_Organ_Ureter_R",
+    displayName: {
+      en: "Right Ureter",
+      hi: "दाईं मूत्रवाहिनी",
+      bn: "ডান মূত্রনালী",
+      ta: "வலது சிறுநீர்க்குழாய்",
+      te: "కుడి మూత్రనాళం",
+      mr: "उजवी मूत्रवाहिनी"
+    },
+    system: "urinary",
+    laterality: "right",
+    parentRegion: "abdomen_pelvis",
+    snomedBodyStructure: {
+      code: "30930002",
+      display: "Structure of right ureter (body structure)"
+    },
+    icd11Topography: "XA8V23",
+    position: [0.22, 0.72, -0.05],
+    scale: [0.06, 0.35, 0.06],
+    color: "#EAB308",
+    emissive: "#FACC15",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT / EAU Guidelines"
+  },
+  {
+    id: "organ_small_intestine",
+    meshName: "Mesh_Organ_Small_Intestine",
+    displayName: {
+      en: "Small Intestine",
+      hi: "छोटी आंत",
+      bn: "ক্ষুদ্রান্ত্র",
+      ta: "சிறுகுடல்",
+      te: "చిన్న ప్రేగు",
+      mr: "लहान आतडे"
+    },
+    system: "digestive",
+    laterality: "midline",
+    parentRegion: "abdomen_pelvis",
+    snomedBodyStructure: {
+      code: "30315005",
+      display: "Structure of small intestine (body structure)"
+    },
+    icd11Topography: "XA06K8",
+    position: [0.0, 0.72, 0.16],
+    scale: [0.38, 0.25, 0.2],
+    color: "#D97706",
+    emissive: "#F59E0B",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT / ASCRS"
+  },
+  {
+    id: "organ_large_intestine",
+    meshName: "Mesh_Organ_Large_Intestine",
+    displayName: {
+      en: "Large Intestine (Colon)",
+      hi: "बड़ी आंत (कोलन)",
+      bn: "বৃহদান্ত্র (কোলন)",
+      ta: "பெருங்குடல்",
+      te: "పెద్ద ప్రేగు",
+      mr: "मोठे आतडे (कोलन)"
+    },
+    system: "digestive",
+    laterality: "bilateral",
+    parentRegion: "abdomen_pelvis",
+    snomedBodyStructure: {
+      code: "71854001",
+      display: "Structure of colon (body structure)"
+    },
+    icd11Topography: "XA06K9",
+    position: [0.0, 0.88, 0.14],
+    scale: [0.55, 0.38, 0.22],
+    color: "#B45309",
+    emissive: "#D97706",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT / ACG Guidelines"
+  },
+  {
+    id: "organ_reproductive",
+    meshName: "Mesh_Organ_Reproductive",
+    displayName: {
+      en: "Reproductive Organs (Pelvis)",
+      hi: "प्रजनन अंग (पेल्विक)",
+      bn: "প্রজনন অঙ্গ",
+      ta: "இனப்பெருக்க உறுப்புகள்",
+      te: "పునరుత్పత్తి అవయవాలు",
+      mr: "प्रजनन अवयव"
+    },
+    system: "digestive",
+    laterality: "midline",
+    parentRegion: "abdomen_pelvis",
+    snomedBodyStructure: {
+      code: "361351000",
+      display: "Reproductive structure (body structure)"
+    },
+    icd11Topography: "XA50K0",
+    position: [0.0, 0.32, 0.08],
+    scale: [0.24, 0.18, 0.16],
+    color: "#DB2777",
+    emissive: "#F472B6",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT / FOGSI"
+  },
+  {
+    id: "skel_spine_sacrum",
+    meshName: "Mesh_Skel_Spine_Sacrum",
+    displayName: {
+      en: "Sacrum & Coccyx (Base of Spine)",
+      hi: "त्रिकास्थि व पुच्छ हड्डी (सैकर्म/कॉक्सिक्स)",
+      bn: "স্যাক্রাম ও ককসিক্স",
+      ta: "திரிகவெலும்பு",
+      te: "త్రికాస్థి",
+      mr: "माकडहाड व त्रिकास्थी"
+    },
+    system: "skeletal",
+    laterality: "axial",
+    parentRegion: "spine",
+    snomedBodyStructure: {
+      code: "54735007",
+      display: "Sacrum structure (body structure)"
+    },
+    icd11Topography: "XA1624",
+    position: [0.0, 0.58, -0.08],
+    scale: [0.22, 0.24, 0.15],
+    color: "#E2E8F0",
+    emissive: "#FFFFFF",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT International"
+  },
+  {
+    id: "joint_elbow_l",
+    meshName: "Mesh_Joint_Elbow_L",
+    displayName: {
+      en: "Left Elbow Joint",
+      hi: "बाईं कोहनी जोड़",
+      bn: "বাম কনুইয়ের জয়েন্ট",
+      ta: "இடது முழங்கை மூட்டு",
+      te: "ఎడమ మోచేయి కీలు",
+      mr: "डावा कोपर सांधा"
+    },
+    system: "skeletal",
+    laterality: "left",
+    parentRegion: "upper_extremity",
+    snomedBodyStructure: {
+      code: "36856002",
+      display: "Structure of left elbow joint (body structure)"
+    },
+    icd11Topography: "XA96F6",
+    position: [-0.85, 1.25, 0.0],
+    scale: [0.15, 0.15, 0.15],
+    color: "#E2E8F0",
+    emissive: "#60A5FA",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT International"
+  },
+  {
+    id: "joint_elbow_r",
+    meshName: "Mesh_Joint_Elbow_R",
+    displayName: {
+      en: "Right Elbow Joint",
+      hi: "दाईं कोहनी जोड़",
+      bn: "ডান কনুইয়ের জয়েন্ট",
+      ta: "வலது முழங்கை மூட்டு",
+      te: "కుడి మోచేయి కీలు",
+      mr: "उजवा कोपर सांधा"
+    },
+    system: "skeletal",
+    laterality: "right",
+    parentRegion: "upper_extremity",
+    snomedBodyStructure: {
+      code: "36856003",
+      display: "Structure of right elbow joint (body structure)"
+    },
+    icd11Topography: "XA96F7",
+    position: [0.85, 1.25, 0.0],
+    scale: [0.15, 0.15, 0.15],
+    color: "#E2E8F0",
+    emissive: "#60A5FA",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT International"
+  },
+  {
+    id: "joint_wrist_l",
+    meshName: "Mesh_Joint_Wrist_L",
+    displayName: {
+      en: "Left Wrist Joint",
+      hi: "बाईं कलाई जोड़",
+      bn: "বাম কব্জির জয়েন্ট",
+      ta: "இடது மணிக்கட்டு மூட்டு",
+      te: "ఎడమ మణికట్టు కీలు",
+      mr: "डावा मनगट सांधा"
+    },
+    system: "skeletal",
+    laterality: "left",
+    parentRegion: "upper_extremity",
+    snomedBodyStructure: {
+      code: "5951000",
+      display: "Structure of left wrist joint (body structure)"
+    },
+    icd11Topography: "XA96F8",
+    position: [-0.96, 0.88, 0.0],
+    scale: [0.12, 0.12, 0.12],
+    color: "#E2E8F0",
+    emissive: "#60A5FA",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT International"
+  },
+  {
+    id: "joint_wrist_r",
+    meshName: "Mesh_Joint_Wrist_R",
+    displayName: {
+      en: "Right Wrist Joint",
+      hi: "दाईं कलाई जोड़",
+      bn: "ডান কব্জির জয়েন্ট",
+      ta: "வலது மணிக்கட்டு மூட்டு",
+      te: "కుడి మణికట్టు కీలు",
+      mr: "उजवा मनगट सांधा"
+    },
+    system: "skeletal",
+    laterality: "right",
+    parentRegion: "upper_extremity",
+    snomedBodyStructure: {
+      code: "5951001",
+      display: "Structure of right wrist joint (body structure)"
+    },
+    icd11Topography: "XA96F9",
+    position: [0.96, 0.88, 0.0],
+    scale: [0.12, 0.12, 0.12],
+    color: "#E2E8F0",
+    emissive: "#60A5FA",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT International"
+  },
+  {
+    id: "joint_hip_l",
+    meshName: "Mesh_Joint_Hip_L",
+    displayName: {
+      en: "Left Hip Joint",
+      hi: "बायाँ कूल्हा जोड़",
+      bn: "বাম নিতম্বের জয়েন্ট",
+      ta: "இடது இடுப்பு மூட்டு",
+      te: "ఎడమ తుంటి కీలు",
+      mr: "डावा नितंब सांधा"
+    },
+    system: "skeletal",
+    laterality: "left",
+    parentRegion: "lower_extremity",
+    snomedBodyStructure: {
+      code: "287579007",
+      display: "Structure of left hip joint (body structure)"
+    },
+    icd11Topography: "XA1943",
+    position: [-0.28, 0.38, 0.02],
+    scale: [0.18, 0.18, 0.18],
+    color: "#E2E8F0",
+    emissive: "#60A5FA",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT International"
+  },
+  {
+    id: "joint_hip_r",
+    meshName: "Mesh_Joint_Hip_R",
+    displayName: {
+      en: "Right Hip Joint",
+      hi: "दायाँ कूल्हा जोड़",
+      bn: "ডান নিতম্বের জয়েন্ট",
+      ta: "வலது இடுப்பு மூட்டு",
+      te: "కుడి తుంటి కీలు",
+      mr: "उजवा नितंब सांधा"
+    },
+    system: "skeletal",
+    laterality: "right",
+    parentRegion: "lower_extremity",
+    snomedBodyStructure: {
+      code: "287580005",
+      display: "Structure of right hip joint (body structure)"
+    },
+    icd11Topography: "XA1944",
+    position: [0.28, 0.38, 0.02],
+    scale: [0.18, 0.18, 0.18],
+    color: "#E2E8F0",
+    emissive: "#60A5FA",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT International"
+  },
+  {
+    id: "joint_ankle_l",
+    meshName: "Mesh_Joint_Ankle_L",
+    displayName: {
+      en: "Left Ankle Joint",
+      hi: "बायाँ टखना जोड़",
+      bn: "বাম গোড়ালির জয়েন্ট",
+      ta: "இடது கணுக்கால் மூட்டு",
+      te: "ఎడమ చీలమండ కీలు",
+      mr: "डावा घोटा सांधा"
+    },
+    system: "skeletal",
+    laterality: "left",
+    parentRegion: "lower_extremity",
+    snomedBodyStructure: {
+      code: "67889009",
+      display: "Structure of left ankle joint (body structure)"
+    },
+    icd11Topography: "XA1945",
+    position: [-0.22, -1.15, 0.02],
+    scale: [0.14, 0.14, 0.14],
+    color: "#E2E8F0",
+    emissive: "#60A5FA",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT International"
+  },
+  {
+    id: "joint_ankle_r",
+    meshName: "Mesh_Joint_Ankle_R",
+    displayName: {
+      en: "Right Ankle Joint",
+      hi: "दायाँ टखना जोड़",
+      bn: "ডান গোড়ালির জয়েন্ট",
+      ta: "வலது கணுக்கால் மூட்டு",
+      te: "కుడి చీలమండ కీలు",
+      mr: "उजवा घोटा सांधा"
+    },
+    system: "skeletal",
+    laterality: "right",
+    parentRegion: "lower_extremity",
+    snomedBodyStructure: {
+      code: "67889010",
+      display: "Structure of right ankle joint (body structure)"
+    },
+    icd11Topography: "XA1946",
+    position: [0.22, -1.15, 0.02],
+    scale: [0.14, 0.14, 0.14],
+    color: "#E2E8F0",
+    emissive: "#60A5FA",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT International"
+  },
+  {
+    id: "muscle_pectoralis_l",
+    meshName: "Mesh_Muscle_Pectoralis_L",
+    displayName: {
+      en: "Left Pectoralis Major (Chest)",
+      hi: "बायाँ सीना / पेक्टोरल मांसपेशी",
+      bn: "বাম বুকের পেশী",
+      ta: "இடது மார்பு தசை",
+      te: "ఎడమ ఛాతీ కండరము",
+      mr: "डाव्या छातीचे स्नायू"
+    },
+    system: "muscular",
+    laterality: "left",
+    parentRegion: "thorax",
+    snomedBodyStructure: {
+      code: "284687002",
+      display: "Structure of left pectoralis major muscle (body structure)"
+    },
+    icd11Topography: "XA78C1",
+    position: [-0.22, 1.52, 0.26],
+    scale: [0.28, 0.22, 0.16],
+    color: "#B91C1C",
+    emissive: "#DC2626",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT International / Gray's Anatomy"
+  },
+  {
+    id: "muscle_pectoralis_r",
+    meshName: "Mesh_Muscle_Pectoralis_R",
+    displayName: {
+      en: "Right Pectoralis Major (Chest)",
+      hi: "दायाँ सीना / पेक्टोरल मांसपेशी",
+      bn: "ডান বুকের পেশী",
+      ta: "வலது மார்பு தசை",
+      te: "కుడి ఛాతీ కండరము",
+      mr: "उजव्या छातीचे स्नायू"
+    },
+    system: "muscular",
+    laterality: "right",
+    parentRegion: "thorax",
+    snomedBodyStructure: {
+      code: "284688007",
+      display: "Structure of right pectoralis major muscle (body structure)"
+    },
+    icd11Topography: "XA78C2",
+    position: [0.22, 1.52, 0.26],
+    scale: [0.28, 0.22, 0.16],
+    color: "#B91C1C",
+    emissive: "#DC2626",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT International / Gray's Anatomy"
+  },
+  {
+    id: "muscle_rectus_abdominis",
+    meshName: "Mesh_Muscle_Rectus_Abdominis",
+    displayName: {
+      en: "Rectus Abdominis (Abdominal Core)",
+      hi: "पेट की मांसपेशियां (सिक्स-पैक कोर)",
+      bn: "পেটের পেশী (অ্যাবডোমিনাল কোর)",
+      ta: "வயிற்று தசை (சிக்ஸ்-பேக்)",
+      te: "పొట్ట కండరాలు (యాబ్స్)",
+      mr: "पोटाचे स्नायू (कोर)"
+    },
+    system: "muscular",
+    laterality: "midline",
+    parentRegion: "abdomen_pelvis",
+    snomedBodyStructure: {
+      code: "284686006",
+      display: "Structure of rectus abdominis muscle (body structure)"
+    },
+    icd11Topography: "XA5E29",
+    position: [0, 1.15, 0.24],
+    scale: [0.28, 0.44, 0.14],
+    color: "#C2410C",
+    emissive: "#EA580C",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT International / Gray's Anatomy"
+  },
+  {
+    id: "muscle_obliques_l",
+    meshName: "Mesh_Muscle_Obliques_L",
+    displayName: {
+      en: "Left External Oblique (Flank/Waist)",
+      hi: "बाईं कमर / तिरछी मांसपेशी",
+      bn: "বাম কোমরের পেশী",
+      ta: "இடது இடுப்பு தசை",
+      te: "ఎడమ నడుము కండరము",
+      mr: "डाव्या कमरेचे स्नायू"
+    },
+    system: "muscular",
+    laterality: "left",
+    parentRegion: "abdomen_pelvis",
+    snomedBodyStructure: {
+      code: "284683003",
+      display: "Structure of left external oblique muscle (body structure)"
+    },
+    icd11Topography: "XA5E30",
+    position: [-0.34, 1.12, 0.18],
+    scale: [0.18, 0.36, 0.16],
+    color: "#B45309",
+    emissive: "#D97706",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT International / Gray's Anatomy"
+  },
+  {
+    id: "muscle_obliques_r",
+    meshName: "Mesh_Muscle_Obliques_R",
+    displayName: {
+      en: "Right External Oblique (Flank/Waist)",
+      hi: "दाईं कमर / तिरछी मांसपेशी",
+      bn: "ডান কোমরের পেশী",
+      ta: "வலது இடுப்பு தசை",
+      te: "కుడి నడుము కండరము",
+      mr: "उजव्या कमरेचे स्नायू"
+    },
+    system: "muscular",
+    laterality: "right",
+    parentRegion: "abdomen_pelvis",
+    snomedBodyStructure: {
+      code: "284684009",
+      display: "Structure of right external oblique muscle (body structure)"
+    },
+    icd11Topography: "XA5E31",
+    position: [0.34, 1.12, 0.18],
+    scale: [0.18, 0.36, 0.16],
+    color: "#B45309",
+    emissive: "#D97706",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT International / Gray's Anatomy"
+  },
+  {
+    id: "muscle_deltoid_l",
+    meshName: "Mesh_Muscle_Deltoid_L",
+    displayName: {
+      en: "Left Deltoid (Shoulder Muscle)",
+      hi: "बायाँ कन्धा मांसपेशी",
+      bn: "বাম কাঁধের পেশী",
+      ta: "இடது தோள்பட்டை தசை",
+      te: "ఎడమ భుజం కండరము",
+      mr: "डाव्या खांद्याचे स्नायू"
+    },
+    system: "muscular",
+    laterality: "left",
+    parentRegion: "upper_extremity",
+    snomedBodyStructure: {
+      code: "284681005",
+      display: "Structure of left deltoid muscle (body structure)"
+    },
+    icd11Topography: "XA2011",
+    position: [-0.62, 1.62, 0.08],
+    scale: [0.2, 0.24, 0.2],
+    color: "#991B1B",
+    emissive: "#DC2626",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT International"
+  },
+  {
+    id: "muscle_deltoid_r",
+    meshName: "Mesh_Muscle_Deltoid_R",
+    displayName: {
+      en: "Right Deltoid (Shoulder Muscle)",
+      hi: "दायाँ कन्धा मांसपेशी",
+      bn: "ডান কাঁধের পেশী",
+      ta: "வலது தோள்பட்டை தசை",
+      te: "కుడి భుజం కండరము",
+      mr: "उजव्या खांद्याचे स्नायू"
+    },
+    system: "muscular",
+    laterality: "right",
+    parentRegion: "upper_extremity",
+    snomedBodyStructure: {
+      code: "284682000",
+      display: "Structure of right deltoid muscle (body structure)"
+    },
+    icd11Topography: "XA2012",
+    position: [0.62, 1.62, 0.08],
+    scale: [0.2, 0.24, 0.2],
+    color: "#991B1B",
+    emissive: "#DC2626",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT International"
+  },
+  {
+    id: "muscle_biceps_l",
+    meshName: "Mesh_Muscle_Biceps_L",
+    displayName: {
+      en: "Left Biceps Brachii (Arm)",
+      hi: "बाईं बांह (बाइसेप्स)",
+      bn: "বাম বাহু পেশী (বাইসেপস)",
+      ta: "இடது கை தசை (பைசெப்ஸ்)",
+      te: "ఎడమ చేయి కండరము (బైసెప్స్)",
+      mr: "डाव्या हाताचे स्नायू"
+    },
+    system: "muscular",
+    laterality: "left",
+    parentRegion: "upper_extremity",
+    snomedBodyStructure: {
+      code: "284679001",
+      display: "Structure of left biceps brachii muscle (body structure)"
+    },
+    icd11Topography: "XA2013",
+    position: [-0.64, 1.34, 0.06],
+    scale: [0.14, 0.3, 0.14],
+    color: "#A16207",
+    emissive: "#CA8A04",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT International"
+  },
+  {
+    id: "muscle_biceps_r",
+    meshName: "Mesh_Muscle_Biceps_R",
+    displayName: {
+      en: "Right Biceps Brachii (Arm)",
+      hi: "दाईं बांह (बाइसेप्स)",
+      bn: "ডান বাহু পেশী (বাইসেপস)",
+      ta: "வலது கை தசை (பைசெப்ஸ்)",
+      te: "కుడి చేయి కండరము (బైసెప్స్)",
+      mr: "उजव्या हाताचे स्नायू"
+    },
+    system: "muscular",
+    laterality: "right",
+    parentRegion: "upper_extremity",
+    snomedBodyStructure: {
+      code: "284680003",
+      display: "Structure of right biceps brachii muscle (body structure)"
+    },
+    icd11Topography: "XA2014",
+    position: [0.64, 1.34, 0.06],
+    scale: [0.14, 0.3, 0.14],
+    color: "#A16207",
+    emissive: "#CA8A04",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT International"
+  },
+  {
+    id: "muscle_quadriceps_l",
+    meshName: "Mesh_Muscle_Quadriceps_L",
+    displayName: {
+      en: "Left Quadriceps (Thigh)",
+      hi: "बाईं जांघ मांसपेशी (क्वाड्रिसेप्स)",
+      bn: "বাম উরুর পেশী",
+      ta: "இடது தொடை தசை",
+      te: "ఎడమ తొడ కండరము",
+      mr: "डाव्या मांडीचे स्नायू"
+    },
+    system: "muscular",
+    laterality: "left",
+    parentRegion: "lower_extremity",
+    snomedBodyStructure: {
+      code: "284673000",
+      display: "Structure of left quadriceps femoris muscle (body structure)"
+    },
+    icd11Topography: "XA3015",
+    position: [-0.32, 0.15, 0.1],
+    scale: [0.24, 0.58, 0.22],
+    color: "#B91C1C",
+    emissive: "#DC2626",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT International"
+  },
+  {
+    id: "muscle_quadriceps_r",
+    meshName: "Mesh_Muscle_Quadriceps_R",
+    displayName: {
+      en: "Right Quadriceps (Thigh)",
+      hi: "दाईं जांघ मांसपेशी (क्वाड्रिसेप्स)",
+      bn: "ডান উরুর পেশী",
+      ta: "வலது தொடை தசை",
+      te: "కుడి తొడ కండరము",
+      mr: "उजव्या मांडीचे स्नायू"
+    },
+    system: "muscular",
+    laterality: "right",
+    parentRegion: "lower_extremity",
+    snomedBodyStructure: {
+      code: "284674006",
+      display: "Structure of right quadriceps femoris muscle (body structure)"
+    },
+    icd11Topography: "XA3016",
+    position: [0.32, 0.15, 0.1],
+    scale: [0.24, 0.58, 0.22],
+    color: "#B91C1C",
+    emissive: "#DC2626",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT International"
+  },
+  {
+    id: "muscle_trapezius",
+    meshName: "Mesh_Muscle_Trapezius",
+    displayName: {
+      en: "Trapezius (Neck & Upper Back)",
+      hi: "गर्दन व ऊपरी पीठ (ट्रेपेज़ियस)",
+      bn: "ঘাড় ও উপরের পিঠের পেশী",
+      ta: "கழுத்து மற்றும் மேல் முதுகு தசை",
+      te: "మెడ మరియు పై వీపు కండరము",
+      mr: "मान आणि पाठीचे स्नायू"
+    },
+    system: "muscular",
+    laterality: "midline",
+    parentRegion: "head_neck",
+    snomedBodyStructure: {
+      code: "284675007",
+      display: "Structure of trapezius muscle (body structure)"
+    },
+    icd11Topography: "XA1018",
+    position: [0, 1.82, -0.06],
+    scale: [0.48, 0.26, 0.22],
+    color: "#991B1B",
+    emissive: "#DC2626",
+    pediatricApplicable: true,
+    clinicalSource: "SNOMED CT International / Gray's Anatomy"
+  }
+];
+
+export const ANATOMY_SYSTEMS = [
+  { id: "all", label: "All Layers", icon: "🌐" },
+  { id: "muscular", label: "Muscles & Torso", icon: "💪" },
+  { id: "skeletal", label: "Skeleton & Joints", icon: "🦴" },
+  { id: "circulatory", label: "Circulatory / Heart", icon: "🫀" },
+  { id: "digestive", label: "Digestive / GI", icon: "🥘" },
+  { id: "urinary", label: "Urinary / Renal", icon: "💧" },
+  { id: "respiratory", label: "Respiratory / Lungs", icon: "🫁" },
+  { id: "nervous", label: "Nervous / Brain", icon: "🧠" },
+  { id: "endocrine", label: "Endocrine / Thyroid", icon: "🦋" }
+];
+
+/**
+ * Legacy 3D Procedural Mesh-ID to 2D Region-ID Mapping Table
+ * Maintains backward compatibility for stored encounters and DB records.
+ */
+export const LEGACY_3D_MESH_TO_2D_ID = {
+  "Mesh_Organ_Heart": "organ_heart",
+  "Mesh_Organ_Liver": "organ_liver",
+  "Mesh_Organ_Kidney_L": "organ_kidney_l",
+  "Mesh_Organ_Kidney_R": "organ_kidney_r",
+  "Mesh_Organ_Lungs": "organ_lungs",
+  "Mesh_Organ_Stomach": "organ_stomach",
+  "Mesh_Organ_Pancreas": "organ_pancreas",
+  "Mesh_Organ_Spleen": "organ_spleen",
+  "Mesh_Organ_Gallbladder": "organ_gallbladder",
+  "Mesh_Organ_Bladder": "organ_bladder",
+  "Mesh_Organ_Intestines": "organ_intestines",
+  "Mesh_Organ_Brain": "organ_brain",
+  "Mesh_Organ_Thyroid": "organ_thyroid",
+  "Mesh_Skel_Skull": "skel_skull",
+  "Mesh_Skel_Spine_Cervical": "skel_spine_cervical",
+  "Mesh_Skel_Spine_Thoracic": "skel_spine_thoracic",
+  "Mesh_Skel_Spine_Lumbar": "skel_spine_lumbar",
+  "Mesh_Skel_Ribcage": "skel_ribcage",
+  "Mesh_Skel_Pelvis": "skel_pelvis",
+  "Mesh_Joint_Shoulder_L": "joint_shoulder_l",
+  "Mesh_Joint_Shoulder_R": "joint_shoulder_r",
+  "Mesh_Joint_Knee_L": "joint_knee_l",
+  "Mesh_Joint_Knee_R": "joint_knee_r",
+  "Mesh_Muscle_Pectoralis_L": "muscle_pectoralis_l",
+  "Mesh_Muscle_Pectoralis_R": "muscle_pectoralis_r",
+  "Mesh_Muscle_Rectus_Abdominis": "muscle_rectus_abdominis",
+  "Mesh_Muscle_Obliques_L": "muscle_obliques_l",
+  "Mesh_Muscle_Obliques_R": "muscle_obliques_r",
+  "Mesh_Muscle_Deltoid_L": "muscle_deltoid_l",
+  "Mesh_Muscle_Deltoid_R": "muscle_deltoid_r",
+  "Mesh_Muscle_Biceps_L": "muscle_biceps_l",
+  "Mesh_Muscle_Biceps_R": "muscle_biceps_r",
+  "Mesh_Muscle_Quadriceps_L": "muscle_quadriceps_l",
+  "Mesh_Muscle_Quadriceps_R": "muscle_quadriceps_r",
+  "Mesh_Muscle_Trapezius": "muscle_trapezius"
+};
+
+/**
+ * Safely maps any mesh ID or region ID to a normalized 2D anatomy identifier.
+ * @param {string} meshOrRegionId
+ * @returns {string} 2D region ID
+ */
+export function mapMeshToRegionId(meshOrRegionId) {
+  if (!meshOrRegionId) return null;
+  if (LEGACY_3D_MESH_TO_2D_ID[meshOrRegionId]) {
+    return LEGACY_3D_MESH_TO_2D_ID[meshOrRegionId];
+  }
+  return meshOrRegionId;
+}
+

@@ -34,6 +34,7 @@ eng.traineddata
 care_extracted_*.jpg
 *.tmp
 *.temp
+scratch/
 
 # 5. Python Bytecode, Caches & Virtual Envs
 __pycache__/

@@ -1,41 +1,75 @@
+version: '3.8'
+
 services:
-  medikiosk:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: medikiosk-service
+  # 1. MediKiosk REST API & Socket.IO Real-Time Gateway
+  api:
+    build: .
+    container_name: medikiosk-api
     restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
-      - NODE_ENV=production
       - PORT=3000
-      - MONGODB_URI=mongodb://mongodb:27017/medikiosk
-      - MONGODB_DB_NAME=medikiosk
-      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      - NODE_ENV=development
+      - REDIS_URL=redis://redis:6379
+      - MONGODB_URI=mongodb://mongo:27017/medikiosk_db
+      - DLT_ENTITY_ID=1401550000000000001
+      - DLT_SENDER_ID=MDKIOS
+      - PATIENT_NAME_MASKING=FIRST_NAME
+      - TRACKING_BASE_URL=http://localhost:3000/q
     depends_on:
-      - mongodb
+      redis:
+        condition: service_healthy
+      mongo:
+        condition: service_started
     volumes:
-      - ./frontend:/app/frontend
-      - ./backend:/app/backend
-    networks:
-      - medikiosk-network
+      - .:/app
+      - /app/node_modules
 
-  mongodb:
-    image: mongo:6.0
-    container_name: medikiosk-mongodb
+  # 2. BullMQ Dedicated SMS Notification Worker
+  worker:
+    build: .
+    container_name: medikiosk-sms-worker
+    restart: unless-stopped
+    command: ["npm", "run", "worker"]
+    environment:
+      - NODE_ENV=development
+      - REDIS_URL=redis://redis:6379
+      - MONGODB_URI=mongodb://mongo:27017/medikiosk_db
+      - DLT_ENTITY_ID=1401550000000000001
+      - DLT_SENDER_ID=MDKIOS
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+  # 3. Redis Service for BullMQ Job Queues & Socket.IO Adapter
+  redis:
+    image: redis:7-alpine
+    container_name: medikiosk-redis
     restart: unless-stopped
     ports:
-      - "27018:27017"
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
     volumes:
-      - mongo-clinical-data:/data/db
-    networks:
-      - medikiosk-network
+      - redis_data:/data
 
-networks:
-  medikiosk-network:
-    driver: bridge
+  # 4. MongoDB Clinical Persistence Store
+  mongo:
+    image: mongo:7.0
+    container_name: medikiosk-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
 
 volumes:
-  mongo-clinical-data:
-    driver: local
+  redis_data:
+  mongo_data:
